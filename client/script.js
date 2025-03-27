@@ -67,13 +67,24 @@ document.addEventListener("DOMContentLoaded", function () {
         let email = document.getElementById("email").value;
         let password = document.getElementById("password").value;
 
-        let output = `
-            <h3>Sign-Up Details</h3>
-            <p><strong>Full Name:</strong> ${fullName}</p>
-            <p><strong>Mobile:</strong> ${mobile}</p>
-            <p><strong>Email:</strong> ${email}</p>
-        `;
-
-        document.getElementById("output").innerHTML = output;
+        // Instead of displaying the details, send them to the backend (if needed)
+        fetch("http://localhost:5000/signup", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ fullName, mobile, email, password }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Sign-up successful! Please log in.");
+                signUpForm.reset(); // Clear the form after successful submission
+                signinBtn.click(); // Switch to the sign-in form after signing up
+            } else {
+                alert("Sign-up failed: " + data.message);
+            }
+        })
+        .catch(error => console.error("Error:", error));
     });
 });
