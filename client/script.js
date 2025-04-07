@@ -68,14 +68,16 @@ document.addEventListener("DOMContentLoaded", function () {
         let password = document.getElementById("password").value;
 
         // Instead of displaying the details, send them to the backend (if needed)
-        fetch("http://localhost:5000/signup", {
+        fetch("http://localhost:5500/signup", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ fullName, mobile, email, password }),
+            body: JSON.stringify({ email: "test@example.com", password: "123456" }),
         })
         .then(response => response.json())
+        .then(data => console.log(data))
+        .catch(error => console.error("Error:", error))
         .then(data => {
             if (data.success) {
                 alert("Sign-up successful! Please log in.");

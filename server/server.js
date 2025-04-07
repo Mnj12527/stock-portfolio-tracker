@@ -52,7 +52,7 @@ app.post("/signin", async (req, res) => {
 
         // Find user by email
         const user = await User.findOne({ email });
-        if (!user) return res.status(400).json({ message: "Invalid credentials" });
+        if (!user) return res.status(400).json({ message: "User not found" });
 
         // Compare password
         const isMatch = await bcrypt.compare(password, user.password);
@@ -63,7 +63,8 @@ app.post("/signin", async (req, res) => {
 
         res.json({ token, user: { id: user._id, username: user.username, email: user.email } });
     } catch (error) {
-        res.status(500).json({ message: "Server error" });
+        res.status(500).json({ message: "Server error", error: error.message });
+
     }
 });
 
