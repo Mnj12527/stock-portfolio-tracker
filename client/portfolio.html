@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Portfolio</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #0f0f0f;
+      color: white;
+    }
+
+    .navbar {
+      background-color: #1e1e1e;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid #00c49f;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .logo span {
+      color: #6f2cff;
+    }
+
+    .search-bar {
+      flex-grow: 1;
+      margin: 0 30px;
+      display: flex;
+      align-items: center;
+      background-color: #2a2a2a;
+      border-radius: 25px;
+      overflow: hidden;
+    }
+
+    .search-bar input {
+      padding: 10px;
+      border: none;
+      outline: none;
+      flex-grow: 1;
+      background: transparent;
+      color: white;
+    }
+
+    .search-bar button {
+      background-color: #00c49f;
+      border: none;
+      padding: 10px 15px;
+      cursor: pointer;
+      color: white;
+      font-size: 16px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 25px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .nav-links a.active {
+      color: #00c49f;
+    }
+
+    .nav-links .portfolio-btn {
+      background-color: #00c49f;
+      padding: 8px 14px;
+      border-radius: 6px;
+      color: black;
+    }
+
+    .mail-icon {
+      background-color: #2e3a59;
+      padding: 8px 14px;
+      border: 1px solid #6ea8ff;
+      border-radius: 25px;
+      color: white;
+    }
+
+    /* Add some portfolio content */
+    .content {
+      padding: 40px 20px;
+      text-align: center;
+    }
+
+    .content h1 {
+      color: #00c49f;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="navbar">
+    <div class="logo"><span>spt</span>finance</div>
+
+    <div class="search-bar">
+      <input type="text" placeholder="Search for news, symbols or company...">
+      <button>🔍</button>
+    </div>
+
+    <div class="nav-links">
+      <a href="#" class="portfolio-btn">My Portfolio</a>
+      <a href="#">News</a>
+      <a href="#">Markets</a>
+      <a href="#">Research</a>
+      <a href="#">Personal Finance</a>
+      <a href="#">Videos</a>
+      <a href="#">Streaming Now</a>
+      <a href="#" class="mail-icon">📩 Mail</a>
+    </div>
+  </div>
+
+  <div class="content">
+    <h1>Welcome to your Stock Portfolio!</h1>
+    <p>This is where your tracked stocks, charts, and performance will appear.</p>
+  </div>
+
+</body>
+</html>

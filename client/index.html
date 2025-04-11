@@ -1,107 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Portfolio Tracker - Login</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stock Portfolio Tracker - Login</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-    <div class="container">
-        <h2>STOCK PORTFOLIO TRACKER</h2>
-        <div class="tabs">
-            <button id="signupBtn">Sign Up</button>
-            <button id="signinBtn" class="active">Sign In</button>
-        </div>
-
-        <!-- Sign-Up Form -->
-        <form id="signupForm" style="display: none;">
-            <input type="text" id="username" placeholder="Username" required />
-            <input type="email" id="signup-email" placeholder="Email" required />
-            <input type="password" id="signup-password" placeholder="Password" required />
-            <button type="submit">Sign Up</button>
-        </form>
-
-        <!-- Sign-In Form -->
-        <form id="signinForm">
-            <input type="email" id="signin-email" placeholder="Email" required />
-            <input type="password" id="signin-password" placeholder="Password" required />
-            <button type="submit">Sign In</button>
-        </form>
-        
-        <a href="#" class="forgot-password">Forgot Password?</a>
-        <p>Continue without signing in? <a href="#">EXPLORE</a></p>
-        <p id="output"></p>
+  <div class="container">
+    <h2>STOCK PORTFOLIO TRACKER</h2>
+    <div class="tabs">
+      <button id="signupBtn">Sign Up</button>
+      <button id="signinBtn" class="active">Sign In</button>
     </div>
 
-    <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const loginForm = document.getElementById("signinForm");
-        const signUpForm = document.getElementById("signupForm");
-        const signupBtn = document.getElementById("signupBtn");
-        const signinBtn = document.getElementById("signinBtn");
+    <!-- Sign-Up Form -->
+    <form id="signUpForm" style="display: none;">
+      <input type="text" id="signup-fullName" placeholder="Full Name" required />
+      <input type="email" id="signup-email" placeholder="Email" required />
+      <input type="password" id="signup-password" placeholder="Password" required />
+      <button type="submit">Sign Up</button>
+    </form>
 
-        // Initially hide the sign-up form
-        signUpForm.style.display = "none";
+    <!-- Sign-In Form -->
+    <form id="loginForm">
+      <input type="email" id="signin-email" placeholder="Email" required />
+      <input type="password" id="signin-password" placeholder="Password" required />
+      <button type="submit">Sign In</button>
+    </form>
 
-        // Show sign-up form when clicking "Sign Up"
-        signupBtn.addEventListener("click", function () {
-            signUpForm.style.display = "block";
-            loginForm.style.display = "none";
-            signupBtn.classList.add("active");
-            signinBtn.classList.remove("active");
-        });
+    <a href="#" class="forgot-password">Forgot Password?</a>
+    <p>Continue without signing in? <a href="#">EXPLORE</a></p>
+    <p id="output"></p>
+  </div>
 
-        // Show sign-in form when clicking "Sign In"
-        signinBtn.addEventListener("click", function () {
-            loginForm.style.display = "block";
-            signUpForm.style.display = "none";
-            signinBtn.classList.add("active");
-            signupBtn.classList.remove("active");
-        });
-
-        // Handle signup form submission
-        signUpForm.addEventListener("submit", async (event) => {
-            event.preventDefault();
-            const username = document.getElementById("username").value;
-            const email = document.getElementById("signup-email").value;
-            const password = document.getElementById("signup-password").value;
-
-            const response = await fetch("http://localhost:5000/signup", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, email, password })
-            });
-
-            const data = await response.json();
-            alert(data.message);
-            if (response.ok) {
-                signUpForm.reset();
-                signinBtn.click(); // Switch to sign-in form after successful signup
-            }
-        });
-
-        // Handle signin form submission
-        loginForm.addEventListener("submit", async (event) => {
-            event.preventDefault();
-            const email = document.getElementById("signin-email").value;
-            const password = document.getElementById("signin-password").value;
-
-            const response = await fetch("http://localhost:5000/signin", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password })
-            });
-
-            const data = await response.json();
-            if (data.token) {
-                localStorage.setItem("token", data.token);
-                alert("Sign in successful");
-            } else {
-                alert(data.message);
-            }
-        });
-    });
-    </script>
+  <script src="script.js"></script>
 </body>
 </html>
