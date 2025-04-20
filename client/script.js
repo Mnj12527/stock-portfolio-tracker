@@ -22,7 +22,8 @@ document.addEventListener("DOMContentLoaded", function () {
       signinBtn.classList.add("active");
       signupBtn.classList.remove("active");
     });
-  
+
+
     // Handle Login
     loginForm.addEventListener("submit", async function (event) {
       event.preventDefault();
@@ -71,3 +72,44 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
   
+
+  function signOut() {
+    // Clear session or token - here we just simulate
+    alert("You have been signed out.");
+    // Redirect to login page
+    window.location.href = "Home.html"; // Replace with your actual login page path
+  }
+  
+const apiKey = '5b9dc55198084f319b1bb3d2e8ffb8dc'; // Replace with your real key
+const newsList = document.getElementById('news-list');
+
+async function fetchNews() {
+  try {
+    const response = await fetch(`https://newsapi.org/v2/top-headlines?country=in&pageSize=10&apiKey=${apiKey}`);
+    const data = await response.json();
+
+    if (data.articles) {
+      data.articles.forEach(article => {
+        const item = document.createElement('div');
+        item.className = 'news-item';
+
+        item.innerHTML = `
+          <img src="${article.urlToImage || 'https://via.placeholder.com/120x80'}" alt="news image" />
+          <div class="content">
+            <h3><a href="${article.url}" target="_blank">${article.title}</a></h3>
+            <p>${article.description || ''}</p>
+          </div>
+        `;
+
+        newsList.appendChild(item);
+      });
+    } else {
+      newsList.innerHTML = '<p>No news articles found.</p>';
+    }
+  } catch (error) {
+    console.error('Error fetching news:', error);
+    newsList.innerHTML = '<p>Failed to load news.</p>';
+  }
+}
+
+fetchNews();

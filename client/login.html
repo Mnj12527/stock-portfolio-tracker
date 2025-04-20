@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stock Portfolio Tracker - Login</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h2>STOCK PORTFOLIO TRACKER</h2>
+    <div class="tabs">
+      <button id="signupBtn">Sign Up</button>
+      <button id="signinBtn" class="active">Sign In</button>
+    </div>
+
+    <!-- Sign-Up Form -->
+    <form id="signUpForm" style="display: none;">
+      <input type="text" id="signup-fullName" placeholder="Full Name" required />
+      <input type="email" id="signup-email" placeholder="Email" required />
+      <input type="password" id="signup-password" placeholder="Password" required />
+      <button type="submit">Sign Up</button>
+    </form>
+
+    <!-- Sign-In Form -->
+    <form id="loginForm">
+      <input type="email" id="signin-email" placeholder="Email" required />
+      <input type="password" id="signin-password" placeholder="Password" required />
+      <button type="submit">Sign In</button>
+    </form>
+
+    <a href="#" class="forgot-password">Forgot Password?</a>
+    <p>Continue without signing in? <a href="#">EXPLORE</a></p>
+    <p id="output"></p>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

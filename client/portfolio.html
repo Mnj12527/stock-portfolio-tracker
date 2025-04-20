@@ -4,101 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>My Portfolio</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #0f0f0f;
-      color: white;
-    }
-
-    .navbar {
-      background-color: #1e1e1e;
-      padding: 10px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 2px solid #00c49f;
-    }
-
-    .logo {
-      font-size: 24px;
-      font-weight: bold;
-    }
-
-    .logo span {
-      color: #6f2cff;
-    }
-
-    .search-bar {
-      flex-grow: 1;
-      margin: 0 30px;
-      display: flex;
-      align-items: center;
-      background-color: #2a2a2a;
-      border-radius: 25px;
-      overflow: hidden;
-    }
-
-    .search-bar input {
-      padding: 10px;
-      border: none;
-      outline: none;
-      flex-grow: 1;
-      background: transparent;
-      color: white;
-    }
-
-    .search-bar button {
-      background-color: #00c49f;
-      border: none;
-      padding: 10px 15px;
-      cursor: pointer;
-      color: white;
-      font-size: 16px;
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 25px;
-      align-items: center;
-    }
-
-    .nav-links a {
-      color: white;
-      text-decoration: none;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .nav-links a.active {
-      color: #00c49f;
-    }
-
-    .nav-links .portfolio-btn {
-      background-color: #00c49f;
-      padding: 8px 14px;
-      border-radius: 6px;
-      color: black;
-    }
-
-    .mail-icon {
-      background-color: #2e3a59;
-      padding: 8px 14px;
-      border: 1px solid #6ea8ff;
-      border-radius: 25px;
-      color: white;
-    }
-
-    .content {
-      padding: 40px 20px;
-      text-align: center;
-    }
-
-    .content h1 {
-      color: #00c49f;
-    }
-  </style>
+  <link rel="stylesheet" href="/style.css">
 </head>
 <body>
 
@@ -106,7 +12,7 @@
     <div class="logo"><span>Prasham</span>finance</div>
 
     <div class="search-bar">
-      <input type="text" placeholder="Search for news, symbols or company...">
+      <input type="text" placeholder="Search for news, symbols or company..." style="background-color: white; color: black;">
       <button>🔍</button>
     </div>
 
@@ -119,25 +25,47 @@
       <a onclick="loadPage('Videos.html')">Videos</a>
       <a onclick="loadPage('Stream.html')">Streaming Now</a>
       <a class="mail-icon">📩 Mail</a>
+      <a class="signout-btn" onclick="signOut()">🚪 Sign Out</a>
     </div>
   </div>
 
   <div id="content" class="content">
-    <h1>Welcome to your Stock Portfolio!</h1>
-    <p>This is where your tracked stocks, charts, and performance will appear.</p>
+    <h2 style="color: black;">Hi, this is your portfolio</h2>
+    <p style="color: black;">This is where your tracked stocks, charts, and performance will appear.</p>
   </div>
 
   <script>
+    // Load inner pages dynamically
     function loadPage(page) {
       fetch(page)
-        .then(res => res.text())
+        .then(res => {
+          if (!res.ok) throw new Error("Page not found");
+          return res.text();
+        })
         .then(html => {
           document.getElementById("content").innerHTML = html;
+          window.scrollTo({ top: 0, behavior: "smooth" });
         })
         .catch(() => {
           document.getElementById("content").innerHTML = "<p>Error loading page.</p>";
         });
     }
+
+    // Sign out function
+    function signOut() {
+      localStorage.removeItem("token"); // Remove token
+      alert("You have been signed out.");
+      window.location.href = "index.html"; // Redirect to login
+    }
+
+    // Protect page: check if token exists, if not redirect
+    window.addEventListener("DOMContentLoaded", function () {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("You must be signed in to view this page.");
+        window.location.href = "index.html";
+      }
+    });
   </script>
 
 </body>
