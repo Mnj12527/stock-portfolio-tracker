@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stock Market Videos</title>
+  <style>
+    body {
+      background-color: #0f0f0f;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    h2 {
+      color: #00c49f;
+    }
+
+    .video {
+      margin-bottom: 30px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 20px;
+    }
+
+    iframe {
+      width: 100%;
+      max-width: 560px;
+      height: 315px;
+    }
+
+    .video-title {
+      margin-top: 10px;
+      font-size: 18px;
+      color: #6f2cff;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>📺 Live Stock Market Videos</h2>
+  <div id="videoContent"></div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const apiKey = "AIzaSyDT7bHgiIJms6vU-1UfitlBo2pD-sdo9tg"; // Your YouTube Data API key
+      const searchQuery = "stock market news";
+      const maxResults = 50;
+
+      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(searchQuery)}&type=video&maxResults=${maxResults}&key=${apiKey}`;
+
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          const container = document.getElementById("videoContent");
+          container.innerHTML = "";
+
+          data.items.forEach(item => {
+            const videoId = item.id.videoId;
+            const title = item.snippet.title;
+
+            const videoDiv = document.createElement("div");
+            videoDiv.classList.add("video");
+            videoDiv.innerHTML = `
+              <iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>
+              <div class="video-title">${title}</div>
+            `;
+            container.appendChild(videoDiv);
+          });
+        })
+        .catch(error => {
+          console.error("Failed to fetch videos:", error);
+          document.getElementById("videoContent").innerHTML = "<p>Failed to load videos.</p>";
+        });
+    });
+  </script>
+
+</body>
+</html>
