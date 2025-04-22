@@ -7,31 +7,43 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="container">
-    <h2>STOCK PORTFOLIO TRACKER</h2>
-    <div class="tabs">
-      <button id="signupBtn">Sign Up</button>
-      <button id="signinBtn" class="active">Sign In</button>
+  <div class="top-message">Control over emotions</div>
+
+  <div class="page-wrapper">
+    <div class="quote-box">
+      <h1>💼 Smart Investing Starts Here</h1>
+      <p>"The stock market is a device for transferring money from the impatient to the patient."<br><span>– Warren Buffett</span></p>
+      <p>"Invest in yourself. Your career is the engine of your wealth."<br><span>– Paul Clitheroe</span></p>
+      <p>"Every time you borrow money, you’re robbing your future self."<br><span>– Nathan W. Morris</span></p>
+      <p>"Do not save what is left after spending, but spend what is left after saving."<br><span>– Warren Buffett</span></p>
     </div>
 
-    <!-- Sign-Up Form -->
-    <form id="signUpForm" style="display: none;">
-      <input type="text" id="signup-fullName" placeholder="Full Name" required />
-      <input type="email" id="signup-email" placeholder="Email" required />
-      <input type="password" id="signup-password" placeholder="Password" required />
-      <button type="submit">Sign Up</button>
-    </form>
+    <div class="container">
+      <h2>STOCK PORTFOLIO TRACKER</h2>
+      <div class="tabs">
+        <button id="signupBtn">Sign Up</button>
+        <button id="signinBtn" class="active">Sign In</button>
+      </div>
 
-    <!-- Sign-In Form -->
-    <form id="loginForm">
-      <input type="email" id="signin-email" placeholder="Email" required />
-      <input type="password" id="signin-password" placeholder="Password" required />
-      <button type="submit">Sign In</button>
-    </form>
+      <!-- Sign-Up Form -->
+      <form id="signUpForm" style="display: none;">
+        <input type="text" id="signup-fullName" placeholder="Full Name" required />
+        <input type="email" id="signup-email" placeholder="Email" required />
+        <input type="password" id="signup-password" placeholder="Password" required />
+        <button type="submit">Sign Up</button>
+      </form>
 
-    <a href="#" class="forgot-password">Forgot Password?</a>
-    <p>Continue without signing in? <a href="#">EXPLORE</a></p>
-    <p id="output"></p>
+      <!-- Sign-In Form -->
+      <form id="loginForm">
+        <input type="email" id="signin-email" placeholder="Email" required />
+        <input type="password" id="signin-password" placeholder="Password" required />
+        <button type="submit">Sign In</button>
+      </form>
+
+      <a href="#" class="forgot-password">Forgot Password?</a>
+      <p>Continue without signing in? <a href="#">EXPLORE</a></p>
+      <p id="output"></p>
+    </div>
   </div>
 
   <script src="script.js"></script>

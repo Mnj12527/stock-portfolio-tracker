@@ -65,7 +65,6 @@ body {
   font-weight: bold;
 }
 
-
 .search-bar button {
   background-color: #247ccebb;
   border: none;
@@ -111,7 +110,7 @@ body {
 
 /* === MAIN CONTENT === */
 .content {
-  padding: 120px 20px 40px; /* Leave space for fixed navbar */
+  padding: 120px 20px 40px;
   text-align: center;
 }
 
@@ -124,11 +123,6 @@ body {
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
   text-align: center;
   width: 350px;
-
-  position: absolute;       /* allows explicit positioning */
-  top: 40%;                 /* vertical center */
-  right: 300px;              /* distance from the right edge */
-  transform: translateY(-50%); /* adjust to perfectly center vertically */
 }
 
 h2 {
@@ -274,7 +268,7 @@ p {
 
 .footer-content {
   display: flex;
-  flex-direction: column; /* Make content stack vertically */
+  flex-direction: column;
   align-items: center;
   gap: 30px;
 }
@@ -303,17 +297,74 @@ p {
   color: #aaa;
 }
 
-.footer-content {
+.footer-links,
+.footer-contact {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 40px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  text-align: center;
 }
 
-.footer-links, .footer-contact {
+/* === LOGIN PAGE LAYOUT FIX === */
+.page-wrapper {
   display: flex;
-  flex-wrap: wrap;           /* Wrap to new line on smaller screens */
   justify-content: center;
-  gap: 20px;                 /* Space between each item */
+  align-items: center;
+  padding: 100px 40px;
+  gap: 150px;
+  height: 100vh;
+  background: linear-gradient(135deg, #eef2f3, #8e9eab);
+}
+
+.quote-box {
+  background-color: #ffffffdd;
+  color: #222;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  width: 1000px;
+  height: auto;
+}
+
+.quote-box h1 {
+  font-size: 28px;
+  color: #6f2cff;
+  margin-bottom: 20px;
+}
+
+.quote-box p {
+  font-size: 16px;
+  line-height: 1.6;
+  font-style: italic;
+  margin-bottom: 10px;
+}
+
+.quote-box span {
+  display: block;
+  font-size: 14px;
+  margin-top: 5px;
+  color: #555;
+}
+
+/* fix login box in layout */
+.container {
+  position: static;
+  transform: none;
+}
+
+.top-message {
+  position: fixed;
+  top: 60px; /* adjust if you have a navbar */
+  left: 0;
+  width: 100%;
   text-align: center;
+  font-size: 22px;
+  font-weight: bold;
+  color: #6f2cff;
+  letter-spacing: 1px;
+  background-color: rgba(255, 255, 255, 0.95); /* subtle bg */
+  padding: 10px 0;
+  z-index: 999;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
