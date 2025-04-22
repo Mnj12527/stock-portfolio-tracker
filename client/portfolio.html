@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>My Portfolio</title>
   <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/portfolio.css">
 </head>
 <body>
 
@@ -17,7 +18,6 @@
     </div>
 
     <div class="nav-links">
-      <a class="portfolio-btn" onclick="loadPage('myportfolio.html')">My Portfolio</a>
       <a onclick="loadPage('News.html')">News</a>
       <a onclick="loadPage('Markets.html')">Markets</a>
       <a onclick="loadPage('Research.html')">Research</a>
@@ -29,9 +29,16 @@
     </div>
   </div>
 
-  <div id="content" class="content">
-    <h2 style="color: black;">Hi, this is your portfolio</h2>
-    <p style="color: black;">This is where your tracked stocks, charts, and performance will appear.</p>
+  <div class="watchlist-container">
+    <h3>📈 Watchlists</h3>
+    <div class="watchlist-tabs">
+      <button onclick="switchWatchlist(0)">Watchlist 1</button>
+      <button onclick="switchWatchlist(1)">Watchlist 2</button>
+      <button onclick="switchWatchlist(2)">Watchlist 3</button>
+    </div>
+    <input type="text" id="stockInput" placeholder="Add stock symbol" />
+    <button onclick="addStock()">➕ Add</button>
+    <ul id="watchlistDisplay"></ul>
   </div>
 
   <script>
@@ -53,9 +60,9 @@
 
     // Sign out function
     function signOut() {
-      localStorage.removeItem("token"); // Remove token
+      localStorage.removeItem("token");
       alert("You have been signed out.");
-      window.location.href = "index.html"; // Redirect to login
+      window.location.href = "index.html";
     }
 
     // Protect page: check if token exists, if not redirect
@@ -65,7 +72,48 @@
         alert("You must be signed in to view this page.");
         window.location.href = "index.html";
       }
+      renderWatchlist(); // Render the default watchlist on load
     });
+
+    // Watchlist logic
+    let watchlists = [[], [], []];
+    let currentWatchlist = 0;
+    
+    function switchWatchlist(index) {
+      currentWatchlist = index;
+      renderWatchlist();
+    
+      const buttons = document.querySelectorAll('.watchlist-tabs button');
+      buttons.forEach((btn, i) => {
+        btn.classList.toggle('active', i === index);
+      });
+    }
+    
+    function addStock() {
+      const input = document.getElementById('stockInput');
+      const symbol = input.value.trim().toUpperCase();
+      if (symbol && !watchlists[currentWatchlist].includes(symbol)) {
+        watchlists[currentWatchlist].push(symbol);
+        renderWatchlist();
+      }
+      input.value = '';
+    }
+    
+    function renderWatchlist() {
+      const list = document.getElementById('watchlistDisplay');
+      list.innerHTML = '';
+      watchlists[currentWatchlist].forEach(stock => {
+        const li = document.createElement('li');
+        li.textContent = stock;
+        list.appendChild(li);
+      });
+    }
+    
+    // Set default active watchlist on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      switchWatchlist(0);
+    });
+    
   </script>
 
 </body>
