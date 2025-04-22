@@ -41,6 +41,9 @@
     <ul id="watchlistDisplay"></ul>
   </div>
 
+  <!-- Placeholder for dynamically loaded content -->
+  <div id="content"></div>
+
   <script>
     // Load inner pages dynamically
     function loadPage(page) {
@@ -65,54 +68,87 @@
       window.location.href = "index.html";
     }
 
-    // Protect page: check if token exists, if not redirect
-    window.addEventListener("DOMContentLoaded", function () {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("You must be signed in to view this page.");
-        window.location.href = "index.html";
-      }
-      renderWatchlist(); // Render the default watchlist on load
-    });
-
     // Watchlist logic
     let watchlists = [[], [], []];
     let currentWatchlist = 0;
     
+    // Fetch watchlists on load
+    window.addEventListener("DOMContentLoaded", async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+    
+      const response = await fetch("http://localhost:5000/watchlists", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (data.watchlists) {
+        watchlists = data.watchlists;
+        renderWatchlist();
+      }
+    });
+    
     function switchWatchlist(index) {
       currentWatchlist = index;
       renderWatchlist();
-    
-      const buttons = document.querySelectorAll('.watchlist-tabs button');
-      buttons.forEach((btn, i) => {
-        btn.classList.toggle('active', i === index);
-      });
+      highlightActiveButton(index);
     }
     
     function addStock() {
-      const input = document.getElementById('stockInput');
+      const input = document.getElementById("stockInput");
       const symbol = input.value.trim().toUpperCase();
       if (symbol && !watchlists[currentWatchlist].includes(symbol)) {
         watchlists[currentWatchlist].push(symbol);
         renderWatchlist();
+        saveWatchlists();
       }
-      input.value = '';
+      input.value = "";
     }
     
     function renderWatchlist() {
-      const list = document.getElementById('watchlistDisplay');
-      list.innerHTML = '';
-      watchlists[currentWatchlist].forEach(stock => {
-        const li = document.createElement('li');
-        li.textContent = stock;
+      const list = document.getElementById("watchlistDisplay");
+      list.innerHTML = "";
+      watchlists[currentWatchlist].forEach((stock, index) => {
+        const li = document.createElement("li");
+        
+        // Create the stock name span
+        const stockName = document.createElement("span");
+        stockName.textContent = stock;
+        
+        // Create the delete button (minus symbol)
+        const removeBtn = document.createElement("button");
+        removeBtn.textContent = "−"; // Minus symbol
+        removeBtn.onclick = () => {
+          watchlists[currentWatchlist].splice(index, 1);
+          renderWatchlist();
+          saveWatchlists();
+        };
+        
+        // Append stock name and remove button to the list item
+        li.appendChild(stockName);
+        li.appendChild(removeBtn);
+        
         list.appendChild(li);
       });
     }
     
-    // Set default active watchlist on page load
-    window.addEventListener('DOMContentLoaded', () => {
-      switchWatchlist(0);
-    });
+    
+    function saveWatchlists() {
+      const token = localStorage.getItem("token");
+      fetch("http://localhost:5000/watchlists", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ watchlists })
+      });
+    }
+    
+    function highlightActiveButton(index) {
+      document.querySelectorAll(".watchlist-tabs button").forEach((btn, i) => {
+        btn.style.backgroundColor = i === index ? "#333" : "#6f2cff";
+      });
+    }
     
   </script>
 
