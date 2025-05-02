@@ -11,7 +11,6 @@
 
     <div class="navbar">
         <div class="logo"><span>Prasham</span>finance</div>
-
         <div class="search-bar">
             <input type="text" placeholder="Search for news, symbols or company..." style="background-color: white; color: black;">
             <button>🔍</button>
@@ -38,16 +37,14 @@
 
         // Load inner pages dynamically
         function loadPage(page) {
-            fetch(page)
+            const url = `http://localhost:5000/${page}`; // पोर्ट 5000 सह URL तयार करा
+            fetch(url)
                 .then(res => {
                     if (!res.ok) throw new Error("Page not found");
                     return res.text();
                 })
                 .then(html => {
                     document.getElementById("content").innerHTML = html;
-                    attachWatchlistListeners(); // Attach listeners after loading
-                    // renderWatchlist(); // Render will be called after fetching
-                    // highlightActiveButton(currentWatchlist); // Highlight after fetching
                     window.scrollTo({ top: 0, behavior: "smooth" });
                 })
                 .catch(() => {
@@ -58,7 +55,6 @@
         function signOut() {
             localStorage.removeItem("token");
             alert("You have been signed out.");
-            // **महत्त्वाचा बदल:** साइन आउट झाल्यावर लोकल वॉचलिस्ट रीसेट करा
             watchlists = [[], [], []];
             renderWatchlist();
             window.location.href = "index.html";
@@ -111,37 +107,10 @@
             });
         }
 
-        function attachWatchlistListeners() {
-            const watchlistTabs = document.querySelectorAll(".watchlist-tabs button");
-            const addButton = document.querySelector(".watchlist-container button");
-            const stockInput = document.getElementById("stockInput");
-            const watchlistDisplay = document.getElementById("watchlistDisplay");
-
-            watchlistTabs.forEach((button, index) => {
-                button.onclick = () => switchWatchlist(index);
-            });
-
-            if (addButton) {
-                addButton.onclick = addStock;
-            }
-
-            // Event delegation for dynamically added remove buttons
-            watchlistDisplay.addEventListener('click', function(event) {
-                if (event.target && event.target.tagName === 'BUTTON' && event.target.textContent === '−') {
-                    const listItem = event.target.parentNode;
-                    const indexToRemove = Array.from(listItem.parentNode.children).indexOf(listItem);
-                    watchlists[currentWatchlist].splice(indexToRemove, 1);
-                    renderWatchlist();
-                    saveWatchlistsToServer();
-                }
-            });
-        }
-
         // Function to fetch watchlists from the server
         async function fetchWatchlistsFromServer() {
             if (!authToken) {
                 console.log("No token found, cannot fetch watchlists.");
-                // **महत्त्वाचा बदल:** टोकन नसेल तर लोकल वॉचलिस्ट रीसेट करा
                 watchlists = [[], [], []];
                 renderWatchlist();
                 highlightActiveButton(0);
@@ -158,7 +127,6 @@
                 if (!response.ok) {
                     const error = await response.json();
                     console.error("Failed to fetch watchlists:", error.message);
-                    // **महत्त्वाचा बदल:** एरर आल्यास लोकल वॉचलिस्ट रीसेट करा
                     watchlists = [[], [], []];
                     renderWatchlist();
                     highlightActiveButton(0);
@@ -171,7 +139,6 @@
                 highlightActiveButton(currentWatchlist); // Highlight the default tab
             } catch (error) {
                 console.error("Error fetching watchlists:", error);
-                // **महत्त्वाचा बदल:** कॅच ब्लॉक मध्ये लोकल वॉचलिस्ट रीसेट करा
                 watchlists = [[], [], []];
                 renderWatchlist();
                 highlightActiveButton(0);
