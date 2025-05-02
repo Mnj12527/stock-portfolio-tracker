@@ -1,3 +1,4 @@
+portfolio.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -216,3 +217,20 @@
 
 </body>
 </html>
+
+
+////////////////////////////////////
+
+
+myportfolio.html
+<div class="watchlist-container">
+    <h3>📈 Watchlists</h3>
+    <div class="watchlist-tabs">
+        <button onclick="switchWatchlist(0)">Watchlist 1</button>
+        <button onclick="switchWatchlist(1)">Watchlist 2</button>
+        <button onclick="switchWatchlist(2)">Watchlist 3</button>
+    </div>
+    <input type="text" id="stockInput" placeholder="Add stock symbol" />
+    <button onclick="addStock()">➕ Add</button>
+    <ul id="watchlistDisplay"></ul>
+</div>

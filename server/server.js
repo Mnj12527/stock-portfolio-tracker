@@ -76,19 +76,32 @@ app.post("/signin", async (req, res) => {
 
 // Get Watchlists
 app.get("/watchlists", authenticate, async (req, res) => {
+  console.log("Getting watchlists for user ID:", req.user._id);
   res.json({ watchlists: req.user.watchlists });
 });
 
 // Update Watchlists
 app.put("/watchlists", authenticate, async (req, res) => {
   const { watchlists } = req.body;
+  console.log("Updating watchlists for user ID:", req.user._id);
+
   if (!Array.isArray(watchlists) || watchlists.length !== 3) {
+    console.error("Invalid watchlists format");
     return res.status(400).json({ message: "Invalid watchlists format" });
   }
 
-  req.user.watchlists = watchlists;
-  await req.user.save();
-  res.json({ success: true, watchlists: req.user.watchlists });
+  try {
+    // Update the user with new watchlists
+    req.user.watchlists = watchlists;
+    await req.user.save();
+
+    // Log the success and return the updated watchlists
+    console.log("Watchlists updated successfully:", req.user.watchlists);
+    res.json({ success: true, watchlists: req.user.watchlists });
+  } catch (error) {
+    console.error("Error updating watchlists:", error); // Log the error
+    res.status(500).json({ message: "Error updating watchlists" });
+  }
 });
 
 // Start Server
