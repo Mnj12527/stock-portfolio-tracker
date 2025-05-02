@@ -81,3 +81,10 @@
   border-radius: 5px;
   border: 1px solid #ddd;
 }
+
+.content-below-navbar {
+  /* नेव्हबारच्या उंचीनुसार मार्जिन टॉप सेट करा */
+  margin-top: 60px; /* उदाहरणार्थ, जर नेव्हबारची उंची 60px असेल */
+  padding: 20px;
+  /* इतर स्टाईल्स */
+}

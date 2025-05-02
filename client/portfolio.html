@@ -21,7 +21,7 @@
             <a onclick="loadPage('News.html')">News</a>
             <a onclick="loadPage('Markets.html')">Markets</a>
             <a onclick="loadPage('Research.html')">Research</a>
-            <a onclick="loadPage('Finance.html')">Personal Finance</a>
+            <a onclick="loadPage('Analysis.html')">Analysis</a>
             <a onclick="loadPage('Videos.html')">Videos</a>
             <a class="signout-btn" onclick="signOut()">🚪 Sign Out</a>
         </div>
@@ -46,6 +46,9 @@
                 .then(html => {
                     document.getElementById("content").innerHTML = html;
                     window.scrollTo({ top: 0, behavior: "smooth" });
+                    if (page === 'myportfolio.html') {
+                        fetchWatchlistsFromServer(); // फक्त myportfolio.html लोड झाल्यावर कॉल करा
+                    }
                 })
                 .catch(() => {
                     document.getElementById("content").innerHTML = "<p>Error loading page.</p>";
@@ -56,8 +59,7 @@
             localStorage.removeItem("token");
             alert("You have been signed out.");
             watchlists = [[], [], []];
-            renderWatchlist();
-            window.location.href = "index.html";
+            window.location.href = "index.html"; // renderWatchlist() कॉल काढला
         }
 
         function switchWatchlist(index) {
@@ -176,7 +178,7 @@
         // Load myportfolio.html by default and fetch watchlists
         document.addEventListener("DOMContentLoaded", () => {
             loadPage('myportfolio.html');
-            fetchWatchlistsFromServer(); // Fetch watchlists on page load
+            // fetchWatchlistsFromServer(); // आता loadPage मध्ये कॉल केला जाईल
         });
 
     </script>

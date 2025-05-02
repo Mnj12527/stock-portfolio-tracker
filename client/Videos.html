@@ -4,36 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Stock Market Videos</title>
-  <style>
-    body {
-      background-color: #0f0f0f;
-      color: white;
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
-
-    h2 {
-      color: #00c49f;
-    }
-
-    .video {
-      margin-bottom: 30px;
-      border-bottom: 1px solid #333;
-      padding-bottom: 20px;
-    }
-
-    iframe {
-      width: 100%;
-      max-width: 560px;
-      height: 315px;
-    }
-
-    .video-title {
-      margin-top: 10px;
-      font-size: 18px;
-      color: #6f2cff;
-    }
-  </style>
+  <link rel="stylesheet" href="/videos.css">
 </head>
 <body>
 
@@ -42,7 +13,7 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const apiKey = "AIzaSyDT7bHgiIJms6vU-1UfitlBo2pD-sdo9tg"; // Your YouTube Data API key
+      const apiKey = "AIzaSyDT7bHgiIJms6vU-1UfitlBo2pD-sdo9tg"; // तुमची खरी YouTube Data API की इथे टाका
       const searchQuery = "stock market news";
       const maxResults = 50;
 
@@ -58,13 +29,13 @@
             const videoId = item.id.videoId;
             const title = item.snippet.title;
 
-            const videoDiv = document.createElement("div");
-            videoDiv.classList.add("video");
-            videoDiv.innerHTML = `
+            const videoContainer = document.createElement("div");
+            videoContainer.classList.add("video-container");
+            videoContainer.innerHTML = `
               <iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>
               <div class="video-title">${title}</div>
             `;
-            container.appendChild(videoDiv);
+            container.appendChild(videoContainer);
           });
         })
         .catch(error => {

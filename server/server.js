@@ -104,21 +104,10 @@ app.put("/watchlists", authenticate, async (req, res) => {
   }
 });
 
-// Start Server
-app.listen(5000, () => console.log("Server running on http://localhost:5000"));
-
-//videos
-
-const port = 5000;
-
-// स्टॅटिक फाइल्स सर्व्ह करण्यासाठी 'client' फोल्डर वापरा
-app.use(express.static(path.join(__dirname, 'client')));
-
 // '/Videos.html' या राऊटसाठी व्हिडिओ पेज सर्व्ह करा
 app.get('/Videos.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client', 'Videos.html'));
+  res.sendFile(path.join(__dirname, '../client/Videos.html'));
 });
 
-app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
-});
+// Start Server
+app.listen(5000, () => console.log("Server running on http://localhost:5000"));
