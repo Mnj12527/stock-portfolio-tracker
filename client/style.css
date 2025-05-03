@@ -54,7 +54,7 @@ body {
   flex-grow: 1;
   background: transparent;
   color: white;
-  height: 40px; 
+  height: 40px;
 }
 
 .signout-btn {
@@ -73,7 +73,7 @@ body {
   color: white;
   font-size: 16px;
   width: 100px;
-  height: 40px;  
+  height: 40px;
 }
 
 .nav-links {
@@ -110,12 +110,12 @@ body {
 
 /* === MAIN CONTENT === */
 .content {
-  padding: 120px 20px 40px;
+  padding: 80px 20px 40px; /* Adjusted top padding */
   text-align: center;
 }
 
 /* === LOGIN/REGISTER FORM === */
-.container {
+.auth-container { /* Renamed the container class */
   background: white;
   color: black;
   padding: 20px;
@@ -348,7 +348,7 @@ p {
 }
 
 /* fix login box in layout */
-.container {
+.auth-container { /* Using the renamed class */
   position: static;
   transform: none;
 }

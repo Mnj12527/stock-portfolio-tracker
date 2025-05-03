@@ -1,51 +1,80 @@
-body {
-    background-color: #0f0f0f;
-    color: white;
-    font-family: Arial, sans-serif;
-  }
-  
-  h2 {
-    color: #00c49f;
-    text-align: center; /* व्हिडिओंच्या वरती मध्यभागी दिसेल */
-    margin-bottom: 20px;
-  }
-  
-  #videoContent {
-    display: flex;
-    flex-wrap: wrap; /* लहान स्क्रीनवर व्हिडिओ खाली येतील */
-    gap: 20px; /* व्हिडिओमधील अंतर */
-    justify-content: center; /* मोठ्या स्क्रीनवर व्हिडिओ मध्यभागी दिसतील */
-  }
-  
-  .video-container {
-    flex: 0 0 calc(33.33% - 20px); /* प्रत्येक कंटेनर जास्तीत जास्त 33% जागा घेईल (तीन व्हिडिओ per row) */
-    max-width: 560px; /* iframe ची कमाल रुंदी */
-    margin-bottom: 20px;
-    border: 1px solid #333;
-    padding: 10px;
-    box-sizing: border-box; /* पॅडिंग आणि बॉर्डरमुळे रुंदी वाढणार नाही */
-  }
-  
-  @media (max-width: 768px) {
-    .video-container {
-      flex: 0 0 calc(50% - 20px); /* दोन व्हिडिओ per row */
-    }
-  }
-  
-  @media (max-width: 480px) {
-    .video-container {
-      flex: 0 0 100%; /* एका ओळीत एकच व्हिडिओ */
-    }
-  }
-  
-  iframe {
-    width: 100%;
-    height: auto; /* उंची रुंदीनुसार ऑटोमॅटिकली एडजस्ट होईल */
-    aspect-ratio: 16 / 9; /* 16:9 aspect ratio राखण्यासाठी */
-  }
-  
-  .video-title {
-    margin-top: 10px;
-    font-size: 16px;
-    color: #6f2cff;
-  }
+/* videos.css */
+
+.video-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Responsive grid */
+  gap: 16px; /* Spacing between video items */
+  padding: 20px 0; /* Add some padding around the grid */
+}
+
+.video-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  display: flex;
+  flex-direction: column; /* Arrange thumbnail and text vertically */
+}
+
+.video-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.video-thumbnail-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9; /* Standard video aspect ratio */
+}
+
+.video-thumbnail {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.play-icon-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+  color: #fff;
+  font-size: 2em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+  text-decoration: none; /* Remove default link styling */
+}
+
+.video-thumbnail-container:hover .play-icon-overlay {
+  opacity: 1;
+}
+
+.video-details {
+  padding: 12px;
+}
+
+.video-title {
+  font-size: 1em;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8px;
+  display: block; /* Make title a block-level element */
+  text-decoration: none; /* Remove default link styling */
+}
+
+.video-title:hover {
+  color: #007bff; /* Example hover color */
+}
+
+.video-description {
+  font-size: 0.8em;
+  color: #666;
+  line-height: 1.4;
+}

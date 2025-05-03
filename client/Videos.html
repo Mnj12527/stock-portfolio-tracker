@@ -1,49 +1,137 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Stock Market Videos</title>
-  <link rel="stylesheet" href="/videos.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indian Stock Market Videos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-semibold text-blue-700 mb-6" style="color: black; text-align: center;">Indian Stock Market Videos</h1>
 
-  <h2>📺 Live Stock Market Videos</h2>
-  <div id="videoContent"></div>
+        <div class="flex flex-col sm:flex-row items-center gap-4 mb-6">
+            <input
+                type="text"
+                id="search-input"
+                placeholder="Search for videos..."
+                class="flex-grow p-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            />
+            <button
+                id="search-button"
+                class="bg-blue-500 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            >
+                Search
+            </button>
+             <div id="loading-indicator" class="hidden animate-spin text-blue-500">
+                Loading...
+            </div>
+        </div>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const apiKey = "AIzaSyDT7bHgiIJms6vU-1UfitlBo2pD-sdo9tg"; // तुमची खरी YouTube Data API की इथे टाका
-      const searchQuery = "stock market news";
-      const maxResults = 50;
+        <div id="video-container" class="video-container">
+            </div>
+        <div id="error-message" class="text-red-500 text-center mt-4 hidden">
+            </div>
+    </div>
 
-      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(searchQuery)}&type=video&maxResults=${maxResults}&key=${apiKey}`;
+    <script>
+    const videoContainer = document.getElementById('video-container');
+    const searchInput = document.getElementById('search-input');
+    const searchButton = document.getElementById('search-button');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const errorMessageDisplay = document.getElementById('error-message');
 
-      fetch(url)
-        .then(res => res.json())
-        .then(data => {
-          const container = document.getElementById("videoContent");
-          container.innerHTML = "";
+    const API_BASE_URL = 'http://localhost:5000'; // Or your server's URL
 
-          data.items.forEach(item => {
-            const videoId = item.id.videoId;
-            const title = item.snippet.title;
+    function displayErrorMessage(message) {
+        errorMessageDisplay.textContent = message;
+        errorMessageDisplay.classList.remove('hidden');
+        videoContainer.classList.add('hidden'); // hide the video container
+    }
 
-            const videoContainer = document.createElement("div");
-            videoContainer.classList.add("video-container");
-            videoContainer.innerHTML = `
-              <iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>
-              <div class="video-title">${title}</div>
+    function clearErrorMessage() {
+        errorMessageDisplay.textContent = '';
+        errorMessageDisplay.classList.add('hidden');
+        videoContainer.classList.remove('hidden'); // show the video container
+    }
+
+
+    async function fetchVideos(query) {
+        loadingIndicator.classList.remove('hidden');
+        clearErrorMessage();
+        try {
+            const response = await fetch(`${API_BASE_URL}/search?query=${query}`);
+            if (!response.ok) {
+                let message = `HTTP error! status: ${response.status}`;
+                try {
+                    const errorData = await response.json();
+                    if (errorData && errorData.error) {
+                        message += ` - ${errorData.error}`;
+                    }
+                } catch (parseError) {
+                    console.error("Error parsing error response:", parseError);
+                }
+                throw new Error(message);
+            }
+            const videos = await response.json();
+            loadingIndicator.classList.add('hidden');
+            displayVideos(videos);
+        } catch (error) {
+            loadingIndicator.classList.add('hidden');
+            console.error('Error fetching videos:', error);
+            displayErrorMessage(`Failed to fetch videos: ${error.message}. Please check your network connection and try again.`);
+        }
+    }
+
+    function displayVideos(videos) {
+        videoContainer.innerHTML = ''; // Clear previous videos
+        if (videos.length === 0) {
+            displayErrorMessage('No videos found for your search query.');
+            return;
+        }
+
+        videos.forEach(video => {
+            const videoCard = document.createElement('div');
+            videoCard.classList.add('video-card'); // Use the class from videos.css
+
+            // Construct the standard YouTube video URL
+            const youtubeUrl = `https://www.youtube.com/watch?v=${video.id}`;
+
+            videoCard.innerHTML = `
+                <div class="video-thumbnail-container">
+                    <img src="${video.thumbnail}" alt="${video.title}" class="video-thumbnail">
+                    <a href="${youtubeUrl}" target="_blank" class="play-icon-overlay">
+                        ▶
+                    </a>
+                </div>
+                <div class="video-details">
+                    <a href="${youtubeUrl}" target="_blank" class="video-title">
+                        ${video.title}
+                    </a>
+                    <p class="video-description">${video.description}</p>
+                </div>
             `;
-            container.appendChild(videoContainer);
-          });
-        })
-        .catch(error => {
-          console.error("Failed to fetch videos:", error);
-          document.getElementById("videoContent").innerHTML = "<p>Failed to load videos.</p>";
+            videoContainer.appendChild(videoCard);
         });
-    });
-  </script>
+    }
 
+    searchButton.addEventListener('click', () => {
+        const query = searchInput.value.trim();
+        if (query) {
+            fetchVideos(query);
+        } else {
+            alert('Please enter a search query.');
+        }
+    });
+
+    searchInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            searchButton.click();
+        }
+    });
+
+    // Initial load (optional - loads a default search)
+    fetchVideos('Indian stock market');
+    </script>
 </body>
 </html>

@@ -6,6 +6,46 @@
     <title>My Portfolio</title>
     <link rel="stylesheet" href="/style.css">
     <link rel="stylesheet" href="/portfolio.css">
+    <link rel="stylesheet" href="/videos.css">
+    <style>
+        /* Keep any global styles or styles specific to portfolio.html here */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        /* ... any other global or portfolio-specific styles ... */
+        .loading-indicator {
+            color: #007bff;
+            display: none; /* Hidden by default */
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            color: #dc3545;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
 
@@ -31,13 +71,106 @@
         </div>
 
     <script>
-        let watchlists = [[], [], []]; // Initialize an empty watchlist array for the current user
+        let watchlists = [[], [], []]; // Initialize an empty watchlist array
         let currentWatchlist = 0;
         let authToken = localStorage.getItem('token'); // Get the token
+        const API_BASE_URL = 'http://localhost:5000';
 
-        // Load inner pages dynamically
+        // --- Video Elements ---
+        let videoContainer;
+        let searchInput;
+        let searchButton;
+        let loadingIndicator;
+        let errorMessageDisplay;
+
+        function displayErrorMessage(message) {
+            if (errorMessageDisplay) {
+                errorMessageDisplay.textContent = message;
+                errorMessageDisplay.classList.remove('hidden');
+            }
+            if (videoContainer) {
+                videoContainer.classList.add('hidden');
+            }
+        }
+
+        function clearErrorMessage() {
+            if (errorMessageDisplay) {
+                errorMessageDisplay.textContent = '';
+                errorMessageDisplay.classList.add('hidden');
+            }
+            if (videoContainer) {
+                videoContainer.classList.remove('hidden');
+            }
+        }
+
+        async function fetchVideos(query) {
+            if (loadingIndicator) {
+                loadingIndicator.classList.remove('hidden');
+            }
+            clearErrorMessage();
+            try {
+                const response = await fetch(`${API_BASE_URL}/search?query=${query}`);
+                if (!response.ok) {
+                    let message = `HTTP error! status: ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        if (errorData && errorData.error) {
+                            message += ` - ${errorData.error}`;
+                        }
+                    } catch (parseError) {
+                        console.error("Error parsing error response:", parseError);
+                    }
+                    throw new Error(message);
+                }
+                const videos = await response.json();
+                if (loadingIndicator) {
+                    loadingIndicator.classList.add('hidden');
+                }
+                displayVideos(videos);
+            } catch (error) {
+                if (loadingIndicator) {
+                    loadingIndicator.classList.add('hidden');
+                }
+                console.error('Error fetching videos:', error);
+                displayErrorMessage(`Failed to fetch videos: ${error.message}. Please check your network connection and try again.`);
+            }
+        }
+
+        function displayVideos(videos) {
+            if (!videoContainer) return;
+            videoContainer.innerHTML = ''; // Clear previous videos
+            if (videos.length === 0) {
+                displayErrorMessage('No videos found for your search query.');
+                return;
+            }
+
+            videos.forEach(video => {
+                const videoCard = document.createElement('div');
+                videoCard.classList.add('video-card');
+
+                const youtubeUrl = `https://www.youtube.com/watch?v=${video.id}`;
+
+                videoCard.innerHTML = `
+                    <div class="video-thumbnail-container">
+                        <img src="${video.thumbnail}" alt="${video.title}" class="video-thumbnail">
+                        <a href="${youtubeUrl}" target="_blank" class="play-icon-overlay">
+                            ▶
+                        </a>
+                    </div>
+                    <div class="video-details">
+                        <a href="${youtubeUrl}" target="_blank" class="video-title">
+                            ${video.title}
+                        </a>
+                        <p class="video-description">${video.description}</p>
+                    </div>
+                `;
+                videoContainer.appendChild(videoCard);
+            });
+        }
+
+        // --- Dynamic Page Loading ---
         function loadPage(page) {
-            const url = `http://localhost:5000/${page}`; // पोर्ट 5000 सह URL तयार करा
+            const url = `http://localhost:5000/${page}`;
             fetch(url)
                 .then(res => {
                     if (!res.ok) throw new Error("Page not found");
@@ -47,7 +180,49 @@
                     document.getElementById("content").innerHTML = html;
                     window.scrollTo({ top: 0, behavior: "smooth" });
                     if (page === 'myportfolio.html') {
-                        fetchWatchlistsFromServer(); // फक्त myportfolio.html लोड झाल्यावर कॉल करा
+                        fetchWatchlistsFromServer();
+                        // Re-initialize watchlist elements if needed after loading
+                        const watchlistTabs = document.querySelector(".watchlist-tabs");
+                        const watchlistDisplay = document.getElementById("watchlistDisplay");
+                        const stockInput = document.getElementById("stockInput");
+                        const addStockButton = document.getElementById("addStockButton");
+                        if (watchlistTabs && watchlistDisplay && stockInput && addStockButton) {
+                            renderWatchlist();
+                            highlightActiveButton(currentWatchlist);
+                            // Re-attach event listeners if they were in the loaded HTML
+                            // Example:
+                            // if (addStockButton) {
+                            //     addStockButton.onclick = addStock;
+                            // }
+                        }
+                    } else if (page === 'Videos.html') {
+                        // Initialize video elements after Videos.html content is loaded
+                        videoContainer = document.getElementById('video-container');
+                        searchInput = document.getElementById('search-input');
+                        searchButton = document.getElementById('search-button');
+                        loadingIndicator = document.getElementById('loading-indicator');
+                        errorMessageDisplay = document.getElementById('error-message');
+
+                        if (videoContainer && searchInput && searchButton && loadingIndicator && errorMessageDisplay) {
+                            fetchVideos('Indian stock market'); // Initial load
+
+                            searchButton.addEventListener('click', () => {
+                                const query = searchInput.value.trim();
+                                if (query) {
+                                    fetchVideos(query);
+                                } else {
+                                    alert('Please enter a search query.');
+                                }
+                            });
+
+                            searchInput.addEventListener('keydown', (event) => {
+                                if (event.key === 'Enter') {
+                                    searchButton.click();
+                                }
+                            });
+                        } else {
+                            console.error("Video elements not found in loaded Videos.html");
+                        }
                     }
                 })
                 .catch(() => {
@@ -59,7 +234,7 @@
             localStorage.removeItem("token");
             alert("You have been signed out.");
             watchlists = [[], [], []];
-            window.location.href = "index.html"; // renderWatchlist() कॉल काढला
+            window.location.href = "index.html";
         }
 
         function switchWatchlist(index) {
@@ -81,6 +256,7 @@
 
         function renderWatchlist() {
             const list = document.getElementById("watchlistDisplay");
+            if (!list) return;
             list.innerHTML = "";
             if (watchlists[currentWatchlist].length === 0) {
                 list.innerHTML = "<p>No stocks in this watchlist.</p>";
@@ -104,12 +280,12 @@
         }
 
         function highlightActiveButton(index) {
-            document.querySelectorAll(".watchlist-tabs button").forEach((btn, i) => {
+            const buttons = document.querySelectorAll(".watchlist-tabs button");
+            buttons.forEach((btn, i) => {
                 btn.style.backgroundColor = i === index ? "#333" : "#6f2cff";
             });
         }
 
-        // Function to fetch watchlists from the server
         async function fetchWatchlistsFromServer() {
             if (!authToken) {
                 console.log("No token found, cannot fetch watchlists.");
@@ -136,7 +312,7 @@
                 }
 
                 const data = await response.json();
-                watchlists = data.watchlists; // Assign the fetched watchlist to the global array
+                watchlists = data.watchlists; // Assign the fetched watchlist
                 renderWatchlist(); // Render the fetched watchlist
                 highlightActiveButton(currentWatchlist); // Highlight the default tab
             } catch (error) {
@@ -147,7 +323,6 @@
             }
         }
 
-        // Function to save watchlists to the server
         async function saveWatchlistsToServer() {
             if (!authToken) {
                 console.log("No token found, cannot save watchlists.");
@@ -175,12 +350,9 @@
             }
         }
 
-        // Load myportfolio.html by default and fetch watchlists
         document.addEventListener("DOMContentLoaded", () => {
-            loadPage('myportfolio.html');
-            // fetchWatchlistsFromServer(); // आता loadPage मध्ये कॉल केला जाईल
+            loadPage('myportfolio.html'); // Load portfolio by default
         });
-
     </script>
 
 </body>
