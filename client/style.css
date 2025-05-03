@@ -34,7 +34,7 @@ body {
 }
 
 .logo span {
-  color: #6f2cff;
+  color: #2bc2e7;
 }
 
 .search-bar {
@@ -115,7 +115,7 @@ body {
 }
 
 /* === LOGIN/REGISTER FORM === */
-.auth-container { /* Renamed the container class */
+.login-container { /* Renamed to login-container */
   background: white;
   color: black;
   padding: 20px;
@@ -205,58 +205,6 @@ p {
   color: green;
 }
 
-/* === NEWS STYLING === */
-.news-container {
-  max-width: 900px;
-  margin: 30px auto;
-  padding: 20px;
-  background-color: #1b1b1b;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.news-container h1 {
-  text-align: center;
-  margin-bottom: 20px;
-  color: #00c49f;
-}
-
-.news-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.news-item {
-  display: flex;
-  flex-direction: row;
-  gap: 15px;
-  border-bottom: 1px solid #444;
-  padding-bottom: 15px;
-}
-
-.news-item img {
-  width: 120px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 8px;
-}
-
-.news-item .content {
-  flex: 1;
-}
-
-.news-item .content h3 {
-  margin: 0 0 5px;
-  color: #fff;
-}
-
-.news-item .content p {
-  margin: 0;
-  font-size: 0.9em;
-  color: #ccc;
-}
-
 .footer {
   background-color: #1e1e1e;
   color: #ddd;
@@ -329,7 +277,7 @@ p {
 
 .quote-box h1 {
   font-size: 28px;
-  color: #6f2cff;
+  color: #2bc2e7;
   margin-bottom: 20px;
 }
 
@@ -348,7 +296,7 @@ p {
 }
 
 /* fix login box in layout */
-.auth-container { /* Using the renamed class */
+.login-container { /* Updated to .login-container */
   position: static;
   transform: none;
 }
@@ -361,7 +309,7 @@ p {
   text-align: center;
   font-size: 22px;
   font-weight: bold;
-  color: #6f2cff;
+  color: #2bc2e7;
   letter-spacing: 1px;
   background-color: rgba(255, 255, 255, 0.95); /* subtle bg */
   padding: 10px 0;

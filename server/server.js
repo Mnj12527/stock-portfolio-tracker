@@ -156,7 +156,6 @@ const port = process.env.PORT || 5000;
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 const MAX_RESULTS = 10;
 
-console.log("YOUTUBE_API_KEY:", YOUTUBE_API_KEY); // Debug: Check if API key is loaded
 
 app.get('/search', async (req, res) => {
     const { query } = req.query;

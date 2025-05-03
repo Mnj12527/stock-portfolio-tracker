@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/style.css">
     <link rel="stylesheet" href="/portfolio.css">
     <link rel="stylesheet" href="/videos.css">
+    <link rel="stylesheet" href="/news.css">
     <style>
         /* Keep any global styles or styles specific to portfolio.html here */
         body {
@@ -223,6 +224,25 @@
                         } else {
                             console.error("Video elements not found in loaded Videos.html");
                         }
+                    }  else if (page === 'News.html') {
+                        // Load news content directly into the 'content' div
+                        const newsContainer = document.createElement('div');
+                        newsContainer.id = 'news-container';
+
+                        const loadingIndicatorElement = document.createElement('p'); // Rename to avoid shadowing
+                        loadingIndicatorElement.className = 'loading-indicator animate-spin';
+                        loadingIndicatorElement.textContent = 'Loading news...';
+                        newsContainer.appendChild(loadingIndicatorElement);
+
+                        const errorMessageDiv = document.createElement('p');
+                        errorMessageDiv.id = 'error-message';
+                        errorMessageDiv.className = 'error-message hidden';
+
+                        document.getElementById('content').innerHTML = ''; // Clear previous content
+                        document.getElementById('content').appendChild(newsContainer);
+                        document.getElementById('content').appendChild(errorMessageDiv);
+
+                        fetchStockNews(newsContainer, errorMessageDiv, loadingIndicatorElement); // Pass loadingIndicator
                     }
                 })
                 .catch(() => {
@@ -347,6 +367,52 @@
                 }
             } catch (error) {
                 console.error("Error saving watchlists:", error);
+            }
+        }
+
+        // --- News Fetching Function ---
+        async function fetchStockNews(newsContainer, errorMessageDiv, loadingIndicatorElement) {
+            // Replace with your actual NewsAPI.org API key
+            const API_KEY = '5b9dc55198084f319b1bb3d2e8ffb8dc';
+            const BASE_URL = 'https://newsapi.org/v2';
+
+            const query = 'stock market'; // Or 'financial news', or any other relevant query
+            const pageSize = '10';
+
+            const apiKeyParam = `apiKey=${API_KEY}`;
+            let apiUrl = `${BASE_URL}/everything?q=${encodeURIComponent(query)}&pageSize=${pageSize}&sortBy=publishedAt&${apiKeyParam}`;
+
+            newsContainer.innerHTML = ''; // Clear previous news
+            errorMessageDiv.classList.add('hidden');
+
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                if (data && data.articles && data.articles.length > 0) {
+                    data.articles.forEach(article => {
+                        const articleDiv = document.createElement('div');
+                        articleDiv.classList.add('article');
+                        articleDiv.innerHTML = `
+                            <h3><a href="${article.url}" target="_blank">${article.title}</a></h3>
+                            <p>${article.description || article.content || 'No description available.'}</p>
+                            <small>Published: ${new Date(article.publishedAt).toLocaleString()} Source: ${article.source.name || 'Unknown'}</small>
+                        `;
+                        newsContainer.appendChild(articleDiv);
+                    });
+                } else {
+                    newsContainer.textContent = 'No stock market news found.';
+                }
+            } catch (error) {
+                console.error('Error fetching news:', error);
+                errorMessageDiv.textContent = `Failed to load news: ${error.message}`;
+                errorMessageDiv.classList.remove('hidden');
+            } finally {
+                 if (loadingIndicatorElement) { // Check if the element exists
+                     loadingIndicatorElement.style.display = 'none'; // Hide loading indicator
+                 }
             }
         }
 
