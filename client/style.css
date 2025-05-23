@@ -29,8 +29,12 @@ body {
 }
 
 .logo {
-  font-size: 24px;
+  font-size: 30px;
   font-weight: bold;
+}
+
+.logo .finance {
+  color: rgb(255, 255, 255); /* or any color you want */
 }
 
 .logo span {

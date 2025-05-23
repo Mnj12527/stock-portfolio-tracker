@@ -51,7 +51,7 @@
 <body>
 
     <div class="navbar">
-        <div class="logo"><span>Prasham</span>finance</div>
+        <div class="logo"><span>Prasham</span><span class="finance">finance</span></div>
         <div class="search-bar">
             <input type="text" placeholder="Search for news, symbols or company..." style="background-color: white; color: black;">
             <button>🔍</button>
@@ -69,9 +69,12 @@
     </div>
 
     <div id="content" class="content-below-navbar">
-        </div>
+    </div>
 
     <script>
+        // No FMP_API_KEY here anymore. It's handled securely on the server.
+        // const FMP_BASE_URL = 'https://financialmodelingprep.com/api/v3'; // Still here for reference if direct client-side FMP calls were needed elsewhere.
+
         let watchlists = [[], [], []]; // Initialize an empty watchlist array
         let currentWatchlist = 0;
         let authToken = localStorage.getItem('token'); // Get the token
@@ -146,10 +149,10 @@
             }
 
             videos.forEach(video => {
+                const youtubeUrl = `https://www.youtube.com/watch?v=${video.id}`; // Corrected YouTube URL
+
                 const videoCard = document.createElement('div');
                 videoCard.classList.add('video-card');
-
-                const youtubeUrl = `https://www.youtube.com/watch?v=${video.id}`;
 
                 videoCard.innerHTML = `
                     <div class="video-thumbnail-container">
@@ -171,7 +174,7 @@
 
         // --- Dynamic Page Loading ---
         function loadPage(page) {
-            const url = `http://localhost:5000/${page}`;
+            const url = `${API_BASE_URL}/${page}`; // Use API_BASE_URL for pages as well
             fetch(url)
                 .then(res => {
                     if (!res.ok) throw new Error("Page not found");
@@ -181,20 +184,15 @@
                     document.getElementById("content").innerHTML = html;
                     window.scrollTo({ top: 0, behavior: "smooth" });
                     if (page === 'myportfolio.html') {
-                        fetchWatchlistsFromServer();
+                        fetchWatchlistsFromServer(); // Always fetch when portfolio page loads
                         // Re-initialize watchlist elements if needed after loading
                         const watchlistTabs = document.querySelector(".watchlist-tabs");
                         const watchlistDisplay = document.getElementById("watchlistDisplay");
                         const stockInput = document.getElementById("stockInput");
                         const addStockButton = document.getElementById("addStockButton");
                         if (watchlistTabs && watchlistDisplay && stockInput && addStockButton) {
-                            renderWatchlist();
+                            renderWatchlist(); // Will render what's in 'watchlists' array
                             highlightActiveButton(currentWatchlist);
-                            // Re-attach event listeners if they were in the loaded HTML
-                            // Example:
-                            // if (addStockButton) {
-                            //     addStockButton.onclick = addStock;
-                            // }
                         }
                     } else if (page === 'Videos.html') {
                         // Initialize video elements after Videos.html content is loaded
@@ -224,7 +222,7 @@
                         } else {
                             console.error("Video elements not found in loaded Videos.html");
                         }
-                    }  else if (page === 'News.html') {
+                    } else if (page === 'News.html') {
                         // Load news content directly into the 'content' div
                         const newsContainer = document.createElement('div');
                         newsContainer.id = 'news-container';
@@ -245,8 +243,9 @@
                         fetchStockNews(newsContainer, errorMessageDiv, loadingIndicatorElement); // Pass loadingIndicator
                     }
                 })
-                .catch(() => {
-                    document.getElementById("content").innerHTML = "<p>Error loading page.</p>";
+                .catch(error => {
+                    console.error("Error loading page:", error);
+                    document.getElementById("content").innerHTML = `<p>Error loading page: ${error.message}</p>`;
                 });
         }
 
@@ -263,39 +262,102 @@
             highlightActiveButton(index);
         }
 
-        function addStock() {
+        async function addStock() {
             const input = document.getElementById("stockInput");
             const symbol = input.value.trim().toUpperCase();
             if (symbol && !watchlists[currentWatchlist].includes(symbol)) {
+                // You could add a check here to validate if the symbol is valid via FMP API
+                // before adding it to the watchlist, e.g., by calling getStockPrice(symbol)
+                // and checking if it returns 'N/A'.
                 watchlists[currentWatchlist].push(symbol);
-                renderWatchlist();
+                await renderWatchlist(); // Await rendering to ensure prices are fetched
                 saveWatchlistsToServer(); // Save to the server
             }
             input.value = "";
         }
 
-        function renderWatchlist() {
+        async function getStockPrice(symbol) {
+            if (!symbol) { // Add a check for undefined/null symbol
+                console.warn("Attempted to fetch price for an undefined or null symbol.");
+                return 'N/A';
+            }
+            try {
+                // Fetch stock data from your backend route, which will then call FMP
+                const response = await fetch(`${API_BASE_URL}/stock-data/${symbol}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`, // Include token if the backend route requires it
+                    },
+                });
+                if (!response.ok) {
+                    // Try to parse error message if available
+                    const errorText = await response.text();
+                    console.error(`Backend error for ${symbol}: ${response.status} - ${errorText}`);
+                    throw new Error(`Failed to fetch price for ${symbol}.`);
+                }
+                const data = await response.json();
+                // FMP's /quote endpoint returns an array, so access the first element
+                if (data && data.length > 0 && data[0].price !== undefined) {
+                    return data[0].price.toFixed(2); // Format to 2 decimal places
+                } else {
+                    console.warn(`No price data found for ${symbol}`);
+                    return 'N/A';
+                }
+            } catch (error) {
+                console.error(`Error fetching price for ${symbol}:`, error);
+                return 'N/A'; // Or handle the error as you see fit
+            }
+        }
+
+        async function renderWatchlist() {
             const list = document.getElementById("watchlistDisplay");
             if (!list) return;
             list.innerHTML = "";
             if (watchlists[currentWatchlist].length === 0) {
                 list.innerHTML = "<p>No stocks in this watchlist.</p>";
             } else {
-                watchlists[currentWatchlist].forEach((stock, index) => {
+                for (const [index, stock] of watchlists[currentWatchlist].entries()) {
                     const li = document.createElement("li");
                     const stockName = document.createElement("span");
                     stockName.textContent = stock;
+
+                    const price = await getStockPrice(stock); // Fetch price
+                    const priceSpan = document.createElement("span");
+                    priceSpan.textContent = `${price}$`; // Display price with $ without "LTP:"
+                    priceSpan.classList.add('stock-price'); // New class for styling
+
+                    // Refresh Button (Unicode for a refresh arrow)
+                    const refreshBtn = document.createElement("button");
+                    refreshBtn.innerHTML = `&#x21BB;`; // Unicode for clockwise open circle arrow
+                    refreshBtn.classList.add('refresh-btn');
+                    refreshBtn.title = `Refresh price for ${stock}`; // Tooltip
+                    refreshBtn.onclick = async (event) => {
+                        event.stopPropagation(); // Prevent li click if any
+                        const updatedPrice = await getStockPrice(stock);
+                        priceSpan.textContent = `${updatedPrice}$`;
+                    };
+
+                    // Remove Button (existing minus button)
                     const removeBtn = document.createElement("button");
                     removeBtn.textContent = "−";
+                    removeBtn.classList.add('remove-btn'); // Add a class for specific styling
+                    removeBtn.title = `Remove ${stock}`; // Tooltip
                     removeBtn.onclick = () => {
                         watchlists[currentWatchlist].splice(index, 1);
                         renderWatchlist();
                         saveWatchlistsToServer(); // Save to the server
                     };
+
+                    // Create a div to group price, refresh, and remove buttons on the right
+                    const actionsDiv = document.createElement('div');
+                    actionsDiv.classList.add('stock-actions');
+                    actionsDiv.appendChild(priceSpan);
+                    actionsDiv.appendChild(refreshBtn);
+                    actionsDiv.appendChild(removeBtn);
+
                     li.appendChild(stockName);
-                    li.appendChild(removeBtn);
+                    li.appendChild(actionsDiv); // Append the grouped actions div
                     list.appendChild(li);
-                });
+                }
             }
         }
 
@@ -316,28 +378,39 @@
             }
 
             try {
-                const response = await fetch('http://localhost:5000/watchlists', {
+                const response = await fetch(`${API_BASE_URL}/watchlists`, {
                     headers: {
                         'Authorization': `Bearer ${authToken}`,
                     },
                 });
 
                 if (!response.ok) {
-                    const error = await response.json();
-                    console.error("Failed to fetch watchlists:", error.message);
-                    watchlists = [[], [], []];
+                    // Attempt to parse error if it's JSON, otherwise just log status
+                    const errorText = await response.text();
+                    let errorMessage = `Failed to fetch watchlists: HTTP status ${response.status}`;
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        errorMessage = errorJson.message || errorMessage;
+                    } catch (e) {
+                        // Not a JSON error, use the raw text
+                        errorMessage += ` - ${errorText.substring(0, 100)}...`; // Limit length
+                    }
+                    console.error("Error fetching watchlists:", errorMessage);
+                    watchlists = [[], [], []]; // Reset watchlists on error
                     renderWatchlist();
                     highlightActiveButton(0);
                     return;
                 }
 
                 const data = await response.json();
-                watchlists = data.watchlists; // Assign the fetched watchlist
+                // FIX APPLIED HERE: Directly assign data.watchlists as it already contains symbols
+                watchlists = data.watchlists;
+
                 renderWatchlist(); // Render the fetched watchlist
                 highlightActiveButton(currentWatchlist); // Highlight the default tab
             } catch (error) {
-                console.error("Error fetching watchlists:", error);
-                watchlists = [[], [], []];
+                console.error("Error fetching watchlists (network or parsing):", error);
+                watchlists = [[], [], []]; // Reset watchlists on error
                 renderWatchlist();
                 highlightActiveButton(0);
             }
@@ -350,37 +423,44 @@
             }
 
             try {
-                const response = await fetch('http://localhost:5000/watchlists', {
+                const response = await fetch(`${API_BASE_URL}/watchlists`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${authToken}`,
                     },
-                    body: JSON.stringify({ watchlists }),
+                    body: JSON.stringify({ watchlists }), // Send only symbols to the server
                 });
 
                 if (!response.ok) {
-                    const error = await response.json();
-                    console.error("Failed to save watchlists:", error.message);
+                    const errorText = await response.text();
+                    let errorMessage = `Failed to save watchlists: HTTP status ${response.status}`;
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        errorMessage = errorJson.message || errorMessage;
+                    } catch (e) {
+                        errorMessage += ` - ${errorText.substring(0, 100)}...`;
+                    }
+                    console.error("Error saving watchlists:", errorMessage);
                 } else {
                     console.log("Watchlists saved successfully.");
                 }
             } catch (error) {
-                console.error("Error saving watchlists:", error);
+                console.error("Error saving watchlists (network or parsing):", error);
             }
         }
 
         // --- News Fetching Function ---
         async function fetchStockNews(newsContainer, errorMessageDiv, loadingIndicatorElement) {
             // Replace with your actual NewsAPI.org API key
-            const API_KEY = '5b9dc55198084f319b1bb3d2e8ffb8dc';
-            const BASE_URL = 'https://newsapi.org/v2';
+            const NEWS_API_KEY = '5b9dc55198084f319b1bb3d2e8ffb8dc'; // KEEP THIS KEY AS IT IS, THIS IS A DUMMY KEY
+            const NEWS_BASE_URL = 'https://newsapi.org/v2';
 
             const query = 'stock market'; // Or 'financial news', or any other relevant query
             const pageSize = '10';
 
-            const apiKeyParam = `apiKey=${API_KEY}`;
-            let apiUrl = `${BASE_URL}/everything?q=${encodeURIComponent(query)}&pageSize=${pageSize}&sortBy=publishedAt&${apiKeyParam}`;
+            const apiKeyParam = `apiKey=${NEWS_API_KEY}`;
+            let apiUrl = `${NEWS_BASE_URL}/everything?q=${encodeURIComponent(query)}&pageSize=${pageSize}&sortBy=publishedAt&${apiKeyParam}`;
 
             newsContainer.innerHTML = ''; // Clear previous news
             errorMessageDiv.classList.add('hidden');
@@ -410,9 +490,9 @@
                 errorMessageDiv.textContent = `Failed to load news: ${error.message}`;
                 errorMessageDiv.classList.remove('hidden');
             } finally {
-                 if (loadingIndicatorElement) { // Check if the element exists
-                     loadingIndicatorElement.style.display = 'none'; // Hide loading indicator
-                 }
+                    if (loadingIndicatorElement) { // Check if the element exists
+                        loadingIndicatorElement.style.display = 'none'; // Hide loading indicator
+                    }
             }
         }
 

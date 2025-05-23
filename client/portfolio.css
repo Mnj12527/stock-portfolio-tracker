@@ -1,90 +1,132 @@
 .watchlist-container {
-  position: fixed;
-  left: 20px;
-  top: 100px;
-  width: 500px; /* ⬅️ Increased from 250px */
-  min-height: 830px; /* ⬅️ Optional: specify a taller minimum height */
-  padding: 20px;
-  background: #f8f8f8;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  z-index: 999;
+    position: fixed;
+    left: 20px;
+    top: 100px;
+    width: 500px; /* ⬅️ Increased from 250px */
+    min-height: 830px; /* ⬅️ Optional: specify a taller minimum height */
+    padding: 20px;
+    background: #f8f8f8;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    z-index: 999;
 }
 
 .watchlist-container h3 {
-  margin-bottom: 10px;
-  color: #333;
+    margin-bottom: 10px;
+    color: #333;
 }
 
 .watchlist-tabs {
-  display: flex;
-  justify-content: space-between; /* or center */
-  gap: 20px;
-  margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between; /* or center */
+    gap: 20px;
+    margin-bottom: 10px;
 }
 
 .watchlist-tabs button:hover {
-  background-color: #5a23cc;
+    background-color: #5a23cc;
 }
 
 #stockInput {
-  width: 100%;
-  padding: 6px;
-  margin: 10px 0;
-  border: 1px solid #aaa;
-  border-radius: 4px;
+    width: 100%;
+    padding: 6px;
+    margin: 10px 0;
+    border: 1px solid #aaa;
+    border-radius: 4px;
 }
 
 #watchlistDisplay {
-  list-style-type: none;
-  padding: 0;
+    list-style-type: none;
+    padding: 0;
 }
 
-/* Updated to ensure stock name is on the left, and minus button is on the right */
+/* Ensure stock name is on the left, and action buttons are on the right */
 #watchlistDisplay li {
-  display: flex;
-  justify-content: space-between; /* Ensure items are spaced between the left and right */
-  align-items: center;
-  margin: 5px 0;
-  font-size: 16px;
-  padding: 5px 0;
-  border-bottom: 1px solid #ddd;
-  color: #000;
-}
-
-/* Style for the remove button (minus symbol) */
-#watchlistDisplay button {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 20px; /* Adjust the size of the minus symbol */
-  color: #ff4d4d; /* Red color for the minus button */
-  transition: color 0.3s;
-}
-
-/* Hover effect on the minus button */
-#watchlistDisplay button:hover {
-  color: #e60000; /* Darker red on hover */
+    display: flex;
+    justify-content: space-between; /* Space items between the left and right */
+    align-items: center;
+    margin: 5px 0;
+    font-size: 16px;
+    padding: 5px 0;
+    border-bottom: 1px solid #ddd;
+    color: #000;
 }
 
 /* Style for the active button in the tabs */
 .watchlist-tabs button.active {
-  background-color: #ff9900;
-  color: black;
-  font-weight: bold;
+    background-color: #ff9900;
+    color: black;
+    font-weight: bold;
 }
 
 /* Optional: Style for the list container */
 #watchlistDisplay {
-  padding: 10px;
-  background-color: #f7f7f7; /* Light background for the list */
-  border-radius: 5px;
-  border: 1px solid #ddd;
+    padding: 10px;
+    background-color: #f7f7f7; /* Light background for the list */
+    border-radius: 5px;
+    border: 1px solid #ddd;
 }
 
+/* NEW: Container for price, refresh, and remove buttons */
+.stock-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Space between price, refresh, and minus */
+}
+
+/* NEW: Style for the Last Traded Price (LTP) */
+.stock-price {
+    font-weight: bold;
+    color: #000; /* Black color based on image */
+    white-space: nowrap; /* Prevent price from wrapping */
+}
+
+/* NEW: Style for the refresh button */
+.refresh-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 20px; /* Size of the icon */
+    color: #555; /* Grey color for icon */
+    padding: 0; /* Remove default button padding */
+    line-height: 1; /* Align icon vertically */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.3s;
+}
+
+.refresh-btn:hover {
+    color: #007bff; /* Blue on hover for example */
+}
+
+/* NEW: Style for the remove button (black circle with minus) */
+/* Specific selector to override previous #watchlistDisplay button styles */
+#watchlistDisplay .remove-btn {
+    background: black; /* Black background */
+    border: none;
+    border-radius: 50%; /* Make it a circle */
+    width: 28px; /* Width for the circle */
+    height: 28px; /* Height for the circle */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: 20px; /* Size of the minus symbol */
+    color: white; /* White color for the minus symbol */
+    padding: 0; /* Remove default button padding */
+    transition: background-color 0.3s;
+    flex-shrink: 0; /* Prevent it from shrinking */
+}
+
+#watchlistDisplay .remove-btn:hover {
+    background-color: #333; /* Darker black on hover */
+}
+
+
 .content-below-navbar {
-  /* नेव्हबारच्या उंचीनुसार मार्जिन टॉप सेट करा */
-  margin-top: 60px; /* उदाहरणार्थ, जर नेव्हबारची उंची 60px असेल */
-  padding: 20px;
-  /* इतर स्टाईल्स */
+    /* नेव्हबारच्या उंचीनुसार मार्जिन टॉप सेट करा */
+    margin-top: 60px; /* उदाहरणार्थ, जर नेव्हबारची उंची 60px असेल */
+    padding: 20px;
+    /* इतर स्टाईल्स */
 }
