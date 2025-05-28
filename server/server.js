@@ -244,10 +244,6 @@ app.get('/search', async (req, res) => {
 });
 
 
-// !!! IMPORTANT: API ROUTES MUST BE DEFINED BEFORE STATIC FILE SERVING !!!
-
-// Serve static files from client - Adjust the path based on your project structure
-// Assuming your client folder is in the project root:
 app.use(express.static(path.join(__dirname, "../client")));
 
 // Serve HTML files dynamically (make sure this is after all API routes)
