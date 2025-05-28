@@ -97,7 +97,7 @@
 }
 
 .refresh-btn:hover {
-    color: #007bff; /* Blue on hover for example */
+    color: #007bff; 
 }
 
 /* NEW: Style for the remove button (black circle with minus) */
@@ -125,8 +125,6 @@
 
 
 .content-below-navbar {
-    /* नेव्हबारच्या उंचीनुसार मार्जिन टॉप सेट करा */
-    margin-top: 60px; /* उदाहरणार्थ, जर नेव्हबारची उंची 60px असेल */
+    margin-top: 60px;
     padding: 20px;
-    /* इतर स्टाईल्स */
 }
