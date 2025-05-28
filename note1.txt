@@ -59,7 +59,6 @@ portfolio.html
         function signOut() {
             localStorage.removeItem("token");
             alert("You have been signed out.");
-            // **महत्त्वाचा बदल:** साइन आउट झाल्यावर लोकल वॉचलिस्ट रीसेट करा
             watchlists = [[], [], []];
             renderWatchlist();
             window.location.href = "index.html";
@@ -142,7 +141,6 @@ portfolio.html
         async function fetchWatchlistsFromServer() {
             if (!authToken) {
                 console.log("No token found, cannot fetch watchlists.");
-                // **महत्त्वाचा बदल:** टोकन नसेल तर लोकल वॉचलिस्ट रीसेट करा
                 watchlists = [[], [], []];
                 renderWatchlist();
                 highlightActiveButton(0);
@@ -159,7 +157,6 @@ portfolio.html
                 if (!response.ok) {
                     const error = await response.json();
                     console.error("Failed to fetch watchlists:", error.message);
-                    // **महत्त्वाचा बदल:** एरर आल्यास लोकल वॉचलिस्ट रीसेट करा
                     watchlists = [[], [], []];
                     renderWatchlist();
                     highlightActiveButton(0);
@@ -172,7 +169,6 @@ portfolio.html
                 highlightActiveButton(currentWatchlist); // Highlight the default tab
             } catch (error) {
                 console.error("Error fetching watchlists:", error);
-                // **महत्त्वाचा बदल:** कॅच ब्लॉक मध्ये लोकल वॉचलिस्ट रीसेट करा
                 watchlists = [[], [], []];
                 renderWatchlist();
                 highlightActiveButton(0);
