@@ -1,0 +1,108 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scrollable Expanded Layout</title>
+  <style>
+    /* Universal box-sizing for better layout control */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    /* *** MODIFIED: Removed height: 100% from html and body, removed overflow: hidden *** */
+    html {
+      /* Removed height: 100%; */
+      margin: 0; /* Keep margin reset for html */
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0; /* Keeps default body margin removed */
+      background-color: #f3f4f6; /* Keeps the light grey background */
+      min-height: 100vh; /* *** MODIFIED: Allows body to grow if content exceeds viewport *** */
+      display: flex;
+      flex-direction: column; /* Stacks title and main box container vertically */
+      /* Removed overflow: hidden; */
+    }
+
+    h1 {
+      font-size: 2.25rem;
+      font-weight: 700;
+      color: #1f2937;
+      text-align: center;
+      padding: 1.5rem 1rem; /* Padding for the title */
+      width: 100%; /* Ensures title takes full width */
+      background-color: #ffffff; /* Gives the title a white background */
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Small shadow for visual separation */
+      margin-bottom: 0; /* No margin below title so main box starts immediately */
+      flex-shrink: 0; /* Prevents the h1 from shrinking if space is tight */
+    }
+
+    .big-box-container {
+      width: 100%; /* Takes full available width */
+      background-color: #fff; /* White background for the main content area */
+      padding: 2rem; /* Inner padding for content */
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      margin: 0; /* Ensure no external margin */
+      
+      display: flex; /* Make it a flex container */
+      flex-direction: column; /* Stack its children (now just the grid) vertically */
+      flex-grow: 1; /* Allows it to grow and fill ALL remaining vertical space */
+    }
+
+    .boxes-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr); /* Two equal columns */
+      gap: 1.5rem; /* Space between grid items */
+      flex-grow: 1; /* Allows the grid to grow and fill available vertical space */
+    }
+
+    .box {
+      padding: 1.5rem;
+      border-radius: 0.5rem; /* Rounded corners for inner boxes */
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Shadow for inner boxes */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 25rem; /* Keeps the tall height for boxes */
+      
+      border: 2px solid #a0a0a0; /* A subtle grey border */
+    }
+
+    /* Responsiveness for smaller screens */
+    @media (max-width: 600px) {
+      .boxes-grid {
+        grid-template-columns: 1fr; /* Stack boxes vertically on small screens */
+      }
+      .big-box-container {
+        padding: 1rem; /* Reduce inner padding on small screens */
+      }
+      h1 {
+        font-size: 1.75rem; /* Adjust title size for small screens */
+        padding: 1rem 0.5rem; /* Adjust title padding for small screens */
+      }
+      .box {
+        min-height: 20rem; /* Keeps the tall height when stacked on small screens */
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Analysis makes you perfect</h1>
+
+  <div class="big-box-container">
+    <div class="boxes-grid">
+      <div class="box"></div>
+      <div class="box"></div>
+      <div class="box"></div>
+      <div class="box"></div>
+    </div>
+  </div>
+</body>
+</html>
+
+
