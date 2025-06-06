@@ -1,5 +1,5 @@
 .watchlist-container {
-    position: fixed;
+    position: fixed; /* Keep watchlist fixed on the left */
     left: 20px;
     top: 100px;
     width: 500px; /* ⬅️ Increased from 250px */
@@ -97,7 +97,7 @@
 }
 
 .refresh-btn:hover {
-    color: #007bff; 
+    color: #007bff;
 }
 
 /* NEW: Style for the remove button (black circle with minus) */
@@ -125,6 +125,75 @@
 
 
 .content-below-navbar {
-    margin-top: 60px;
+    margin-top: 80px;
     padding: 20px;
+}
+
+/* --- NEW CHART STYLES --- */
+.main-portfolio-content {
+    display: flex;
+    gap: 0px; /* Space between watchlist and chart */
+}
+
+.chart-section {
+    flex-grow: 1; /* Allow chart section to take available space */
+    margin-left: 520px; /* Offset to make space for fixed watchlist (500px width + 20px left margin + 20px gap) */
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    padding: 20px;
+    min-height: 830px; /* Ensure it has some height */
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-input-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 40px;
+}
+
+.chart-input-group #symbolInput {
+  flex-grow: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+  height: 42px; /* ⬅️ Set fixed height */
+  box-sizing: border-box;
+}
+
+.chart-input-group #loadChartBtn {
+  padding: 0 20px;
+  height: 42px; 
+  width: 100px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.chart-input-group #loadChartBtn:hover {
+  background-color: #0056b3;
+}
+
+.chart-area {
+    width: 100%;
+    height: 650px; /* 🔽 Increase this */
+    border: 1px solid #eee;
+    border-radius: 5px;
+    background-color: #ffffff;
+}
+
+#currentSymbol {
+  align-self: center;
+  margin-left: 15px;
+  font-weight: bold;
+  font-size: 18px;
+  color: #333;
+  white-space: nowrap;
 }

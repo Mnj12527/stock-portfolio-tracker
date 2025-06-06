@@ -1,3 +1,4 @@
+// server.js
 const express = require("express");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
@@ -5,7 +6,7 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
 const path = require("path");
-const axios = require('axios');
+const axios = require('axios'); // Ensure axios is required
 
 dotenv.config(); // Load .env file once at the beginning
 
@@ -104,7 +105,7 @@ app.post("/signin", async (req, res) => {
     }
 });
 
-// NEW: Endpoint to fetch single stock data from FMP
+// NEW: Endpoint to fetch single stock data from FMP (for watchlist price display)
 app.get('/stock-data/:symbol', authenticate, async (req, res) => {
     const { symbol } = req.params;
     const FMP_API_KEY = process.env.FMP_API_KEY; // Get API key from environment variables
@@ -134,10 +135,46 @@ app.get('/stock-data/:symbol', authenticate, async (req, res) => {
             console.error('Axios error headers:', error.response?.headers);
             // Specifically handle FMP 404s, etc.
             if (error.response?.status === 404) {
-                 return res.status(404).json({ message: `Stock data not found for ${symbol}.` });
+                return res.status(404).json({ message: `Stock data not found for ${symbol}.` });
             }
         }
         res.status(500).json({ message: `Failed to fetch stock data for ${symbol}.` });
+    }
+});
+
+// NEW: API endpoint to get historical price data for a symbol (for the chart)
+app.get('/api/stock-history/:symbol', authenticate, async (req, res) => {
+    const { symbol } = req.params;
+    const FMP_API_KEY = process.env.FMP_API_KEY; // Use consistent FMP_API_KEY
+
+    if (!FMP_API_KEY) {
+        console.error("FMP_API_KEY not set in environment variables for historical data.");
+        return res.status(500).json({ error: 'Server API key not configured.' });
+    }
+
+    try {
+        // Fetch historical data for a year
+        const url = `https://financialmodelingprep.com/api/v3/historical-price-full/${symbol}?serietype=line&apikey=${FMP_API_KEY}`;
+        const response = await axios.get(url);
+
+        if (!response.data.historical || response.data.historical.length === 0) {
+            return res.status(404).json({ error: 'No historical data found for this symbol.' });
+        }
+
+        // Convert data for Lightweight Charts: [{time: 'YYYY-MM-DD', value: closePrice}, ...]
+        const data = response.data.historical.map(day => ({
+            time: day.date,
+            value: day.close,
+        }));
+
+        res.json(data.reverse()); // Reverse so oldest data comes first, as required by Lightweight Charts
+    } catch (err) {
+        console.error(`Error fetching historical stock data for ${symbol}:`, err.message);
+        if (axios.isAxiosError(err)) {
+            console.error('Axios error response data:', err.response?.data);
+            console.error('Axios error status:', err.response?.status);
+        }
+        res.status(500).json({ error: 'Failed to fetch historical stock data from API.' });
     }
 });
 
@@ -244,9 +281,10 @@ app.get('/search', async (req, res) => {
 });
 
 
+// Serve static files (ensure this is placed after all API routes)
 app.use(express.static(path.join(__dirname, "../client")));
 
-// Serve HTML files dynamically (make sure this is after all API routes)
+// Serve HTML files dynamically (make sure this is after all API routes and static serving)
 app.get('/:pageName.html', (req, res) => {
     const { pageName } = req.params;
     const filePath = path.join(__dirname, `../client/${pageName}.html`);

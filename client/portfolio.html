@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/portfolio.css">
     <link rel="stylesheet" href="/videos.css">
     <link rel="stylesheet" href="/news.css">
+    <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
     <style>
         /* Keep any global styles or styles specific to portfolio.html here */
         body {
@@ -84,6 +85,12 @@
         let loadingIndicator;
         let errorMessageDisplay;
 
+        // --- Chart Elements and Initialization ---
+        let stockChart; // Variable to hold the LightweightCharts instance
+        let stockLineSeries; // Variable to hold the chart's line series
+        let symbolInput; // Chart symbol input
+        let loadChartBtn; // Chart load button
+
         function displayErrorMessage(message) {
             if (errorMessageDisplay) {
                 errorMessageDisplay.textContent = message;
@@ -146,7 +153,7 @@
             }
 
             videos.forEach(video => {
-                const youtubeUrl = `https://www.youtube.com/watch?v=${video.id}`; // Corrected YouTube URL
+                const youtubeUrl = `https://www.youtube.com/watch?v=${video.id}`; // Corrected YouTube URL for embedding/linking
 
                 const videoCard = document.createElement('div');
                 videoCard.classList.add('video-card');
@@ -191,6 +198,71 @@
                             renderWatchlist(); // Will render what's in 'watchlists' array
                             highlightActiveButton(currentWatchlist);
                         }
+
+                        // NEW: Initialize chart elements after myportfolio.html content is loaded
+                        const stockChartContainer = document.getElementById('stockChartContainer');
+                        symbolInput = document.getElementById('symbolInput');
+                        loadChartBtn = document.getElementById('loadChartBtn');
+
+                        if (stockChartContainer && symbolInput && loadChartBtn) {
+                            // Destroy existing chart instance if it exists to prevent duplicates
+                            if (stockChart) {
+                                stockChart.remove();
+                            }
+                            stockChart = LightweightCharts.createChart(stockChartContainer, {
+                                width: stockChartContainer.clientWidth, // Use container width
+                                height: 650,
+                                layout: {
+                                    background: { color: '#ffffff' }, // Set background to white
+                                    textColor: '#333', // Set text color to dark gray
+                                },
+                                grid: {
+                                    vertLines: { color: '#e0e0e0' }, // Lighter grid lines
+                                    horzLines: { color: '#e0e0e0' },
+                                },
+                                crosshair: {
+                                    mode: LightweightCharts.CrosshairMode.Normal,
+                                },
+                                rightPriceScale: {
+                                    borderColor: '#e0e0e0',
+                                },
+                                timeScale: {
+                                    borderColor: '#e0e0e0',
+                                    timeVisible: true,
+                                    secondsVisible: false,
+                                },
+                            });
+                            stockLineSeries = stockChart.addLineSeries({
+                                color: '#2bc2e7', // A nice blue for the line
+                                lineWidth: 2,
+                            });
+
+                            // Add event listener for the chart load button
+                            loadChartBtn.onclick = () => {
+                                const symbol = symbolInput.value.trim().toUpperCase();
+                                if (symbol) {
+                                    fetchStockChartData(symbol);
+                                } else {
+                                    alert('Please enter a stock symbol to load the chart.');
+                                }
+                            };
+
+                            // Optional: Load a default chart on page load
+                            fetchStockChartData('AAPL'); // Load Apple's chart by default
+
+                            // Adjust chart size on window resize
+                            const resizeChart = () => {
+                                if (stockChartContainer) {
+                                    stockChart.resize(stockChartContainer.clientWidth, 400);
+                                }
+                            };
+                            window.removeEventListener('resize', resizeChart); // Prevent multiple listeners
+                            window.addEventListener('resize', resizeChart);
+
+                        } else {
+                            console.error("Chart elements not found after loading myportfolio.html");
+                        }
+
                     } else if (page === 'Videos.html') {
                         // Initialize video elements after Videos.html content is loaded
                         videoContainer = document.getElementById('video-container');
@@ -324,7 +396,7 @@
 
                     // Refresh Button (Unicode for a refresh arrow)
                     const refreshBtn = document.createElement("button");
-                    refreshBtn.innerHTML = `&#x21BB;`; // Unicode for clockwise open circle arrow
+                    refreshBtn.innerHTML = `↻`; // Unicode for clockwise open circle arrow
                     refreshBtn.classList.add('refresh-btn');
                     refreshBtn.title = `Refresh price for ${stock}`; // Tooltip
                     refreshBtn.onclick = async (event) => {
@@ -446,6 +518,52 @@
                 console.error("Error saving watchlists (network or parsing):", error);
             }
         }
+
+        // NEW: Function to fetch stock chart data
+async function fetchStockChartData(symbol) {
+    try {
+        const stockChartContainer = document.getElementById('stockChartContainer');
+        if (!stockChartContainer) {
+            console.error("Chart container not found.");
+            return;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/stock-history/${symbol}`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+            },
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `Failed to fetch chart data for ${symbol}.`);
+        }
+
+        const data = await response.json();
+
+        if (stockLineSeries) {
+            stockLineSeries.setData(data);
+        } else {
+            console.warn("stockLineSeries not initialized yet.");
+        }
+
+        // ✅ Update symbol label beside Load button
+        document.getElementById('currentSymbol').textContent = `📊 ${symbol}`;
+        
+    } catch (err) {
+        console.error('Error loading chart:', err);
+        alert('Error loading chart: ' + err.message);
+
+        if (stockLineSeries) {
+            stockLineSeries.setData([]);
+        }
+
+        // ❌ Clear symbol label on error
+        document.getElementById('currentSymbol').textContent = '';
+    }
+}
+
+
 
         // --- News Fetching Function ---
         async function fetchStockNews(newsContainer, errorMessageDiv, loadingIndicatorElement) {
