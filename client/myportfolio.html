@@ -8,7 +8,19 @@
         </div>
         <input type="text" id="stockInput" placeholder="Add stock symbol" />
         <button id="addStockButton" onclick="addStock()">➕ Add</button>
-        <ul id="watchlistDisplay"></ul>
+        <table id="watchlistTable">
+             <thead>
+                 <tr>
+                     <th>Symbol</th>
+                     <th>LTP</th>
+                    <th>Change</th>
+                     <th>% Change</th>
+                     <th>Actions</th>
+                    </tr>
+                 </thead>
+             <tbody id="watchlistDisplay">
+              </tbody>
+         </table>
     </div>
 
     <div class="chart-section">
@@ -19,5 +31,6 @@
             <span id="currentSymbol" style="align-self: center; margin-left: 15px; font-weight: bold; font-size: 18px; color: #333;"></span>
         </div>
         <div id="stockChartContainer" class="chart-area"></div>
+        <p id="chartLoadingIndicator" class="loading-indicator hidden" style="margin-top: 10px;">Loading chart data...</p>
     </div>
 </div>

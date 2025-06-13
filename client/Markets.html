@@ -1,314 +1,522 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Financial Dashboard - Indices, Forex & Commodities</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-    background: #f9f9f9;
-    color: #333;
-  }
-  h2 {
-    text-align: center;
-    margin-top: 40px;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-  }
-  th, td {
-    padding: 8px 12px;
-    border: 1px solid #ccc;
-    text-align: center;
-  }
-  th {
-    background: #eee;
-  }
-  .up {
-    color: green;
-  }
-  .down {
-    color: red;
-  }
-  .chart-cell {
-    width: 150px;
-  }
-  canvas {
-    display: block;
-    margin: 0 auto;
-  }
-  #refresh-btn {
-    display: block;
-    margin: 20px auto;
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Financial Dashboard - Indices, Forex & Commodities</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f9f9f9;
+      color: #333;
+    }
+
+    h2 {
+      text-align: center;
+      margin-top: 40px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      border-radius: 8px;
+      /* Added for consistency */
+      overflow: hidden;
+      /* Ensures border-radius applies to children */
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      /* Added for consistency */
+    }
+
+    th,
+    td {
+      padding: 12px 15px;
+      /* Increased padding */
+      border: 1px solid #e0e0e0;
+      /* Lighter border */
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    th {
+      background: #f0f0f0;
+      /* Slightly darker header */
+      font-weight: bold;
+      color: #555;
+    }
+
+    tr:nth-child(even) {
+      /* Zebra striping */
+      background-color: #f6f6f6;
+    }
+
+    .up {
+      color: #28a745;
+      /* Green for positive change */
+      font-weight: bold;
+    }
+
+    .down {
+      color: #dc3545;
+      /* Red for negative change */
+      font-weight: bold;
+    }
+
+    .chart-cell {
+      width: 180px;
+      /* Increased width for chart cell */
+      height: 60px;
+      /* Set a fixed height for canvas */
+    }
+
+    canvas {
+      display: block;
+      margin: 0 auto;
+      width: 100% !important;
+      /* Ensure canvas fills its container */
+      height: 100% !important;
+    }
+
+    #refresh-btn {
+      display: block;
+      margin: 30px auto 20px auto;
+      /* More margin around the button */
+      padding: 12px 25px;
+      /* Larger button */
+      font-size: 17px;
+      cursor: pointer;
+      background-color: #6f2cff;
+      /* Purple background */
+      color: white;
+      border: none;
+      border-radius: 6px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    #refresh-btn:hover {
+      background-color: #5a23d9;
+      transform: translateY(-2px);
+    }
+
+    .loading-message,
+    .error-indicator {
+      text-align: center;
+      padding: 15px;
+      font-size: 1.1em;
+    }
+
+    .loading-message {
+      color: #007bff;
+    }
+
+    .error-indicator {
+      color: #dc3545;
+    }
+  </style>
 </head>
+
 <body>
 
-<h1 style="text-align:center;">Financial Dashboard</h1>
+  <h1 style="text-align:center; color: #333; margin-bottom: 30px;">Financial Dashboard</h1>
 
-<button id="refresh-btn">Refresh Data</button>
+  <button id="refresh-btn">Refresh Data</button>
 
-<section>
-  <h2>World Indices</h2>
-  <table id="indices-table">
-    <thead>
-      <tr>
-        <th>Index</th>
-        <th>Price</th>
-        <th>Change</th>
-        <th>Change %</th>
-        <th>Trend</th>
-      </tr>
-    </thead>
-    <tbody id="indices-body">
-      <tr><td colspan="5">Loading...</td></tr>
-    </tbody>
-  </table>
-</section>
+  <section>
+      <h2>World Indices</h2>
+      <table id="indices-table">
+          <thead>
+              <tr>
+                  <th>Index</th>
+                  <th>Price</th>
+                  <th>Change</th>
+                  <th>Change %</th>
+                  <th>Trend</th>
+                </tr>
+            </thead>
+          <tbody id="indices-body">
+              <tr>
+          <td colspan="5" class="loading-message">Loading World Indices...</td>
+        </tr>
+            </tbody>
+        </table>
+  </section>
 
-<section>
-  <h2>Forex Rates</h2>
-  <table id="forex-table">
-    <thead>
-      <tr>
-        <th>Pair</th>
-        <th>Price</th>
-        <th>Change</th>
-        <th>Change %</th>
-        <th>Trend</th>
-      </tr>
-    </thead>
-    <tbody id="forex-body">
-      <tr><td colspan="5">Loading...</td></tr>
-    </tbody>
-  </table>
-</section>
+  <section>
+      <h2>Forex Rates</h2>
+      <table id="forex-table">
+          <thead>
+              <tr>
+                  <th>Pair</th>
+                  <th>Price</th>
+                  <th>Change</th>
+                  <th>Change %</th>
+                  <th>Trend</th>
+                </tr>
+            </thead>
+          <tbody id="forex-body">
+              <tr>
+          <td colspan="5" class="loading-message">Loading Forex Rates...</td>
+        </tr>
+            </tbody>
+        </table>
+  </section>
 
-<section>
-  <h2>Commodities</h2>
-  <table id="commodities-table">
-    <thead>
-      <tr>
-        <th>Commodity</th>
-        <th>Price (USD)</th>
-        <th>Change</th>
-        <th>Change %</th>
-        <th>Trend</th>
-      </tr>
-    </thead>
-    <tbody id="commodities-body">
-      <tr><td colspan="5">Loading...</td></tr>
-    </tbody>
-  </table>
-</section>
+  <section>
+      <h2>Commodities</h2>
+      <table id="commodities-table">
+          <thead>
+              <tr>
+                  <th>Commodity</th>
+                  <th>Price (USD)</th>
+                  <th>Change</th>
+                  <th>Change %</th>
+                  <th>Trend</th>
+                </tr>
+            </thead>
+          <tbody id="commodities-body">
+              <tr>
+          <td colspan="5" class="loading-message">Loading Commodities...</td>
+        </tr>
+            </tbody>
+        </table>
+  </section>
 
-<!-- Chart.js CDN -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<script>
-const apiKey = "a027a03f3baa42d2a31a50ba5509c726";
+  <script>
+    // API_BASE_URL and authToken are expected to be defined in the parent portfolio.html script
+    // Example (for standalone testing, would be removed in actual integration):
+    // const API_BASE_URL = 'http://localhost:5000';
+    // let authToken = localStorage.getItem('token') || 'dummy-token-for-testing'; 
 
-const indices = {
-  "S&P 500": "SPX",
-  "Dow Jones": "DJI",
-  "NASDAQ 100": "NDX",
-  "FTSE 100": "UKX",
-  "DAX": "DAX",
-  "Nikkei 225": "N225",
-  "Hang Seng": "HSI",
-  "Nifty 50": "NSEI",
-  "Sensex": "BSESN"
-};
+    const indices = {
+      "S&P 500": "SPX",
+      "Dow Jones": "DJI",
+      "NASDAQ 100": "NDX",
+      "FTSE 100": "UKX",
+      "DAX": "DAX",
+      "Nikkei 225": "N225",
+      "Hang Seng": "HSI",
+      "Nifty 50": "NSEI",
+      "Sensex": "BSESN"
+    };
 
-const forex = {
-  "USD/INR": "USD/INR",
-  "EUR/INR": "EUR/INR"
-};
+    const forex = {
+      "USD/INR": "USD/INR",
+      "EUR/INR": "EUR/INR"
+    };
 
-const commodities = {
-  "Gold": "XAU/USD",
-  "Silver": "XAG/USD",
-  "Crude Oil": "WTI"
-};
+    const commodities = {
+      "Gold": "XAU/USD",
+      "Silver": "XAG/USD",
+      "Crude Oil": "WTI"
+    };
 
-const charts = {};
+    const charts = {}; // To store Chart.js instances
 
-async function fetchQuote(symbol) {
-  const url = `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(symbol)}&apikey=${apiKey}`;
-  const res = await fetch(url);
-  return await res.json();
-}
-
-async function fetchTimeSeries(symbol) {
-  const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=1min&outputsize=30&apikey=${apiKey}`;
-  const res = await fetch(url);
-  return await res.json();
-}
-
-function createRow(name, price, change, changePercent, canvasId) {
-  const changeClass = parseFloat(change) >= 0 ? "up" : "down";
-  return `
-    <tr>
-      <td>${name}</td>
-      <td>${price}</td>
-      <td class="${changeClass}">${change}</td>
-      <td class="${changeClass}">${changePercent}%</td>
-      <td class="chart-cell"><canvas id="${canvasId}" width="150" height="50"></canvas></td>
-    </tr>
-  `;
-}
-
-function createOrUpdateChart(id, labels, data, color) {
-  if (charts[id]) {
-    charts[id].data.labels = labels;
-    charts[id].data.datasets[0].data = data;
-    charts[id].update();
-  } else {
-    const ctx = document.getElementById(id).getContext('2d');
-    charts[id] = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [{
-          data,
-          borderColor: color,
-          backgroundColor: color + '44',
-          fill: true,
-          tension: 0.3,
-          pointRadius: 0
-        }]
-      },
-      options: {
-        responsive: false,
-        animation: false,
-        scales: {
-          x: { display: false },
-          y: { display: false }
-        },
-        plugins: {
-          legend: { display: false }
-        },
-        elements: { line: { borderWidth: 2 } }
+    /**
+     * Fetches quote data for a given symbol from the backend proxy.
+     * @param {string} symbol - The financial symbol.
+     * @returns {Promise<Object>} The quote data.
+     */
+    async function fetchQuote(symbol) {
+      if (!API_BASE_URL || !authToken) {
+        console.error("API_BASE_URL or authToken is not defined for fetchQuote.");
+        throw new Error("Authentication details missing for quote fetch.");
       }
+      const url = `${API_BASE_URL}/api/twelvedata/quote/${encodeURIComponent(symbol)}`;
+      const headers = { 'Authorization': `Bearer ${authToken}` };
+
+      const res = await fetch(url, { headers });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || `Failed to fetch quote for ${symbol}: HTTP status ${res.status}`);
+      }
+      return await res.json();
+    }
+
+    /**
+     * Fetches time series data for a given symbol from the backend proxy.
+     * @param {string} symbol - The financial symbol.
+     * @returns {Promise<Object>} The time series data.
+     */
+    async function fetchTimeSeries(symbol) {
+      if (!API_BASE_URL || !authToken) {
+        console.error("API_BASE_URL or authToken is not defined for fetchTimeSeries.");
+        throw new Error("Authentication details missing for time series fetch.");
+      }
+      const url = `${API_BASE_URL}/api/twelvedata/time_series/${encodeURIComponent(symbol)}`;
+      const headers = { 'Authorization': `Bearer ${authToken}` };
+
+      const res = await fetch(url, { headers });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || `Failed to fetch time series for ${symbol}: HTTP status ${res.status}`);
+      }
+      return await res.json();
+    }
+
+    /**
+     * Creates an HTML table row for a financial instrument.
+     * @param {string} name - The display name of the instrument.
+     * @param {string} price - The current price.
+     * @param {string} change - The absolute change.
+     * @param {string} changePercent - The percentage change.
+     * @param {string} canvasId - The ID for the canvas element for the trend chart.
+     * @returns {string} The HTML string for the table row.
+     */
+    function createRow(name, price, change, changePercent, canvasId) {
+      const changeClass = parseFloat(change) >= 0 ? "up" : "down";
+      const changeSign = parseFloat(change) >= 0 ? "+" : ""; // Add '+' for positive changes
+      return `
+    <tr>
+      <td>${name}</td>
+      <td>${price}</td>
+      <td class="${changeClass}">${changeSign}${change}</td>
+      <td class="${changeClass}">${changeSign}${changePercent}%</td>
+      <td class="chart-cell"><canvas id="${canvasId}" width="180" height="60"></canvas></td>
+    </tr>
+  `;
+    }
+
+    /**
+     * Creates or updates a Chart.js trend chart in a given canvas.
+     * @param {string} id - The ID of the canvas element.
+     * @param {Array<string>} labels - X-axis labels (usually time).
+     * @param {Array<number>} data - Y-axis data (price values).
+     * @param {string} color - The color for the chart line.
+     */
+    function createOrUpdateChart(id, labels, data, color) {
+      const ctx = document.getElementById(id);
+      if (!ctx) {
+        console.warn(`Canvas element with ID '${id}' not found for chart.`);
+        return;
+      }
+      const chartInstance = charts[id];
+
+      if (chartInstance) {
+        chartInstance.data.labels = labels;
+        chartInstance.data.datasets[0].data = data;
+        chartInstance.data.datasets[0].borderColor = color; // Update color if change state changes
+        chartInstance.data.datasets[0].backgroundColor = color + '44';
+        chartInstance.update();
+      } else {
+        charts[id] = new Chart(ctx.getContext('2d'), {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              data,
+              borderColor: color,
+              backgroundColor: color + '44',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 0
+            }]
+          },
+          options: {
+            responsive: false, // Managed by explicit width/height
+            animation: {
+              duration: 0 // Disable animation for quick updates
+            },
+            scales: {
+              x: { display: false },
+              y: { display: false }
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: { enabled: false } // Disable tooltips for sparkline
+            },
+            elements: { line: { borderWidth: 2 } },
+            maintainAspectRatio: false // Important for fixed canvas size
+          }
+        });
+      }
+    }
+
+    /**
+     * Updates the World Indices table with fresh data.
+     */
+    async function updateIndices() {
+      const tbody = document.getElementById("indices-body");
+      tbody.innerHTML = `<tr><td colspan="5" class="loading-message">Loading World Indices...</td></tr>`; // Show loading
+
+      try {
+        const rowsHtml = [];
+        for (const [name, symbol] of Object.entries(indices)) {
+          try {
+            const quote = await fetchQuote(symbol);
+            if (!quote || quote.status === 'error' || !quote.close) { // Check quote.status from Twelve Data
+              rowsHtml.push(`<tr><td>${name}</td><td colspan="4" class="error-indicator">No data / Invalid symbol</td></tr>`);
+              continue;
+            }
+
+            const price = parseFloat(quote.close).toFixed(2);
+            const change = parseFloat(quote.change).toFixed(2);
+            const changePercent = parseFloat(quote.percent_change).toFixed(2);
+            const canvasId = `chart-indices-${symbol}`;
+
+            rowsHtml.push(createRow(name, price, change, changePercent, canvasId));
+
+            const ts = await fetchTimeSeries(symbol);
+            if (!ts || ts.status === 'error' || !ts.values || ts.values.length === 0) {
+              // Chart cannot be drawn, but don't stop the whole row from rendering
+              console.warn(`No time series data for ${name} (${symbol})`);
+              // You could update the existing row to indicate no chart if needed
+              // For now, it will just not draw a chart in that cell.
+              continue;
+            }
+            const labels = ts.values.map(v => v.datetime.split(" ")[1]);
+            const data = ts.values.map(v => parseFloat(v.close));
+
+            createOrUpdateChart(canvasId, labels.reverse(), data.reverse(), change >= 0 ? "green" : "red");
+          } catch (e) {
+            console.error(`Error processing ${name} (${symbol}):`, e);
+            rowsHtml.push(`<tr><td>${name}</td><td colspan="4" class="error-indicator">Fetch error: ${e.message.substring(0, 50)}...</td></tr>`); // Display brief error
+          }
+        }
+        tbody.innerHTML = rowsHtml.join(''); // Update tbody once
+      } catch (error) {
+        console.error("Global error updating indices:", error);
+        tbody.innerHTML = `<tr><td colspan="5" class="error-indicator">Failed to load indices: ${error.message}</td></tr>`;
+      }
+    }
+
+    /**
+     * Updates the Forex Rates table with fresh data.
+     */
+    async function updateForex() {
+      const tbody = document.getElementById("forex-body");
+      tbody.innerHTML = `<tr><td colspan="5" class="loading-message">Loading Forex Rates...</td></tr>`;
+
+      try {
+        const rowsHtml = [];
+        for (const [name, symbol] of Object.entries(forex)) {
+          try {
+            const quote = await fetchQuote(symbol);
+            if (!quote || quote.status === 'error' || !quote.close) {
+              rowsHtml.push(`<tr><td>${name}</td><td colspan="4" class="error-indicator">No data / Invalid symbol</td></tr>`);
+              continue;
+            }
+
+            const price = parseFloat(quote.close).toFixed(4);
+            const change = parseFloat(quote.change).toFixed(4);
+            const changePercent = parseFloat(quote.percent_change).toFixed(2);
+            const canvasId = `chart-forex-${symbol.replace("/", "")}`;
+
+            rowsHtml.push(createRow(name, price, change, changePercent, canvasId));
+
+            const ts = await fetchTimeSeries(symbol);
+            if (!ts || ts.status === 'error' || !ts.values || ts.values.length === 0) {
+              console.warn(`No time series data for ${name} (${symbol})`);
+              continue;
+            }
+            const labels = ts.values.map(v => v.datetime.split(" ")[1]);
+            const data = ts.values.map(v => parseFloat(v.close));
+
+            createOrUpdateChart(canvasId, labels.reverse(), data.reverse(), change >= 0 ? "green" : "red");
+          } catch (e) {
+            console.error(`Error processing ${name} (${symbol}):`, e);
+            rowsHtml.push(`<tr><td>${name}</td><td colspan="4" class="error-indicator">Fetch error: ${e.message.substring(0, 50)}...</td></tr>`);
+          }
+        }
+        tbody.innerHTML = rowsHtml.join('');
+      } catch (error) {
+        console.error("Global error updating forex:", error);
+        tbody.innerHTML = `<tr><td colspan="5" class="error-indicator">Failed to load forex rates: ${error.message}</td></tr>`;
+      }
+    }
+
+    /**
+     * Updates the Commodities table with fresh data.
+     */
+    async function updateCommodities() {
+      const tbody = document.getElementById("commodities-body");
+      tbody.innerHTML = `<tr><td colspan="5" class="loading-message">Loading Commodities...</td></tr>`;
+
+      try {
+        const rowsHtml = [];
+        for (const [name, symbol] of Object.entries(commodities)) {
+          try {
+            const quote = await fetchQuote(symbol);
+            if (!quote || quote.status === 'error' || !quote.close) {
+              rowsHtml.push(`<tr><td>${name}</td><td colspan="4" class="error-indicator">No data / Invalid symbol</td></tr>`);
+              continue;
+            }
+
+            const price = parseFloat(quote.close).toFixed(2);
+            const change = parseFloat(quote.change).toFixed(2);
+            const changePercent = parseFloat(quote.percent_change).toFixed(2);
+            const canvasId = `chart-commodities-${symbol.replace("/", "")}`;
+
+            rowsHtml.push(createRow(name, price, change, changePercent, canvasId));
+
+            const ts = await fetchTimeSeries(symbol);
+            if (!ts || ts.status === 'error' || !ts.values || ts.values.length === 0) {
+              console.warn(`No time series data for ${name} (${symbol})`);
+              continue;
+            }
+            const labels = ts.values.map(v => v.datetime.split(" ")[1]);
+            const data = ts.values.map(v => parseFloat(v.close));
+
+            createOrUpdateChart(canvasId, labels.reverse(), data.reverse(), change >= 0 ? "green" : "red");
+          } catch (e) {
+            console.error(`Error processing ${name} (${symbol}):`, e);
+            rowsHtml.push(`<tr><td>${name}</td><td colspan="4" class="error-indicator">Fetch error: ${e.message.substring(0, 50)}...</td></tr>`);
+          }
+        }
+        tbody.innerHTML = rowsHtml.join('');
+      } catch (error) {
+        console.error("Global error updating commodities:", error);
+        tbody.innerHTML = `<tr><td colspan="5" class="error-indicator">Failed to load commodities: ${error.message}</td></tr>`;
+      }
+    }
+
+    /**
+     * Updates all financial tables and charts.
+     */
+    async function updateAll() {
+      // Ensure existing charts are destroyed before re-creating
+      for (const chartId in charts) {
+        if (charts[chartId]) {
+          charts[chartId].destroy();
+          delete charts[chartId];
+        }
+      }
+
+      // Show loading messages immediately
+      document.getElementById("indices-body").innerHTML = `<tr><td colspan="5" class="loading-message">Loading World Indices...</td></tr>`;
+      document.getElementById("forex-body").innerHTML = `<tr><td colspan="5" class="loading-message">Loading Forex Rates...</td></tr>`;
+      document.getElementById("commodities-body").innerHTML = `<tr><td colspan="5" class="loading-message">Loading Commodities...</td></tr>`;
+
+      // Run all updates concurrently
+      await Promise.all([
+        updateIndices(),
+        updateForex(),
+        updateCommodities()
+      ]).catch(error => {
+        console.error("One or more update functions failed:", error);
+        // Specific error messages are already handled per section, 
+        // but this catch can log any unhandled promise rejections.
+      });
+    }
+
+    // Event listener for Refresh button
+    document.getElementById("refresh-btn").addEventListener("click", () => {
+      updateAll();
     });
-  }
-}
 
-async function updateIndices() {
-  const tbody = document.getElementById("indices-body");
-  tbody.innerHTML = "";
-  for (const [name, symbol] of Object.entries(indices)) {
-    try {
-      const quote = await fetchQuote(symbol);
-      if (!quote || quote.code || !quote.close) {
-        tbody.innerHTML += `<tr><td>${name}</td><td colspan="4">No data</td></tr>`;
-        continue;
-      }
-
-      const price = parseFloat(quote.close).toFixed(2);
-      const change = parseFloat(quote.change).toFixed(2);
-      const changePercent = parseFloat(quote.percent_change).toFixed(2);
-      const canvasId = `chart-indices-${symbol}`;
-
-      tbody.innerHTML += createRow(name, price, change, changePercent, canvasId);
-
-      const ts = await fetchTimeSeries(symbol);
-      if (!ts.values) continue;
-      const labels = ts.values.map(v => v.datetime.split(" ")[1]);
-      const data = ts.values.map(v => parseFloat(v.close));
-
-      createOrUpdateChart(canvasId, labels.reverse(), data.reverse(), change >= 0 ? "green" : "red");
-    } catch (e) {
-      tbody.innerHTML += `<tr><td>${name}</td><td colspan="4">Fetch error</td></tr>`;
-    }
-  }
-}
-
-async function updateForex() {
-  const tbody = document.getElementById("forex-body");
-  tbody.innerHTML = "";
-  for (const [name, symbol] of Object.entries(forex)) {
-    try {
-      const quote = await fetchQuote(symbol);
-      if (!quote || quote.code || !quote.close) {
-        tbody.innerHTML += `<tr><td>${name}</td><td colspan="4">No data</td></tr>`;
-        continue;
-      }
-
-      const price = parseFloat(quote.close).toFixed(4);
-      const change = parseFloat(quote.change).toFixed(4);
-      const changePercent = parseFloat(quote.percent_change).toFixed(2);
-      const canvasId = `chart-forex-${symbol.replace("/", "")}`;
-
-      tbody.innerHTML += createRow(name, price, change, changePercent, canvasId);
-
-      const ts = await fetchTimeSeries(symbol);
-      if (!ts.values) continue;
-      const labels = ts.values.map(v => v.datetime.split(" ")[1]);
-      const data = ts.values.map(v => parseFloat(v.close));
-
-      createOrUpdateChart(canvasId, labels.reverse(), data.reverse(), change >= 0 ? "green" : "red");
-    } catch (e) {
-      tbody.innerHTML += `<tr><td>${name}</td><td colspan="4">Fetch error</td></tr>`;
-    }
-  }
-}
-
-async function updateCommodities() {
-  const tbody = document.getElementById("commodities-body");
-  tbody.innerHTML = "";
-  for (const [name, symbol] of Object.entries(commodities)) {
-    try {
-      const quote = await fetchQuote(symbol);
-      if (!quote || quote.code || !quote.close) {
-        tbody.innerHTML += `<tr><td>${name}</td><td colspan="4">No data</td></tr>`;
-        continue;
-      }
-
-      const price = parseFloat(quote.close).toFixed(2);
-      const change = parseFloat(quote.change).toFixed(2);
-      const changePercent = parseFloat(quote.percent_change).toFixed(2);
-      const canvasId = `chart-commodities-${symbol.replace("/", "")}`;
-
-      tbody.innerHTML += createRow(name, price, change, changePercent, canvasId);
-
-      const ts = await fetchTimeSeries(symbol);
-      if (!ts.values) continue;
-      const labels = ts.values.map(v => v.datetime.split(" ")[1]);
-      const data = ts.values.map(v => parseFloat(v.close));
-
-      createOrUpdateChart(canvasId, labels.reverse(), data.reverse(), change >= 0 ? "green" : "red");
-    } catch (e) {
-      tbody.innerHTML += `<tr><td>${name}</td><td colspan="4">Fetch error</td></tr>`;
-    }
-  }
-}
-
-async function updateAll() {
-  // Show loading while fetching
-  document.getElementById("indices-body").innerHTML = `<tr><td colspan="5">Loading...</td></tr>`;
-  document.getElementById("forex-body").innerHTML = `<tr><td colspan="5">Loading...</td></tr>`;
-  document.getElementById("commodities-body").innerHTML = `<tr><td colspan="5">Loading...</td></tr>`;
-
-  await Promise.all([updateIndices(), updateForex(), updateCommodities()]);
-}
-
-// Event listener for Refresh button
-document.getElementById("refresh-btn").addEventListener("click", () => {
-  updateAll();
-});
-
-// Initial load
-updateAll();
-
-</script>
+    // Initial load when the DOM for markets.html content is ready
+    document.addEventListener("DOMContentLoaded", () => {
+      // This DOMContentLoaded fires AFTER markets.html is inserted into portfolio.html's #content
+      // So, global variables from portfolio.html are already available.
+      updateAll();
+    });
+  </script>
 </body>
+
 </html>

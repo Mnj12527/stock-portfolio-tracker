@@ -18,16 +18,22 @@ const PORT = process.env.PORT || 5000;
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("MongoDB Connected"))
-    .catch(err => console.error(err));
+    .catch(err => console.error("MongoDB connection error:", err)); // More descriptive error
 
 // User schema with watchlists
 const UserSchema = new mongoose.Schema({
-    username: String,
-    email: String,
-    password: String,
+    username: { type: String, required: true, unique: true }, // Added validation
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
     watchlists: {
         type: [[String]],
-        default: [[], [], []]
+        default: [[], [], []],
+        validate: { // Basic validation for watchlist structure
+            validator: function(v) {
+                return v.length === 3 && v.every(Array.isArray);
+            },
+            message: props => `${props.value} is not a valid watchlist format! Expected a 2D array with 3 inner arrays.`
+        }
     }
 });
 const User = mongoose.model("User", UserSchema);
@@ -50,7 +56,11 @@ const authenticate = async (req, res, next) => {
         next();
     } catch (err) {
         console.error("Authentication error:", err);
-        res.status(401).json({ message: "Invalid token" });
+        // Distinguish between token expiration and other errors
+        if (err.name === 'TokenExpiredError') {
+            return res.status(401).json({ message: "Token expired. Please log in again." });
+        }
+        res.status(401).json({ message: "Invalid token." });
     }
 };
 
@@ -61,11 +71,11 @@ app.post("/signup", async (req, res) => {
     if (!username || !email || !password) {
         return res.status(400).json({ message: "Please provide all required fields." });
     }
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-        return res.status(400).json({ message: "User with this email already exists." });
-    }
     try {
+        const existingUser = await User.findOne({ $or: [{ email }, { username }] }); // Check both email and username
+        if (existingUser) {
+            return res.status(400).json({ message: "User with this email or username already exists." });
+        }
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = new User({ username, email, password: hashedPassword });
         await newUser.save();
@@ -103,41 +113,45 @@ app.post("/signin", async (req, res) => {
 // Endpoint to fetch single stock data from FMP (for watchlist price display)
 app.get('/stock-data/:symbol', authenticate, async (req, res) => {
     const { symbol } = req.params;
-    const FMP_API_KEY = process.env.FMP_API_KEY;
+    const FMP_API_KEY = process.env.FMP_API_KEY; // Use consistent key name
 
     if (!FMP_API_KEY) {
         console.error("FMP_API_KEY not set in environment variables.");
-        return res.status(500).json({ message: "Server API key not configured." });
+        return res.status(500).json({ message: "Server API key not configured for FMP." });
     }
     if (!symbol) {
         return res.status(400).json({ message: "Stock symbol is required." });
     }
 
     try {
-        // FIXED: Correct template literal interpolation for FMP_API_KEY
         const response = await axios.get(`https://financialmodelingprep.com/api/v3/quote/${symbol}?apikey=${FMP_API_KEY}`);
         if (response.data && response.data.length > 0) {
             res.json(response.data);
         } else {
-            res.status(404).json({ message: "Stock data not found for symbol." });
+            // FMP returns empty array for invalid symbols, so this is a valid 404 case
+            res.status(404).json({ message: "Stock data not found for symbol or invalid symbol." });
         }
     } catch (error) {
         console.error(`Error fetching stock data for ${symbol}:`, error.message);
         if (axios.isAxiosError(error)) {
             console.error('Axios error response data:', error.response?.data);
             console.error('Axios error status:', error.response?.status);
-            if (error.response?.status === 404) {
-                return res.status(404).json({ message: `Stock data not found for ${symbol}.` });
+            // Propagate specific FMP API errors if relevant (e.g., rate limits)
+            if (error.response?.status === 401) { // Unauthorized with FMP key
+                return res.status(500).json({ message: "FMP API key invalid or expired on server." });
+            }
+            if (error.response?.status === 403) { // Forbidden / Rate limit
+                return res.status(429).json({ message: "FMP API rate limit reached or access forbidden." });
             }
         }
-        res.status(500).json({ message: `Failed to fetch stock data for ${symbol}.` });
+        res.status(500).json({ message: `Failed to fetch stock data for ${symbol} from external API.` });
     }
 });
 
 // API endpoint to get historical price data for a symbol (for the chart)
 app.get('/api/stock-history/:symbol', authenticate, async (req, res) => {
     const { symbol } = req.params;
-    const FMP_API_KEY = process.env.FMP_API_KEY;
+    const FMP_API_KEY = process.env.FMP_API_KEY; // Use consistent key name
 
     if (!FMP_API_KEY) {
         console.error("FMP_API_KEY not set in environment variables for historical data.");
@@ -145,7 +159,6 @@ app.get('/api/stock-history/:symbol', authenticate, async (req, res) => {
     }
 
     try {
-        // FIXED: Correct template literal interpolation for FMP_API_KEY
         const url = `https://financialmodelingprep.com/api/v3/historical-price-full/${symbol}?serietype=line&apikey=${FMP_API_KEY}`;
         const response = await axios.get(url);
 
@@ -158,12 +171,21 @@ app.get('/api/stock-history/:symbol', authenticate, async (req, res) => {
             value: day.close,
         }));
 
-        res.json(data.reverse());
+        res.json(data.reverse()); // Ensure chronological order for chart
     } catch (err) {
         console.error(`Error fetching historical stock data for ${symbol}:`, err.message);
         if (axios.isAxiosError(err)) {
             console.error('Axios error response data:', err.response?.data);
             console.error('Axios error status:', err.response?.status);
+            if (err.response?.status === 401) {
+                return res.status(500).json({ error: "FMP API key invalid or expired for historical data." });
+            }
+            if (err.response?.status === 403) {
+                return res.status(429).json({ error: "FMP API rate limit reached for historical data." });
+            }
+            if (err.response?.status === 400) { // Often for invalid symbol in FMP
+                return res.status(400).json({ error: "Invalid symbol or request for historical data." });
+            }
         }
         res.status(500).json({ error: 'Failed to fetch historical stock data from API.' });
     }
@@ -171,7 +193,7 @@ app.get('/api/stock-history/:symbol', authenticate, async (req, res) => {
 
 // API route to get sector performance data
 app.get('/api/sector-performance', async (req, res) => { // NOTE: Not authenticated in your original code
-    const FMP_API_KEY = process.env.FMP_API_KEY;
+    const FMP_API_KEY = process.env.FMP_API_KEY; // Use consistent key name
 
     if (!FMP_API_KEY) {
         console.error("FMP_API_KEY missing in .env for /api/sector-performance");
@@ -179,13 +201,19 @@ app.get('/api/sector-performance', async (req, res) => { // NOTE: Not authentica
     }
 
     try {
-        // Correct template literal interpolation for FMP_API_KEY
-        const url = `https://financialmodelingprep.com/api/v3/stock/sectors-performance?apikey=${FMP_API_KEY}`;
+        const url = `https://financialmodelingprep.com/api/v3/sectors-performance?apikey=${FMP_API_KEY}`; // Corrected endpoint if needed, usually just `/sectors-performance`
         const response = await axios.get(url);
 
-        if (response.data && response.data.sectorPerformance) {
+        // FMP's sector performance sometimes returns an array directly, sometimes nested.
+        // Adjust based on actual FMP response structure for your endpoint.
+        // Assuming it's an array of objects directly now, or inside a 'sectorPerformance' key.
+        if (response.data && Array.isArray(response.data)) { // If it's an array directly
+             res.json({ sectorPerformance: response.data });
+        } else if (response.data && response.data.sectorPerformance && Array.isArray(response.data.sectorPerformance)) {
             res.json({ sectorPerformance: response.data.sectorPerformance });
-        } else {
+        }
+         else {
+            console.warn("Unexpected FMP response structure for sector performance:", response.data);
             res.status(500).json({ message: "Invalid response from FMP API for sector performance" });
         }
     } catch (error) {
@@ -193,6 +221,12 @@ app.get('/api/sector-performance', async (req, res) => { // NOTE: Not authentica
         if (axios.isAxiosError(error)) {
             console.error('Axios error response data for sector performance:', error.response?.data);
             console.error('Axios error status for sector performance:', error.response?.status);
+            if (error.response?.status === 401) {
+                return res.status(500).json({ message: "FMP API key invalid or expired for sector performance." });
+            }
+            if (error.response?.status === 403) {
+                return res.status(429).json({ message: "FMP API rate limit reached for sector performance." });
+            }
         }
         res.status(500).json({ message: "Failed to fetch sector performance" });
     }
@@ -220,7 +254,7 @@ app.put("/watchlists", authenticate, async (req, res) => {
     const { watchlists } = req.body;
     console.log("Updating watchlists for user ID:", req.user._id);
     if (!Array.isArray(watchlists) || watchlists.length !== 3 || !watchlists.every(Array.isArray)) {
-        console.error("Invalid watchlists format");
+        console.error("Invalid watchlists format received from client.");
         return res.status(400).json({ message: "Invalid watchlists format. Expected a 2D array with 3 inner arrays." });
     }
     try {
@@ -300,6 +334,12 @@ app.get('/search', async (req, res) => {
         if (axios.isAxiosError(error)) {
             console.error('Axios error response data:', error.response?.data);
             console.error('Axios error status:', error.response?.status);
+            if (error.response?.status === 400 && error.response.data.error?.message.includes("API key not valid")) {
+                return res.status(401).json({ error: "YouTube API key is invalid or has insufficient permissions." });
+            }
+            if (error.response?.status === 403 && error.response.data.error?.message.includes("quotaExceeded")) {
+                return res.status(429).json({ error: "YouTube API daily quota exceeded." });
+            }
         }
         res.status(500).json({ error: 'Failed to fetch videos from YouTube.' });
     }
@@ -316,15 +356,24 @@ app.get('/api/twelvedata/quote/:symbol', authenticate, async (req, res) => {
     }
 
     try {
-        // FIXED: Correct template literal interpolation for TWELVEDATA_API_KEY
         const url = `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(symbol)}&apikey=${TWELVEDATA_API_KEY}`;
         const response = await axios.get(url);
+        // Twelve Data often returns a specific status or message for invalid symbols
+        if (response.data.status === 'error') {
+            return res.status(400).json({ message: response.data.message || `Invalid symbol: ${symbol}` });
+        }
         res.json(response.data);
     } catch (error) {
         console.error(`Error fetching Twelve Data quote for ${symbol}:`, error.message);
         if (axios.isAxiosError(error)) {
             console.error('Axios error response data:', error.response?.data);
             console.error('Axios error status:', error.response?.status);
+            if (error.response?.status === 401) {
+                 return res.status(500).json({ message: "Twelve Data API key invalid or expired." });
+            }
+             if (error.response?.status === 429) {
+                 return res.status(429).json({ message: "Twelve Data API rate limit reached." });
+            }
         }
         res.status(500).json({ message: `Failed to fetch quote data for ${symbol}.` });
     }
@@ -340,15 +389,23 @@ app.get('/api/twelvedata/time_series/:symbol', authenticate, async (req, res) =>
     }
 
     try {
-        // FIXED: Correct template literal interpolation for TWELVEDATA_API_KEY
         const url = `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=1min&outputsize=30&apikey=${TWELVEDATA_API_KEY}`;
         const response = await axios.get(url);
+        if (response.data.status === 'error') {
+            return res.status(400).json({ message: response.data.message || `Invalid symbol: ${symbol}` });
+        }
         res.json(response.data);
     } catch (error) {
         console.error(`Error fetching Twelve Data time series for ${symbol}:`, error.message);
         if (axios.isAxiosError(error)) {
             console.error('Axios error response data:', error.response?.data);
             console.error('Axios error status:', error.response?.status);
+            if (error.response?.status === 401) {
+                 return res.status(500).json({ message: "Twelve Data API key invalid or expired." });
+            }
+             if (error.response?.status === 429) {
+                 return res.status(429).json({ message: "Twelve Data API rate limit reached." });
+            }
         }
         res.status(500).json({ message: `Failed to fetch time series data for ${symbol}.` });
     }
@@ -356,9 +413,10 @@ app.get('/api/twelvedata/time_series/:symbol', authenticate, async (req, res) =>
 
 
 // --- Static File Serving (ensure this is placed after all API routes) ---
+// Serve static assets from the 'client' directory
 app.use(express.static(path.join(__dirname, "../client")));
 
-// Catch-all for HTML files (optional, but good for direct URL access)
+// Catch-all for HTML files (optional, but good for direct URL access, e.g., /Markets.html)
 app.get('/:pageName.html', (req, res) => {
     const { pageName } = req.params;
     const filePath = path.join(__dirname, `../client/${pageName}.html`);
@@ -366,14 +424,15 @@ app.get('/:pageName.html', (req, res) => {
     res.sendFile(filePath, (err) => {
         if (err) {
             console.error(`Error serving ${pageName}.html:`, err);
-            res.status(404).send('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Error</title></head><body><pre>Page Not Found</pre></body></html>');
+            // More user-friendly 404 page
+            res.status(404).send('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>404 Not Found</title><style>body { font-family: sans-serif; text-align: center; margin-top: 50px; } h1 { color: #dc3545; }</style></head><body><h1>404 Page Not Found</h1><p>The page you requested could not be found.</p><a href="/">Go to Home</a></body></html>');
         }
     });
 });
 
-// Root route for the main page (if you have one, e.g., index.html)
+// Root route for the main page (e.g., when accessing http://localhost:5000/)
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/index.html'));
+    res.sendFile(path.join(__dirname, '../client/index.html')); // Assuming your login/entry point is index.html
 });
 
 app.listen(PORT, () => {
