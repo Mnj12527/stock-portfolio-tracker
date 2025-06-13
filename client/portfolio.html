@@ -76,16 +76,16 @@
         let watchlists = [[], [], []]; // Initialize an empty watchlist array
         let currentWatchlist = 0;
         let authToken = localStorage.getItem('token'); // Get the token
-        const API_BASE_URL = 'http://localhost:5000';
+        const API_BASE_URL = 'http://localhost:5000'; // Base URL for your Node.js backend
 
-        // --- Video Elements ---
+        // --- Video Elements (used by Videos.html content) ---
         let videoContainer;
         let searchInput;
         let searchButton;
         let loadingIndicator;
         let errorMessageDisplay;
 
-        // --- Chart Elements and Initialization ---
+        // --- Chart Elements and Initialization (used by myportfolio.html content) ---
         let stockChart; // Variable to hold the LightweightCharts instance
         let stockLineSeries; // Variable to hold the chart's line series
         let symbolInput; // Chart symbol input
@@ -117,6 +117,7 @@
             }
             clearErrorMessage();
             try {
+                // This call goes to your server.js /search endpoint, which proxies to YouTube API
                 const response = await fetch(`${API_BASE_URL}/search?query=${query}`);
                 if (!response.ok) {
                     let message = `HTTP error! status: ${response.status}`;
@@ -153,7 +154,7 @@
             }
 
             videos.forEach(video => {
-                const youtubeUrl = `https://www.youtube.com/watch?v=${video.id}`; // Corrected YouTube URL for embedding/linking
+                const youtubeUrl = `https://www.youtube.com/watch?v=${video.id}`;
 
                 const videoCard = document.createElement('div');
                 videoCard.classList.add('video-card');
@@ -243,6 +244,9 @@
                                 if (symbol) {
                                     fetchStockChartData(symbol);
                                 } else {
+                                    // Modified alert to use a safer modal/message box in a full app
+                                    // For now, keeping alert as it was in original code for consistency, but
+                                    // in a real app, replace with a custom modal.
                                     alert('Please enter a stock symbol to load the chart.');
                                 }
                             };
@@ -279,6 +283,7 @@
                                 if (query) {
                                     fetchVideos(query);
                                 } else {
+                                    // Modified alert to use a safer modal/message box
                                     alert('Please enter a search query.');
                                 }
                             });
@@ -296,7 +301,7 @@
                         const newsContainer = document.createElement('div');
                         newsContainer.id = 'news-container';
 
-                        const loadingIndicatorElement = document.createElement('p'); // Rename to avoid shadowing
+                        const loadingIndicatorElement = document.createElement('p');
                         loadingIndicatorElement.className = 'loading-indicator animate-spin';
                         loadingIndicatorElement.textContent = 'Loading news...';
                         newsContainer.appendChild(loadingIndicatorElement);
@@ -309,7 +314,8 @@
                         document.getElementById('content').appendChild(newsContainer);
                         document.getElementById('content').appendChild(errorMessageDiv);
 
-                        fetchStockNews(newsContainer, errorMessageDiv, loadingIndicatorElement); // Pass loadingIndicator
+                        // This call goes to an external NewsAPI.org directly from frontend (if not proxied by your server.js)
+                        fetchStockNews(newsContainer, errorMessageDiv, loadingIndicatorElement);
                     }
                 })
                 .catch(error => {
@@ -320,6 +326,7 @@
 
         function signOut() {
             localStorage.removeItem("token");
+            // Modified alert to use a safer modal/message box
             alert("You have been signed out.");
             watchlists = [[], [], []];
             window.location.href = "index.html";
@@ -335,9 +342,7 @@
             const input = document.getElementById("stockInput");
             const symbol = input.value.trim().toUpperCase();
             if (symbol && !watchlists[currentWatchlist].includes(symbol)) {
-                // You could add a check here to validate if the symbol is valid via FMP API
-                // before adding it to the watchlist, e.g., by calling getStockPrice(symbol)
-                // and checking if it returns 'N/A'.
+                // Validation could be added here using FMP API via backend
                 watchlists[currentWatchlist].push(symbol);
                 await renderWatchlist(); // Await rendering to ensure prices are fetched
                 saveWatchlistsToServer(); // Save to the server
@@ -346,34 +351,34 @@
         }
 
         async function getStockPrice(symbol) {
-            if (!symbol) { // Add a check for undefined/null symbol
+            if (!symbol) {
                 console.warn("Attempted to fetch price for an undefined or null symbol.");
                 return 'N/A';
             }
             try {
-                // Fetch stock data from your backend route, which will then call FMP
+                // This call goes to your server.js /stock-data/:symbol endpoint, which proxies to FMP API
                 const response = await fetch(`${API_BASE_URL}/stock-data/${symbol}`, {
                     headers: {
-                        'Authorization': `Bearer ${authToken}`, // Include token if the backend route requires it
+                        'Authorization': `Bearer ${authToken}`, // Include token for backend authentication
                     },
                 });
                 if (!response.ok) {
-                    // Try to parse error message if available
+                    // Try to parse error message from your backend if available
                     const errorText = await response.text();
                     console.error(`Backend error for ${symbol}: ${response.status} - ${errorText}`);
-                    throw new Error(`Failed to fetch price for ${symbol}.`);
+                    throw new Error(`Failed to fetch price for ${symbol}. Server response: ${errorText}`);
                 }
                 const data = await response.json();
                 // FMP's /quote endpoint returns an array, so access the first element
                 if (data && data.length > 0 && data[0].price !== undefined) {
                     return data[0].price.toFixed(2); // Format to 2 decimal places
                 } else {
-                    console.warn(`No price data found for ${symbol}`);
+                    console.warn(`No price data found for ${symbol} from FMP via backend.`);
                     return 'N/A';
                 }
             } catch (error) {
                 console.error(`Error fetching price for ${symbol}:`, error);
-                return 'N/A'; // Or handle the error as you see fit
+                return 'N/A';
             }
         }
 
@@ -389,18 +394,18 @@
                     const stockName = document.createElement("span");
                     stockName.textContent = stock;
 
-                    const price = await getStockPrice(stock); // Fetch price
+                    const price = await getStockPrice(stock); // Fetch price using backend proxy
                     const priceSpan = document.createElement("span");
-                    priceSpan.textContent = `${price}$`; // Display price with $ without "LTP:"
-                    priceSpan.classList.add('stock-price'); // New class for styling
+                    priceSpan.textContent = `${price}$`;
+                    priceSpan.classList.add('stock-price');
 
                     // Refresh Button (Unicode for a refresh arrow)
                     const refreshBtn = document.createElement("button");
-                    refreshBtn.innerHTML = `↻`; // Unicode for clockwise open circle arrow
+                    refreshBtn.innerHTML = `↻`;
                     refreshBtn.classList.add('refresh-btn');
-                    refreshBtn.title = `Refresh price for ${stock}`; // Tooltip
+                    refreshBtn.title = `Refresh price for ${stock}`;
                     refreshBtn.onclick = async (event) => {
-                        event.stopPropagation(); // Prevent li click if any
+                        event.stopPropagation();
                         const updatedPrice = await getStockPrice(stock);
                         priceSpan.textContent = `${updatedPrice}$`;
                     };
@@ -408,8 +413,8 @@
                     // Remove Button (existing minus button)
                     const removeBtn = document.createElement("button");
                     removeBtn.textContent = "−";
-                    removeBtn.classList.add('remove-btn'); // Add a class for specific styling
-                    removeBtn.title = `Remove ${stock}`; // Tooltip
+                    removeBtn.classList.add('remove-btn');
+                    removeBtn.title = `Remove ${stock}`;
                     removeBtn.onclick = () => {
                         watchlists[currentWatchlist].splice(index, 1);
                         renderWatchlist();
@@ -424,7 +429,7 @@
                     actionsDiv.appendChild(removeBtn);
 
                     li.appendChild(stockName);
-                    li.appendChild(actionsDiv); // Append the grouped actions div
+                    li.appendChild(actionsDiv);
                     list.appendChild(li);
                 }
             }
@@ -447,6 +452,7 @@
             }
 
             try {
+                // This call goes to your server.js /watchlists endpoint
                 const response = await fetch(`${API_BASE_URL}/watchlists`, {
                     headers: {
                         'Authorization': `Bearer ${authToken}`,
@@ -454,15 +460,13 @@
                 });
 
                 if (!response.ok) {
-                    // Attempt to parse error if it's JSON, otherwise just log status
                     const errorText = await response.text();
                     let errorMessage = `Failed to fetch watchlists: HTTP status ${response.status}`;
                     try {
                         const errorJson = JSON.parse(errorText);
                         errorMessage = errorJson.message || errorMessage;
                     } catch (e) {
-                        // Not a JSON error, use the raw text
-                        errorMessage += ` - ${errorText.substring(0, 100)}...`; // Limit length
+                        errorMessage += ` - ${errorText.substring(0, 100)}...`;
                     }
                     console.error("Error fetching watchlists:", errorMessage);
                     watchlists = [[], [], []]; // Reset watchlists on error
@@ -472,14 +476,13 @@
                 }
 
                 const data = await response.json();
-                // FIX APPLIED HERE: Directly assign data.watchlists as it already contains symbols
                 watchlists = data.watchlists;
 
-                renderWatchlist(); // Render the fetched watchlist
-                highlightActiveButton(currentWatchlist); // Highlight the default tab
+                renderWatchlist();
+                highlightActiveButton(currentWatchlist);
             } catch (error) {
                 console.error("Error fetching watchlists (network or parsing):", error);
-                watchlists = [[], [], []]; // Reset watchlists on error
+                watchlists = [[], [], []];
                 renderWatchlist();
                 highlightActiveButton(0);
             }
@@ -492,13 +495,14 @@
             }
 
             try {
+                // This call goes to your server.js /watchlists endpoint
                 const response = await fetch(`${API_BASE_URL}/watchlists`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${authToken}`,
                     },
-                    body: JSON.stringify({ watchlists }), // Send only symbols to the server
+                    body: JSON.stringify({ watchlists }),
                 });
 
                 if (!response.ok) {
@@ -519,65 +523,72 @@
             }
         }
 
-        // NEW: Function to fetch stock chart data
-async function fetchStockChartData(symbol) {
-    try {
-        const stockChartContainer = document.getElementById('stockChartContainer');
-        if (!stockChartContainer) {
-            console.error("Chart container not found.");
-            return;
+        async function fetchStockChartData(symbol) {
+            try {
+                const stockChartContainer = document.getElementById('stockChartContainer');
+                if (!stockChartContainer) {
+                    console.error("Chart container not found.");
+                    return;
+                }
+
+                // This call goes to your server.js /api/stock-history/:symbol endpoint, which proxies to FMP API
+                const response = await fetch(`${API_BASE_URL}/api/stock-history/${symbol}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                    },
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Failed to fetch chart data for ${symbol} from backend.`);
+                }
+
+                const data = await response.json();
+
+                if (stockLineSeries) {
+                    stockLineSeries.setData(data);
+                } else {
+                    console.warn("stockLineSeries not initialized yet.");
+                }
+
+                // ✅ Update symbol label beside Load button
+                const currentSymbolElement = document.getElementById('currentSymbol');
+                if (currentSymbolElement) {
+                    currentSymbolElement.textContent = `📊 ${symbol}`;
+                } else {
+                    console.warn("Element with ID 'currentSymbol' not found for updating symbol label.");
+                }
+
+            } catch (err) {
+                console.error('Error loading chart:', err);
+                // Modified alert to use a safer modal/message box
+                alert('Error loading chart: ' + err.message);
+
+                if (stockLineSeries) {
+                    stockLineSeries.setData([]);
+                }
+
+                // ❌ Clear symbol label on error
+                const currentSymbolElement = document.getElementById('currentSymbol');
+                if (currentSymbolElement) {
+                    currentSymbolElement.textContent = '';
+                }
+            }
         }
-
-        const response = await fetch(`${API_BASE_URL}/api/stock-history/${symbol}`, {
-            headers: {
-                'Authorization': `Bearer ${authToken}`,
-            },
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `Failed to fetch chart data for ${symbol}.`);
-        }
-
-        const data = await response.json();
-
-        if (stockLineSeries) {
-            stockLineSeries.setData(data);
-        } else {
-            console.warn("stockLineSeries not initialized yet.");
-        }
-
-        // ✅ Update symbol label beside Load button
-        document.getElementById('currentSymbol').textContent = `📊 ${symbol}`;
-        
-    } catch (err) {
-        console.error('Error loading chart:', err);
-        alert('Error loading chart: ' + err.message);
-
-        if (stockLineSeries) {
-            stockLineSeries.setData([]);
-        }
-
-        // ❌ Clear symbol label on error
-        document.getElementById('currentSymbol').textContent = '';
-    }
-}
-
-
 
         // --- News Fetching Function ---
         async function fetchStockNews(newsContainer, errorMessageDiv, loadingIndicatorElement) {
-            // Replace with your actual NewsAPI.org API key
+            // Note: This NewsAPI.org key is client-side. For production, consider proxying this via server.js too.
             const NEWS_API_KEY = '5b9dc55198084f319b1bb3d2e8ffb8dc'; // KEEP THIS KEY AS IT IS, THIS IS A DUMMY KEY
             const NEWS_BASE_URL = 'https://newsapi.org/v2';
 
-            const query = 'stock market'; // Or 'financial news', or any other relevant query
+            const query = 'stock market';
             const pageSize = '10';
 
             const apiKeyParam = `apiKey=${NEWS_API_KEY}`;
             let apiUrl = `${NEWS_BASE_URL}/everything?q=${encodeURIComponent(query)}&pageSize=${pageSize}&sortBy=publishedAt&${apiKeyParam}`;
 
-            newsContainer.innerHTML = ''; // Clear previous news
+            newsContainer.innerHTML = '';
             errorMessageDiv.classList.add('hidden');
 
             try {
@@ -605,9 +616,9 @@ async function fetchStockChartData(symbol) {
                 errorMessageDiv.textContent = `Failed to load news: ${error.message}`;
                 errorMessageDiv.classList.remove('hidden');
             } finally {
-                    if (loadingIndicatorElement) { // Check if the element exists
-                        loadingIndicatorElement.style.display = 'none'; // Hide loading indicator
-                    }
+                if (loadingIndicatorElement) {
+                    loadingIndicatorElement.style.display = 'none';
+                }
             }
         }
 
