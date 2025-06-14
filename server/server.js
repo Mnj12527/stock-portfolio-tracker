@@ -109,7 +109,7 @@ app.post("/signin", async (req, res) => {
     }
 });
 
-// --- FMP API Proxy Endpoints (for Portfolio) ---
+// --- FMP API Proxy Endpoints (for Home) ---
 // Endpoint to fetch single stock data from FMP (for watchlist price display)
 app.get('/stock-data/:symbol', authenticate, async (req, res) => {
     const { symbol } = req.params;

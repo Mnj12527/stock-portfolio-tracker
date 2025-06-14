@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (response.ok) {
         localStorage.setItem("token", data.token);
         alert("Sign in successful!");
-        window.location.href = "/portfolio.html"; // Redirect to portfolio
+        window.location.href = "/Home.html"; // Redirect to Home
       } else {
         alert(data.message);
       }

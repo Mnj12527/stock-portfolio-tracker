@@ -1,0 +1,7 @@
+admin page
+1-list of all total users and charts for the same 
+2-total stocks saved of all users
+3-totol portfolio value of the total users
+4-total returns of the portfolio of total users
+5-list of all users including their email id and password with admin access to remove the user
+

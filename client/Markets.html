@@ -188,7 +188,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script>
-    // API_BASE_URL and authToken are expected to be defined in the parent portfolio.html script
+    // API_BASE_URL and authToken are expected to be defined in the parent Home.html script
     // Example (for standalone testing, would be removed in actual integration):
     // const API_BASE_URL = 'http://localhost:5000';
     // let authToken = localStorage.getItem('token') || 'dummy-token-for-testing'; 
@@ -512,8 +512,8 @@
 
     // Initial load when the DOM for markets.html content is ready
     document.addEventListener("DOMContentLoaded", () => {
-      // This DOMContentLoaded fires AFTER markets.html is inserted into portfolio.html's #content
-      // So, global variables from portfolio.html are already available.
+      // This DOMContentLoaded fires AFTER markets.html is inserted into Home.html's #content
+      // So, global variables from Home.html are already available.
       updateAll();
     });
   </script>
