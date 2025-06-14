@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Your Portfolio</title>
+    <!-- Link to your custom CSS file -->
+    <link rel="stylesheet" href="portfolio.css">
+</head>
+
+<body class="min-h-screen flex flex-col bg-gray-100">
+    <!-- Main Content Area - Wider Centered White Box -->
+    <main class="container mt-8 p-6 bg-white rounded-xl shadow-lg flex-grow max-w-7xl">
+        <!-- Portfolio Details and Chart Section -->
+        <div class="section-gap">
+            <!-- Left Column: Portfolio Metrics (Boxed) -->
+            <section class="portfolio-metrics lg:w-1/3">
+                <div class="metric-box bg-blue-50">
+                    <span class="metric-label text-gray-700">Total Portfolio Amount</span>
+                    <span class="metric-value text-blue-700">$XX,XXX.XX</span>
+                </div>
+                <div class="metric-box bg-green-50">
+                    <span class="metric-label text-gray-700">Total Stocks in Portfolio</span>
+                    <span class="metric-value text-green-700">XX</span>
+                </div>
+                <div class="metric-box bg-purple-50">
+                    <span class="metric-label text-gray-700">Unrealized Gain/Loss</span>
+                    <span class="metric-value text-purple-700">+$X,XXX.XX (X.XX%)</span>
+                </div>
+                <div class="metric-box bg-red-50">
+                    <span class="metric-label text-gray-700">Realized Gain/Loss</span>
+                    <span class="metric-value text-red-700">-$XXX.XX (-X.XX%)</span>
+                </div>
+            </section>
+
+            <!-- Right Column: Holdings Value Chart (Larger Area) -->
+            <section class="chart-section lg:w-2/3">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Holdings Value Chart</h2>
+                <div class="chart-visual-container bg-white rounded-xl shadow-lg">
+                    <canvas id="holdingsChart" class="w-full h-full"></canvas>
+                    <p id="chartPlaceholderText" class="text-gray-500 text-center">
+                        Your chart will appear here
+                    </p>
+                </div>
+            </section>
+        </div>
+
+        <!-- Bottom Section: Daily Changes and Watchlist Highlights (Grid Layout) -->
+        <section class="bottom-grid-section">
+            <!-- Day Change -->
+            <div class="card-item bg-white rounded-xl shadow-lg">
+                <h3 class="card-title text-gray-800">Day Change</h3>
+                <p class="card-value-large text-green-600">
+                    +X.XX%
+                </p>
+                <p class="card-value-medium text-green-600">
+                    +$X,XXX.XX
+                </p>
+            </div>
+
+            <!-- Highest Gainer -->
+            <div class="card-item bg-white rounded-xl shadow-lg">
+                <h3 class="card-title text-gray-800">Highest Gainer</h3>
+                <p class="card-value-medium text-indigo-700">
+                    Stock Name A
+                </p>
+                <p class="card-sub-text text-gray-600">
+                    +XX.XX% Today
+                </p>
+            </div>
+
+            <!-- Looser Stock -->
+            <div class="card-item bg-white rounded-xl shadow-lg">
+                <h3 class="card-title text-gray-800">Looser Stock</h3>
+                <p class="card-value-medium text-red-700">
+                    Stock Name B
+                </p>
+                <p class="card-sub-text text-gray-600">
+                    -XX.XX% Today
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // JavaScript for canvas placeholder, unchanged from previous version
+        window.onload = function () {
+            const canvas = document.getElementById('holdingsChart');
+            const ctx = canvas.getContext('2d');
+            const chartPlaceholder = document.getElementById('chartPlaceholderText');
+            const chartContainer = document.querySelector('.chart-visual-container');
+
+            function resizeCanvas() {
+                canvas.width = chartContainer.clientWidth;
+                canvas.height = chartContainer.clientHeight;
+                drawPlaceholderChart();
+            }
+
+            function drawPlaceholderChart() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                if (canvas.width > 0 && canvas.height > 0) {
+                    ctx.fillStyle = '#cbd5e1';
+                    const padding = 20;
+                    if (canvas.width - (2 * padding) > 0 && canvas.height - (2 * padding) > 0) {
+                        ctx.fillRect(padding, padding, canvas.width - (2 * padding), canvas.height - (2 * padding));
+                    }
+                }
+
+                if (chartPlaceholder) {
+                    chartPlaceholder.style.top = `50%`;
+                    chartPlaceholder.style.left = `50%`;
+                    chartPlaceholder.style.transform = `translate(-50%, -50%)`;
+                    chartPlaceholder.style.display = 'block';
+                }
+            }
+
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+        };
+    </script>
+</body>
+
+</html>
