@@ -42,29 +42,24 @@
 
 .watchlist-tabs button:hover {
     background-color: #5a23cc;
-    /* Hover color for inactive tabs */
-    /* Removed: color: white; */
 }
+
 .watchlist-tabs button.active {
     background-color: #ff9900;
-    /* Active tab color */
     color: rgb(255, 255, 255);
     font-weight: bold;
 }
 
 /* Stock Input and Add Button */
 .watchlist-container>div:nth-child(3) {
-    /* Targeting the div containing input and add button */
     display: flex;
     align-items: center;
     margin-bottom: 20px;
     gap: 10px;
-    /* Space between input and add button */
 }
 
 #stockInput {
     flex-grow: 1;
-    /* Allow input to take available space */
     padding: 8px 10px;
     border: 1px solid #aaa;
     border-radius: 4px;
@@ -73,8 +68,18 @@
 }
 
 #addStockButton {
-    /* Ensure add button style is defined */
-    background-color: #007bff;
+    background-color: #afb490;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease;
+}
+
+#addStocktoportfolioButton {
+    background-color: #6c9b83;
     color: white;
     border: none;
     padding: 8px 15px;
@@ -95,82 +100,60 @@
 #watchlistTable {
     width: 100%;
     border-collapse: collapse;
-    /* Removes space between cell borders */
     margin-top: 15px;
-    /* Space below add stock input/button */
     border-radius: 8px;
-    /* Rounded corners for the table */
     overflow: hidden;
-    /* Ensures border-radius applies to contents */
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    /* Subtle shadow */
     background-color: #f7f7f7;
-    /* Light background for the list as requested previously */
     border: 1px solid #ddd;
 }
 
 /* Table Header */
 #watchlistTable thead {
     background-color: #e9e9e9;
-    /* Slightly darker background for header */
 }
 
 #watchlistTable th {
     padding: 12px 10px;
-    /* Padding for header cells */
     text-align: left;
-    /* Default align header text to left */
     font-weight: bold;
     color: #555;
     border-bottom: 1px solid #ccc;
-    /* Separator below header */
     font-size: 0.95em;
 }
 
 /* Align specific header columns (LTP, Change, % Change, Actions) to center/right */
 #watchlistTable th:nth-child(2),
-/* LTP */
 #watchlistTable th:nth-child(3),
-/* Change */
 #watchlistTable th:nth-child(4) {
-    /* % Change */
     text-align: center;
-    /* Center align numeric values */
 }
 
 #watchlistTable th:nth-child(5) {
-    /* Actions */
     text-align: center;
-    /* Center align actions column */
 }
 
 
 /* Table Body Rows and Cells */
 #watchlistDisplay tr {
-    /* Targets the rows within the tbody */
     /* No need for display:flex here, table row handles it */
 }
 
 #watchlistDisplay td {
     padding: 10px;
-    /* Padding for data cells */
     border-bottom: 1px solid #eee;
-    /* Separator between rows */
     vertical-align: middle;
-    /* Align content in the middle vertically */
     font-size: 0.95em;
     color: #333;
 }
 
 #watchlistDisplay tr:last-child td {
     border-bottom: none;
-    /* No border for the last row */
 }
 
 /* Zebra striping for better readability */
 #watchlistDisplay tr:nth-child(even) {
     background-color: #fcfcfc;
-    /* Lighter shade for even rows */
 }
 
 
@@ -180,7 +163,6 @@
 #watchlistDisplay .stock-details {
     display: flex;
     flex-direction: column;
-    /* Symbol above Company Name */
     align-items: flex-start;
 }
 
@@ -201,42 +183,33 @@
     font-weight: bold;
     color: #000;
     white-space: nowrap;
-    /* Prevent price from wrapping */
     text-align: center;
-    /* Center the price within its cell */
     display: block;
-    /* Make it a block element to apply text-align */
 }
 
 /* Change Amount (in its own <td>) */
 #watchlistDisplay .change-amount {
-    /* New class created in JS for amount */
     font-weight: bold;
     white-space: nowrap;
     text-align: center;
-    /* Center the change amount */
     display: block;
 }
 
 /* Percentage Change (in its own <td>) */
 #watchlistDisplay .percentage-change {
-    /* New class created in JS for percentage */
     font-weight: bold;
     white-space: nowrap;
     text-align: center;
-    /* Center the percentage change */
     display: block;
 }
 
 /* Positive and Negative Change Colors (apply to .change-amount and .percentage-change) */
 .change-positive {
     color: #28a745;
-    /* Green for positive change */
 }
 
 .change-negative {
     color: #dc3545;
-    /* Red for negative change */
 }
 
 /* Stock Actions (Refresh and Remove Buttons - within the last <td>) */
@@ -244,9 +217,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    /* Center buttons within their cell */
     gap: 8px;
-    /* Space between refresh and remove buttons */
 }
 
 #watchlistDisplay .refresh-btn {
@@ -254,7 +225,6 @@
     border: none;
     cursor: pointer;
     font-size: 1.2em;
-    /* Adjusted size for table */
     color: #007bff;
     padding: 0;
     line-height: 1;
@@ -273,14 +243,12 @@
     border: none;
     border-radius: 50%;
     width: 24px;
-    /* Adjusted size for table */
     height: 24px;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
     font-size: 1.1em;
-    /* Adjusted size for minus symbol */
     color: white;
     padding: 0;
     transition: background-color 0.3s;
@@ -301,7 +269,6 @@
 
 #watchlistDisplay tr.error-item td {
     color: #dc3545;
-    /* Red for error rows */
     font-style: italic;
 }
 
@@ -315,13 +282,11 @@
 .main-Home-content {
     display: flex;
     gap: 0px;
-    /* Space between watchlist and chart */
 }
 
 .chart-section {
     flex-grow: 1;
     margin-left: 520px;
-    /* Offset to make space for fixed watchlist (500px width + 20px left margin + 20px gap) */
     background: #ffffff;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -380,4 +345,489 @@
     font-size: 18px;
     color: #333;
     white-space: nowrap;
+}
+
+
+/* --- Portfolio Specific Styles (Moved from portfolio.css and renamed) --- */
+.portfolio-body {
+    /* No direct styles here as body is already styled in global style.css */
+    /* This class is primarily for matching HTML structure if it were a standalone file */
+}
+
+.portfolio-container {
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+}
+
+.portfolio-main {
+    margin-top: 0rem;
+    padding: 1.5rem;
+    background-color: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    flex-grow: 1;
+}
+
+.portfolio-header {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.portfolio-h1 {
+    font-size: 1.3rem !important;
+    line-height: 1.25;
+    font-weight: 800;
+    color: #1a202c;
+}
+
+.portfolio-section-gap {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 0.5rem;
+    height: 550px;
+    overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+    .portfolio-section-gap {
+        flex-direction: row;
+    }
+}
+
+.portfolio-bottom-grid-section {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+    .portfolio-bottom-grid-section {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.portfolio-metrics-column {
+    display: flex;
+    flex-direction: column;
+    gap: 4rem;
+    padding-left: 20px;
+    padding-top: 50px;
+}
+
+@media (min-width: 1024px) {
+    .portfolio-metrics-column {
+        width: 32%;
+    }
+}
+
+.portfolio-metric-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    /* Added for consistency */
+}
+
+.portfolio-metric-label {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #4a5568;
+}
+
+.portfolio-metric-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+/* Specific colors for metric boxes (keep existing if they don't conflict) */
+.portfolio-bg-blue-50 {
+    background-color: #eff6ff;
+}
+
+.portfolio-text-blue-700 {
+    color: #1d4ed8;
+}
+
+.portfolio-bg-green-50 {
+    background-color: #ecfdf5;
+}
+
+.portfolio-text-green-700 {
+    color: #047857;
+}
+
+.portfolio-bg-purple-50 {
+    background-color: #faf5ff;
+}
+
+.portfolio-text-purple-700 {
+    color: #6d28d9;
+}
+
+.portfolio-bg-red-50 {
+    background-color: #fef2f2;
+}
+
+.portfolio-text-red-700 {
+    color: #b91c1c;
+}
+
+
+/* Add Stock Button */
+.portfolio-add-stock-btn {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease;
+}
+
+.portfolio-add-stock-btn:hover {
+    background-color: #0056b3;
+}
+
+
+/* Right Column: Holdings Value Chart */
+.portfolio-chart-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (min-width: 1024px) {
+    .portfolio-chart-section {
+        width: 64%;
+    }
+}
+
+.portfolio-h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+}
+
+.portfolio-chart-visual-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100px !important;
+    width: 100%;
+    background-color: #ffffff;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.portfolio-canvas {
+    display: block;
+    background-color: #f0f4f6;
+    border-radius: 0.75rem;
+    max-width: 100%;
+    height: 100% !important;
+}
+
+#portfolio-chart-placeholder-text {
+    position: absolute;
+    z-index: 10;
+    background-color: rgba(255, 255, 255, 0.7);
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    color: #6b7280;
+    text-align: center;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Card item styles */
+.portfolio-card-item {
+    padding: 1.5rem;
+    background-color: #ffffff;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.portfolio-card-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+}
+
+.portfolio-card-value-large {
+    font-size: 1.875rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.portfolio-card-value-medium {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.portfolio-card-sub-text {
+    font-size: 1.125rem;
+    color: #4a5568;
+    margin-top: 0.25rem;
+}
+
+/* Specific colors for text within cards */
+.text-green-600 {
+    color: #16a34a;
+}
+
+.text-indigo-700 {
+    color: #4338ca;
+}
+
+.text-red-700 {
+    color: #b91c1c;
+}
+
+/* Responsive adjustments for header h1 */
+@media (min-width: 640px) {
+    .portfolio-h1 {
+        font-size: 1.5rem !important;
+    }
+
+    .portfolio-card-title {
+        font-size: 1.25rem;
+    }
+
+    .portfolio-card-value-large {
+        font-size: 2.25rem;
+    }
+
+    .portfolio-card-value-medium {
+        font-size: 1.5rem;
+    }
+
+    .portfolio-card-sub-text {
+        font-size: 1.25rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .portfolio-h1 {
+        font-size: 1.75rem !important;
+    }
+
+    .portfolio-header {
+        margin-bottom: 1.5rem;
+    }
+}
+
+
+/* --- Modal Styles --- */
+.portfolio-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.portfolio-modal-content {
+    background-color: #ffffff;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 450px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    position: relative;
+}
+
+.portfolio-modal-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #2d3748;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.portfolio-modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.portfolio-modal-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.portfolio-modal-input-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #4a5568;
+}
+
+.portfolio-modal-input {
+    padding: 0.75rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.portfolio-modal-input:focus {
+    outline: none;
+    border-color: #4c51bf;
+    box-shadow: 0 0 0 3px rgba(76, 81, 191, 0.3);
+}
+
+.portfolio-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.portfolio-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.portfolio-btn-primary {
+    background-color: #1d4ed8;
+    color: white;
+}
+
+.portfolio-btn-primary:hover {
+    background-color: #1e40af;
+    box-shadow: 0 4px 8px rgba(29, 78, 216, 0.2);
+}
+
+.portfolio-btn-secondary {
+    background-color: #e2e8f0;
+    color: #2d3748;
+}
+
+.portfolio-btn-secondary:hover {
+    background-color: #cbd5e1;
+    box-shadow: 0 4px 8px rgba(226, 232, 240, 0.2);
+}
+
+.portfolio-modal-error-message {
+    color: #dc3545;
+    font-size: 0.9rem;
+    text-align: center;
+    margin-top: -0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.portfolio-hidden {
+    display: none !important;
+}
+
+
+/* --- Portfolio Holdings Table Styles --- */
+.portfolio-holdings-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background-color: #ffffff;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.portfolio-holdings-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.portfolio-holdings-table th,
+.portfolio-holdings-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.portfolio-holdings-table th {
+    background-color: #f8f8f8;
+    font-weight: 600;
+    color: #4a5568;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+}
+
+.portfolio-holdings-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.portfolio-holdings-table tbody tr:hover {
+    background-color: #f0f4f8;
+}
+
+@media (max-width: 768px) {
+
+    .portfolio-holdings-table,
+    .portfolio-holdings-table tbody,
+    .portfolio-holdings-table tr,
+    .portfolio-holdings-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .portfolio-holdings-table thead {
+        display: none;
+    }
+
+    .portfolio-holdings-table tr {
+        margin-bottom: 1rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+
+    .portfolio-holdings-table td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+    }
+
+    .portfolio-holdings-table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 10px;
+        width: calc(50% - 20px);
+        text-align: left;
+        font-weight: bold;
+        color: #2d3748;
+    }
 }

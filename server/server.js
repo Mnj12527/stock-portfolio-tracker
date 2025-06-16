@@ -20,7 +20,7 @@ mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("MongoDB Connected"))
     .catch(err => console.error("MongoDB connection error:", err)); // More descriptive error
 
-// User schema with watchlists
+// User schema with watchlists and portfolio
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true }, // Added validation
     email: { type: String, required: true, unique: true },
@@ -29,12 +29,21 @@ const UserSchema = new mongoose.Schema({
         type: [[String]],
         default: [[], [], []],
         validate: { // Basic validation for watchlist structure
-            validator: function(v) {
+            validator: function (v) {
                 return v.length === 3 && v.every(Array.isArray);
             },
             message: props => `${props.value} is not a valid watchlist format! Expected a 2D array with 3 inner arrays.`
         }
-    }
+    },
+    // Updated portfolio field to store detailed stock holdings including portfolioName and totalValue
+    portfolio: [{
+        symbol: { type: String, required: true },
+        quantity: { type: Number, required: true, min: 1 },
+        purchasePrice: { type: Number, required: true },
+        totalValue: { type: Number, required: true }, // Added totalValue
+        portfolioName: { type: String, required: true, trim: true }, // Added portfolioName
+        purchaseDate: { type: Date, default: Date.now }
+    }]
 });
 const User = mongoose.model("User", UserSchema);
 
@@ -208,11 +217,11 @@ app.get('/api/sector-performance', async (req, res) => { // NOTE: Not authentica
         // Adjust based on actual FMP response structure for your endpoint.
         // Assuming it's an array of objects directly now, or inside a 'sectorPerformance' key.
         if (response.data && Array.isArray(response.data)) { // If it's an array directly
-             res.json({ sectorPerformance: response.data });
+            res.json({ sectorPerformance: response.data });
         } else if (response.data && response.data.sectorPerformance && Array.isArray(response.data.sectorPerformance)) {
             res.json({ sectorPerformance: response.data.sectorPerformance });
         }
-         else {
+        else {
             console.warn("Unexpected FMP response structure for sector performance:", response.data);
             res.status(500).json({ message: "Invalid response from FMP API for sector performance" });
         }
@@ -292,6 +301,67 @@ app.get('/api/user-watchlist-counts', authenticate, async (req, res) => {
     }
 });
 
+// --- NEW PORTFOLIO MANAGEMENT ENDPOINTS ---
+// Add Stock to Portfolio
+app.post("/portfolio/add", authenticate, async (req, res) => {
+    // Destructure all expected fields, including the new ones
+    const { symbol, quantity, purchasePrice, totalValue, portfolioName, dateAdded } = req.body;
+
+    if (!symbol || !quantity || quantity <= 0 || !purchasePrice || purchasePrice <= 0 || !totalValue || totalValue <= 0 || !portfolioName) {
+        return res.status(400).json({ message: "Missing required fields or invalid values for portfolio entry." });
+    }
+
+    try {
+        const newHolding = {
+            symbol: symbol.toUpperCase(),
+            quantity: quantity,
+            purchasePrice: purchasePrice,
+            totalValue: totalValue, // Store totalValue
+            portfolioName: portfolioName, // Store portfolioName
+            purchaseDate: new Date(dateAdded) // Use the dateAdded from the client
+        };
+
+        const updatedUser = await User.findByIdAndUpdate(
+            req.user._id,
+            { $push: { portfolio: newHolding } }, // Add to the portfolio array
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        res.status(201).json({
+            success: true,
+            message: `${quantity} shares of ${symbol.toUpperCase()} added to portfolio '${portfolioName}'.`,
+            portfolio: updatedUser.portfolio
+        });
+
+    } catch (error) {
+        console.error("Error adding stock to portfolio:", error);
+        // Catch and respond to Mongoose validation errors or other issues
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({ message: error.message });
+        }
+        res.status(500).json({ message: "Error adding stock to portfolio." });
+    }
+});
+
+// Get User Portfolio
+app.get("/portfolio", authenticate, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+        res.json({ portfolio: user.portfolio });
+    } catch (error) {
+        console.error("Error fetching user portfolio:", error);
+        res.status(500).json({ message: "Error fetching user portfolio." });
+    }
+});
+
+
 // --- Youtube Endpoint ---
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 const MAX_RESULTS = 10;
@@ -369,10 +439,10 @@ app.get('/api/twelvedata/quote/:symbol', authenticate, async (req, res) => {
             console.error('Axios error response data:', error.response?.data);
             console.error('Axios error status:', error.response?.status);
             if (error.response?.status === 401) {
-                 return res.status(500).json({ message: "Twelve Data API key invalid or expired." });
+                return res.status(500).json({ message: "Twelve Data API key invalid or expired." });
             }
-             if (error.response?.status === 429) {
-                 return res.status(429).json({ message: "Twelve Data API rate limit reached." });
+            if (error.response?.status === 429) {
+                return res.status(429).json({ message: "Twelve Data API rate limit reached." });
             }
         }
         res.status(500).json({ message: `Failed to fetch quote data for ${symbol}.` });
@@ -401,10 +471,10 @@ app.get('/api/twelvedata/time_series/:symbol', authenticate, async (req, res) =>
             console.error('Axios error response data:', error.response?.data);
             console.error('Axios error status:', error.response?.status);
             if (error.response?.status === 401) {
-                 return res.status(500).json({ message: "Twelve Data API key invalid or expired." });
+                return res.status(500).json({ message: "Twelve Data API key invalid or expired." });
             }
-             if (error.response?.status === 429) {
-                 return res.status(429).json({ message: "Twelve Data API rate limit reached." });
+            if (error.response?.status === 429) {
+                return res.status(429).json({ message: "Twelve Data API rate limit reached." });
             }
         }
         res.status(500).json({ message: `Failed to fetch time series data for ${symbol}.` });

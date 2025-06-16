@@ -1,125 +1,502 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Track Your Portfolio</title>
     <!-- Link to your custom CSS file -->
     <link rel="stylesheet" href="portfolio.css">
+    <!-- Chart.js CDN for drawing charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body class="min-h-screen flex flex-col bg-gray-100">
-    <!-- Main Content Area - Wider Centered White Box -->
-    <main class="container mt-8 p-6 bg-white rounded-xl shadow-lg flex-grow max-w-7xl">
+<body class="portfolio-body">
+    <!-- Main Content Area -->
+    <main class="portfolio-container portfolio-main">
+        <header class="portfolio-header">
+            <h1 class="portfolio-h1">
+                Track Your Portfolio
+            </h1>
+        </header>
+
+        <!-- Portfolio Selection Dropdown -->
+        <div class="portfolio-dropdown-container">
+            <label for="portfolioSelect" class="portfolio-dropdown-label">Select Portfolio:</label>
+            <select id="portfolioSelect" class="portfolio-dropdown-select">
+                <option value="">Loading Portfolios...</option>
+            </select>
+        </div>
+
         <!-- Portfolio Details and Chart Section -->
-        <div class="section-gap">
+        <div class="portfolio-section-gap">
             <!-- Left Column: Portfolio Metrics (Boxed) -->
-            <section class="portfolio-metrics lg:w-1/3">
-                <div class="metric-box bg-blue-50">
-                    <span class="metric-label text-gray-700">Total Portfolio Amount</span>
-                    <span class="metric-value text-blue-700">$XX,XXX.XX</span>
+            <section class="portfolio-metrics-column">
+                <div class="portfolio-metric-box portfolio-bg-blue-50">
+                    <span class="portfolio-metric-label portfolio-text-gray-700">Total Portfolio Value</span>
+                    <span id="totalPortfolioValue" class="portfolio-metric-value portfolio-text-blue-700">$0.00</span>
                 </div>
-                <div class="metric-box bg-green-50">
-                    <span class="metric-label text-gray-700">Total Stocks in Portfolio</span>
-                    <span class="metric-value text-green-700">XX</span>
+                <div class="portfolio-metric-box portfolio-bg-green-50">
+                    <span class="portfolio-metric-label portfolio-text-gray-700">Total Stocks Held</span>
+                    <span id="totalStocksHeld" class="portfolio-metric-value portfolio-text-green-700">0</span>
                 </div>
-                <div class="metric-box bg-purple-50">
-                    <span class="metric-label text-gray-700">Unrealized Gain/Loss</span>
-                    <span class="metric-value text-purple-700">+$X,XXX.XX (X.XX%)</span>
+                <div class="portfolio-metric-box portfolio-bg-purple-50">
+                    <span class="portfolio-metric-label portfolio-text-gray-700">Unrealized Gain/Loss</span>
+                    <span id="unrealizedGainLoss" class="portfolio-metric-value portfolio-text-purple-700">+$0.00 (0.00%)</span>
                 </div>
-                <div class="metric-box bg-red-50">
-                    <span class="metric-label text-gray-700">Realized Gain/Loss</span>
-                    <span class="metric-value text-red-700">-$XXX.XX (-X.XX%)</span>
+                <div class="portfolio-metric-box portfolio-bg-red-50">
+                    <span class="portfolio-metric-label portfolio-text-gray-700">Realized Gain/Loss</span>
+                    <span id="realizedGainLoss" class="portfolio-metric-value portfolio-text-red-700">+$0.00 (0.00%)</span>
                 </div>
             </section>
 
             <!-- Right Column: Holdings Value Chart (Larger Area) -->
-            <section class="chart-section lg:w-2/3">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Holdings Value Chart</h2>
-                <div class="chart-visual-container bg-white rounded-xl shadow-lg">
-                    <canvas id="holdingsChart" class="w-full h-full"></canvas>
-                    <p id="chartPlaceholderText" class="text-gray-500 text-center">
-                        Your chart will appear here
+            <section class="portfolio-chart-section">
+                <h2 class="portfolio-h2">Holdings Allocation</h2>
+                <div class="portfolio-chart-visual-container">
+                    <canvas id="holdingsChart" class="portfolio-canvas"></canvas>
+                    <p id="portfolio-chart-placeholder-text">
+                        No holdings to display chart
                     </p>
                 </div>
             </section>
         </div>
 
+        <!-- Portfolio Holdings Table -->
+        <div class="portfolio-table-container">
+            <h2 class="portfolio-h2 mb-4">Current Holdings</h2>
+            <table class="portfolio-table">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Company Name</th>
+                        <th>Quantity</th>
+                        <th>Avg. Purchase Price</th>
+                        <th>Current Price</th>
+                        <th>Total Value</th>
+                        <th>Gain/Loss (%)</th>
+                    </tr>
+                </thead>
+                <tbody id="holdingsTableBody">
+                    <tr><td colspan="7" class="text-center text-gray-500 py-4">No holdings in this portfolio.</td></tr>
+                </tbody>
+            </table>
+            <p id="holdingsLoadingIndicator" class="loading-indicator text-center py-4 hidden">Loading holdings...</p>
+        </div>
+
         <!-- Bottom Section: Daily Changes and Watchlist Highlights (Grid Layout) -->
-        <section class="bottom-grid-section">
+        <section class="portfolio-bottom-grid-section mt-8">
             <!-- Day Change -->
-            <div class="card-item bg-white rounded-xl shadow-lg">
-                <h3 class="card-title text-gray-800">Day Change</h3>
-                <p class="card-value-large text-green-600">
-                    +X.XX%
+            <div class="portfolio-card-item">
+                <h3 class="portfolio-card-title">Day Change</h3>
+                <p id="dayChangePercent" class="portfolio-card-value-large text-green-600">
+                    +0.00%
                 </p>
-                <p class="card-value-medium text-green-600">
-                    +$X,XXX.XX
+                <p id="dayChangeAmount" class="portfolio-card-value-medium text-green-600">
+                    +$0.00
                 </p>
             </div>
 
             <!-- Highest Gainer -->
-            <div class="card-item bg-white rounded-xl shadow-lg">
-                <h3 class="card-title text-gray-800">Highest Gainer</h3>
-                <p class="card-value-medium text-indigo-700">
-                    Stock Name A
+            <div class="portfolio-card-item">
+                <h3 class="portfolio-card-title">Highest Gainer</h3>
+                <p id="highestGainerSymbol" class="portfolio-card-value-medium text-indigo-700">
+                    N/A
                 </p>
-                <p class="card-sub-text text-gray-600">
-                    +XX.XX% Today
+                <p id="highestGainerPercent" class="portfolio-card-sub-text text-gray-600">
+                    +0.00% Today
                 </p>
             </div>
 
             <!-- Looser Stock -->
-            <div class="card-item bg-white rounded-xl shadow-lg">
-                <h3 class="card-title text-gray-800">Looser Stock</h3>
-                <p class="card-value-medium text-red-700">
-                    Stock Name B
+            <div class="portfolio-card-item">
+                <h3 class="portfolio-card-title">Looser Stock</h3>
+                <p id="looserStockSymbol" class="portfolio-card-value-medium text-red-700">
+                    N/A
                 </p>
-                <p class="card-sub-text text-gray-600">
-                    -XX.XX% Today
+                <p class="portfolio-card-sub-text text-gray-600">
+                    -0.00% Today
                 </p>
             </div>
         </section>
     </main>
 
     <script>
-        // JavaScript for canvas placeholder, unchanged from previous version
-        window.onload = function () {
-            const canvas = document.getElementById('holdingsChart');
-            const ctx = canvas.getContext('2d');
-            const chartPlaceholder = document.getElementById('chartPlaceholderText');
-            const chartContainer = document.querySelector('.chart-visual-container');
+        const API_BASE_URL = 'http://localhost:5000';
+        // authToken will now be received from the parent page or localStorage
+        let authToken = localStorage.getItem('token'); 
+        let allUserPortfolios = []; // Stores all portfolio entries from the backend
+        let currentChart; // To hold the Chart.js instance
 
-            function resizeCanvas() {
-                canvas.width = chartContainer.clientWidth;
-                canvas.height = chartContainer.clientHeight;
-                drawPlaceholderChart();
+        // Element references
+        const portfolioSelect = document.getElementById('portfolioSelect');
+        const totalPortfolioValueEl = document.getElementById('totalPortfolioValue');
+        const totalStocksHeldEl = document.getElementById('totalStocksHeld');
+        const unrealizedGainLossEl = document.getElementById('unrealizedGainLoss');
+        const realizedGainLossEl = document.getElementById('realizedGainLoss');
+        const holdingsTableBody = document.getElementById('holdingsTableBody');
+        const holdingsChartCanvas = document.getElementById('holdingsChart');
+        const chartPlaceholderText = document.getElementById('portfolio-chart-placeholder-text');
+        const holdingsLoadingIndicator = document.getElementById('holdingsLoadingIndicator');
+
+        const dayChangePercentEl = document.getElementById('dayChangePercent');
+        const dayChangeAmountEl = document.getElementById('dayChangeAmount');
+        const highestGainerSymbolEl = document.getElementById('highestGainerSymbol');
+        const highestGainerPercentEl = document.getElementById('highestGainerPercent');
+        const looserStockSymbolEl = document.getElementById('looserStockSymbol');
+        const looserStockPercentEl = document.getElementById('looserStockPercent');
+
+        // Function to fetch all portfolio holdings for the user
+        async function fetchUserPortfolios() {
+            // Re-check authToken here, as it might have been passed
+            if (!authToken) { 
+                authToken = localStorage.getItem('token'); // Try getting it again from localStorage
+                if (!authToken) {
+                    console.log("No token found, cannot fetch portfolios. Please log in.");
+                    portfolioSelect.innerHTML = '<option value="">Please log in</option>';
+                    return;
+                }
             }
 
-            function drawPlaceholderChart() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            try {
+                const response = await fetch(`${API_BASE_URL}/portfolio`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
 
-                if (canvas.width > 0 && canvas.height > 0) {
-                    ctx.fillStyle = '#cbd5e1';
-                    const padding = 20;
-                    if (canvas.width - (2 * padding) > 0 && canvas.height - (2 * padding) > 0) {
-                        ctx.fillRect(padding, padding, canvas.width - (2 * padding), canvas.height - (2 * padding));
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to fetch portfolio data.');
+                }
+
+                const data = await response.json();
+                allUserPortfolios = data.portfolio || []; // Store all holdings
+                console.log("Fetched user portfolios:", allUserPortfolios); // Debug log
+
+                if (allUserPortfolios.length === 0) {
+                    portfolioSelect.innerHTML = '<option value="">No portfolios found</option>';
+                    updatePortfolioMetrics(null); // Clear metrics
+                    renderHoldingsTable([]); // Clear table
+                    drawHoldingsChart([]); // Clear chart
+                    updateDailyChanges([]); // Clear daily changes
+                    return;
+                }
+
+                // Extract unique portfolio names
+                const uniquePortfolioNames = [...new Set(allUserPortfolios.map(holding => holding.portfolioName))];
+                console.log("Unique portfolio names:", uniquePortfolioNames); // Debug log
+                populatePortfolioDropdown(uniquePortfolioNames);
+
+                // Select the first portfolio by default
+                if (uniquePortfolioNames.length > 0) {
+                    portfolioSelect.value = uniquePortfolioNames[0];
+                    filterAndRenderPortfolio(uniquePortfolioNames[0]);
+                }
+
+            } catch (error) {
+                console.error("Error fetching user portfolios:", error);
+                portfolioSelect.innerHTML = '<option value="">Error loading portfolios</option>';
+                alert(`Error loading portfolios: ${error.message}`);
+                updatePortfolioMetrics(null);
+                renderHoldingsTable([]);
+                drawHoldingsChart([]);
+                updateDailyChanges([]);
+            }
+        }
+
+        // Populate the dropdown with unique portfolio names
+        function populatePortfolioDropdown(portfolioNames) {
+            portfolioSelect.innerHTML = ''; // Clear existing options
+            portfolioNames.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                portfolioSelect.appendChild(option);
+            });
+        }
+
+        // Filter holdings based on selected portfolio and render
+        async function filterAndRenderPortfolio(selectedPortfolioName) {
+            holdingsLoadingIndicator.classList.remove('hidden');
+            const filteredHoldings = allUserPortfolios.filter(holding => holding.portfolioName === selectedPortfolioName);
+            console.log(`Filtering for portfolio: ${selectedPortfolioName}. Found ${filteredHoldings.length} holdings.`); // Debug log
+            
+            // Fetch current prices for all stocks in the filtered holdings
+            const symbolsToFetch = [...new Set(filteredHoldings.map(h => h.symbol))];
+            const currentPrices = {};
+            
+            // Use Promise.allSettled to allow some fetches to fail without stopping others
+            const pricePromises = symbolsToFetch.map(async symbol => {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/stock-data/${symbol}`, {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data && data.length > 0) {
+                            currentPrices[symbol] = { price: data[0].price, name: data[0].name, previousClose: data[0].previousClose };
+                        } else {
+                            console.warn(`No data received for symbol ${symbol} from /stock-data.`);
+                        }
+                    } else {
+                        const errorText = await response.text();
+                        console.error(`Error fetching current price for ${symbol}: Status ${response.status}, ${errorText}`);
+                    }
+                } catch (error) {
+                    console.error(`Network error or unexpected response for ${symbol}:`, error);
+                }
+            });
+            await Promise.allSettled(pricePromises); // Wait for all promises to settle
+
+            // Calculate metrics and prepare data for table and chart
+            const processedHoldings = filteredHoldings.map(holding => {
+                const currentPriceData = currentPrices[holding.symbol];
+                const currentPrice = currentPriceData?.price || holding.purchasePrice; // Fallback to purchase price if fetch fails
+                const companyName = currentPriceData?.name || 'N/A';
+                const previousClose = currentPriceData?.previousClose || holding.purchasePrice; // Fallback for day change
+                
+                const currentValue = holding.quantity * currentPrice;
+                const gainLoss = currentValue - holding.totalValue; // totalValue is purchaseValue
+                const gainLossPercent = holding.totalValue > 0 ? (gainLoss / holding.totalValue) * 100 : 0;
+
+                return {
+                    ...holding,
+                    companyName,
+                    currentPrice,
+                    currentValue,
+                    gainLoss,
+                    gainLossPercent,
+                    previousClose
+                };
+            });
+
+            updatePortfolioMetrics(processedHoldings);
+            renderHoldingsTable(processedHoldings);
+            drawHoldingsChart(processedHoldings);
+            updateDailyChanges(processedHoldings);
+
+            holdingsLoadingIndicator.classList.add('hidden');
+        }
+
+        // Update main portfolio metrics
+        function updatePortfolioMetrics(holdings) {
+            if (!holdings || holdings.length === 0) {
+                totalPortfolioValueEl.textContent = '$0.00';
+                totalStocksHeldEl.textContent = '0';
+                unrealizedGainLossEl.textContent = '+$0.00 (0.00%)';
+                unrealizedGainLossEl.classList.remove('text-green-600', 'text-red-700');
+                unrealizedGainLossEl.classList.add('portfolio-text-purple-700'); // Use custom class for neutral
+                realizedGainLossEl.textContent = '+$0.00 (0.00%)'; // Assuming 'totalValue' is purchase value
+                realizedGainLossEl.classList.remove('text-green-600', 'text-red-700');
+                realizedGainLossEl.classList.add('portfolio-text-red-700'); // Keep default color for now
+                return;
+            }
+
+            let totalValue = 0;
+            let totalStocks = 0;
+            let totalUnrealizedGainLoss = 0;
+            
+            holdings.forEach(h => {
+                totalValue += h.currentValue;
+                totalStocks += h.quantity;
+                totalUnrealizedGainLoss += h.gainLoss;
+            });
+
+            const totalPurchaseValue = holdings.reduce((sum, h) => sum + h.totalValue, 0); // Assuming totalValue is purchase total
+            const unrealizedPercent = totalPurchaseValue > 0 ? (totalUnrealizedGainLoss / totalPurchaseValue) * 100 : 0;
+
+            totalPortfolioValueEl.textContent = `$${totalValue.toFixed(2)}`;
+            totalStocksHeldEl.textContent = holdings.length; // Count of unique stocks
+            
+            unrealizedGainLossEl.textContent = `${totalUnrealizedGainLoss >= 0 ? '+' : ''}$${totalUnrealizedGainLoss.toFixed(2)} (${unrealizedPercent >= 0 ? '+' : ''}${unrealizedPercent.toFixed(2)}%)`;
+            // Remove previous color classes before adding new one
+            unrealizedGainLossEl.classList.remove('portfolio-text-green-700', 'portfolio-text-red-700', 'portfolio-text-purple-700');
+            if (totalUnrealizedGainLoss > 0) {
+                unrealizedGainLossEl.classList.add('portfolio-text-green-700');
+            } else if (totalUnrealizedGainLoss < 0) {
+                unrealizedGainLossEl.classList.add('portfolio-text-red-700');
+            } else {
+                unrealizedGainLossEl.classList.add('portfolio-text-purple-700'); // Neutral color
+            }
+            
+            // Realized gain/loss calculation is not included as it requires transaction history (sell data)
+            // For now, it remains placeholder
+            realizedGainLossEl.textContent = '+$0.00 (0.00%)';
+            realizedGainLossEl.classList.remove('portfolio-text-green-700', 'portfolio-text-red-700'); // Clean up classes
+            realizedGainLossEl.classList.add('portfolio-text-red-700'); // Keep default color for now
+        }
+
+        // Render holdings in the table
+        function renderHoldingsTable(holdings) {
+            holdingsTableBody.innerHTML = '';
+            if (holdings.length === 0) {
+                holdingsTableBody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500 py-4">No holdings in this portfolio.</td></tr>';
+                chartPlaceholderText.style.display = 'block'; // Show placeholder if no holdings
+                return;
+            }
+            chartPlaceholderText.style.display = 'none'; // Hide placeholder if holdings exist
+
+            holdings.forEach((h, index) => {
+                const row = document.createElement('tr');
+                row.classList.add(index % 2 === 0 ? '' : 'even-row'); // For alternating row colors
+
+                const gainLossText = `${h.gainLoss >= 0 ? '+' : ''}${h.gainLoss.toFixed(2)} (${h.gainLossPercent >= 0 ? '+' : ''}${h.gainLossPercent.toFixed(2)}%)`;
+                const gainLossClass = h.gainLoss > 0 ? 'gain' : (h.gainLoss < 0 ? 'loss' : 'neutral');
+
+                row.innerHTML = `
+                    <td>${h.symbol}</td>
+                    <td>${h.companyName}</td>
+                    <td>${h.quantity}</td>
+                    <td>$${h.purchasePrice.toFixed(2)}</td>
+                    <td>$${h.currentPrice.toFixed(2)}</td>
+                    <td>$${h.currentValue.toFixed(2)}</td>
+                    <td class="${gainLossClass}">${gainLossText}</td>
+                `;
+                holdingsTableBody.appendChild(row);
+            });
+        }
+
+        // Draw/update holdings allocation chart using Chart.js
+        function drawHoldingsChart(holdings) {
+            if (currentChart) {
+                currentChart.destroy(); // Destroy previous chart instance
+            }
+
+            if (!holdings || holdings.length === 0) {
+                chartPlaceholderText.style.display = 'block';
+                return;
+            }
+            chartPlaceholderText.style.display = 'none';
+
+            // Aggregate data by stock symbol for the chart
+            const chartDataMap = {};
+            holdings.forEach(h => {
+                if (chartDataMap[h.symbol]) {
+                    chartDataMap[h.symbol].currentValue += h.currentValue;
+                } else {
+                    chartDataMap[h.symbol] = {
+                        symbol: h.symbol,
+                        companyName: h.companyName,
+                        currentValue: h.currentValue
+                    };
+                }
+            });
+
+            const chartLabels = Object.values(chartDataMap).map(d => d.symbol);
+            const chartValues = Object.values(chartDataMap).map(d => d.currentValue);
+            const backgroundColors = [
+                '#4F46E5', '#22C55E', '#F97316', '#EF4444', '#6366F1', '#34D399', '#FB923C', '#F87171',
+                '#A78BFA', '#06B6D4', '#FCD34D', '#F472B6', '#8B5CF6', '#10B981', '#FBBF24', '#EC4899'
+            ]; // Custom color palette
+
+            const data = {
+                labels: chartLabels,
+                datasets: [{
+                    label: 'Portfolio Allocation by Value',
+                    data: chartValues,
+                    backgroundColor: backgroundColors.slice(0, chartLabels.length),
+                    hoverOffset: 4
+                }]
+            };
+
+            const config = {
+                type: 'doughnut', // Doughnut chart for allocation
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right', // Legend on the right
+                            labels: {
+                                color: '#333'
+                            }
+                        },
+                        title: {
+                            display: false,
+                            text: 'Holdings Allocation'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
                     }
                 }
+            };
 
-                if (chartPlaceholder) {
-                    chartPlaceholder.style.top = `50%`;
-                    chartPlaceholder.style.left = `50%`;
-                    chartPlaceholder.style.transform = `translate(-50%, -50%)`;
-                    chartPlaceholder.style.display = 'block';
+            const ctx = holdingsChartCanvas.getContext('2d');
+            currentChart = new Chart(ctx, config);
+        }
+
+        // Update Daily Changes section
+        function updateDailyChanges(holdings) {
+            let totalDayChangeAmount = 0;
+            let totalCurrentValue = 0;
+
+            let highestGainer = { symbol: 'N/A', percent: -Infinity };
+            let looserStock = { symbol: 'N/A', percent: Infinity };
+
+            holdings.forEach(h => {
+                if (h.currentPrice !== 'N/A' && h.previousClose !== 'N/A' && h.previousClose > 0) {
+                    const dayChangePerShare = h.currentPrice - h.previousClose;
+                    totalDayChangeAmount += dayChangePerShare * h.quantity;
+                    totalCurrentValue += h.currentValue;
+
+                    const dailyPercentChange = (dayChangePerShare / h.previousClose) * 100;
+
+                    if (dailyPercentChange > highestGainer.percent) {
+                        highestGainer = { symbol: h.symbol, percent: dailyPercentChange };
+                    }
+                    if (dailyPercentChange < looserStock.percent) {
+                        looserStock = { symbol: h.symbol, percent: dailyPercentChange };
+                    }
                 }
-            }
+            });
 
-            resizeCanvas();
-            window.addEventListener('resize', resizeCanvas);
-        };
+            const dayChangePercent = totalCurrentValue > 0 ? (totalDayChangeAmount / totalCurrentValue) * 100 : 0;
+
+            dayChangePercentEl.textContent = `${dayChangePercent >= 0 ? '+' : ''}${dayChangePercent.toFixed(2)}%`;
+            dayChangePercentEl.className = `portfolio-card-value-large ${dayChangePercent >= 0 ? 'text-green-600' : 'text-red-700'}`;
+            
+            dayChangeAmountEl.textContent = `${totalDayChangeAmount >= 0 ? '+' : ''}$${totalDayChangeAmount.toFixed(2)}`;
+            dayChangeAmountEl.className = `portfolio-card-value-medium ${totalDayChangeAmount >= 0 ? 'text-green-600' : 'text-red-700'}`;
+
+            highestGainerSymbolEl.textContent = highestGainer.symbol;
+            highestGainerPercentEl.textContent = `${highestGainer.percent !== -Infinity ? (highestGainer.percent >= 0 ? '+' : '') + highestGainer.percent.toFixed(2) + '%' : 'N/A'} Today`;
+            highestGainerPercentEl.className = `portfolio-card-sub-text ${highestGainer.percent >= 0 ? 'text-green-600' : 'text-gray-600'}`; // Green for gainers
+
+            looserStockSymbolEl.textContent = looserStock.symbol;
+            looserStockPercentEl.textContent = `${looserStock.percent !== Infinity ? (looserStock.percent >= 0 ? '+' : '') + looserStock.percent.toFixed(2) + '%' : 'N/A'} Today`;
+            looserStockPercentEl.className = `portfolio-card-sub-text ${looserStock.percent < 0 ? 'text-red-700' : 'text-gray-600'}`; // Red for loosers
+        }
+
+
+        // Event listener for portfolio selection dropdown
+        portfolioSelect.addEventListener('change', (event) => {
+            const selectedName = event.target.value;
+            if (selectedName) {
+                filterAndRenderPortfolio(selectedName);
+            } else {
+                updatePortfolioMetrics(null);
+                renderHoldingsTable([]);
+                drawHoldingsChart([]);
+                updateDailyChanges([]);
+            }
+        });
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchUserPortfolios(); // Call fetchUserPortfolios when portfolio.html is loaded and DOM is ready
+        });
+
     </script>
 </body>
-
 </html>

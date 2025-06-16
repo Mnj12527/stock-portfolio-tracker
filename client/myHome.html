@@ -1,36 +1,37 @@
 <div class="main-Home-content">
-    <div class="watchlist-container">
-        <h3>📈 Watchlists</h3>
-        <div class="watchlist-tabs">
-            <button onclick="switchWatchlist(0)">Watchlist 1</button>
-            <button onclick="switchWatchlist(1)">Watchlist 2</button>
-            <button onclick="switchWatchlist(2)">Watchlist 3</button>
-        </div>
-        <input type="text" id="stockInput" placeholder="Add stock symbol" />
-        <button id="addStockButton" onclick="addStock()">➕ Add</button>
-        <table id="watchlistTable">
-             <thead>
-                 <tr>
-                     <th>Symbol</th>
-                     <th>LTP</th>
-                    <th>Change</th>
-                     <th>% Change</th>
-                     <th>Actions</th>
-                    </tr>
-                 </thead>
-             <tbody id="watchlistDisplay">
-              </tbody>
-         </table>
-    </div>
+<div class="watchlist-container">
+<h3>📈 Watchlists</h3>
+<div class="watchlist-tabs">
+<button onclick="switchWatchlist(0)">Watchlist 1</button>
+<button onclick="switchWatchlist(1)">Watchlist 2</button>
+<button onclick="switchWatchlist(2)">Watchlist 3</button>
+</div>
+<input type="text" id="stockInput" placeholder="Add stock symbol" />
+<button id="addStockButton" onclick="addStock()">➕ Add</button>
+<button id="addStocktoportfolioButton">Add to portfolio</button>
+<table id="watchlistTable">
+<thead>
+<tr>
+<th>Symbol</th>
+<th>LTP</th>
+<th>Change</th>
+<th>% Change</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="watchlistDisplay">
+</tbody>
+</table>
+</div>
 
-    <div class="chart-section">
-        <h3 style="text-align:center; margin-bottom: 10px;">Stock Trend Analysis</h3>
-        <div class="chart-input-group">
-            <input id="symbolInput" type="text" placeholder="Enter The Stock Symbol To Analyse the chart" />
-            <button id="loadChartBtn">Load</button> 
-            <span id="currentSymbol" style="align-self: center; margin-left: 15px; font-weight: bold; font-size: 18px; color: #333;"></span>
-        </div>
-        <div id="stockChartContainer" class="chart-area"></div>
-        <p id="chartLoadingIndicator" class="loading-indicator hidden" style="margin-top: 10px;">Loading chart data...</p>
-    </div>
+<div class="chart-section">
+<h3 style="text-align:center; margin-bottom: 10px;">Stock Trend Analysis</h3>
+<div class="chart-input-group">
+<input id="symbolInput" type="text" placeholder="Enter The Stock Symbol To Analyse the chart" />
+<button id="loadChartBtn">Load</button> 
+<span id="currentSymbol" style="align-self: center; margin-left: 15px; font-weight: bold; font-size: 18px; color: #333;"></span>
+</div>
+<div id="stockChartContainer" class="chart-area"></div>
+<p id="chartLoadingIndicator" class="loading-indicator hidden" style="margin-top: 10px;">Loading chart data...</p>
+</div>
 </div>

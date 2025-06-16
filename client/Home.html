@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>My Home</title>
     <link rel="stylesheet" href="/style.css">
-    <link rel="stylesheet" href="/Home.css">
+    <link rel="stylesheet" href="/Home.css"> <!-- This will now contain modal styles -->
     <link rel="stylesheet" href="/videos.css">
     <link rel="stylesheet" href="/news.css">
+    <!-- No portfolio.css link here as its content is now in Home.css or Portfolio.html -->
     <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
-    <script src="https://unpkg.com/d3@7"></script> <style>
+    <script src="https://unpkg.com/d3@7"></script>
+    <style>
         /* Keep any global styles or styles specific to Home.html here */
         body {
             font-family: 'Inter', sans-serif;
@@ -89,7 +91,6 @@
             align-items: center; /* Change from 'flex-end' to 'center' for vertical alignment */
             gap: 8px; /* Add a small space between the price and the change text */
             white-space: nowrap; /* Prevent the price or change from wrapping */
-            /* You can remove margin-right: 10px; if gap: 10px; on stock-actions is enough spacing */
         }
         #watchlistDisplay .stock-price {
             font-size: 1.1em;
@@ -132,7 +133,7 @@
     <div class="navbar">
         <div class="logo"><span>Prasham</span><span class="finance">finance</span></div>
         <div class="search-bar">
-            <input type="text" placeholder="Search for news, symbols or company..." style="background-color: white; color: black;">
+            <input type="text" id="mainSearchBarInput" placeholder="Search for news, symbols or company..." style="background-color: white; color: black;">
             <button>🔍</button>
         </div>
 
@@ -140,7 +141,7 @@
             <a onclick="loadPage('myHome.html')">Home</a>
             <a onclick="loadPage('News.html')">News</a>
             <a onclick="loadPage('Markets.html')">Markets</a>
-            <a onclick="loadPage('Portfolio.html')">Portfolio</a>
+            <a onclick="loadPage('Portfolio.html')">Portfolio</a> <!-- Will load separate Portfolio.html -->
             <a onclick="loadPage('Analysis.html')">Analysis</a>
             <a onclick="loadPage('Videos.html')">Videos</a>
             <a class="signout-btn" onclick="signOut()">Sign Out</a>
@@ -148,7 +149,43 @@
     </div>
 
     <div id="content" class="content-below-navbar">
+        <!-- Dynamic content for myHome.html, News.html etc. will be loaded here -->
+    </div>
+
+    <!-- Add Stock Modal (This modal is directly in home.html now) -->
+    <div id="addStockModal" class="portfolio-modal-overlay portfolio-hidden">
+        <div class="portfolio-modal-content">
+            <h3 class="portfolio-modal-title">Add Stock to Portfolio</h3>
+            <div class="portfolio-modal-body">
+                <div class="portfolio-modal-input-group">
+                    <label for="modalStockSymbol">Stock Symbol:</label>
+                    <input type="text" id="modalStockSymbol" class="portfolio-modal-input" readonly>
+                    <span id="modalCompanyName" class="portfolio-company-name"></span> <!-- Added for company name -->
+                </div>
+                <div class="portfolio-modal-input-group">
+                    <label for="modalStockCurrentPrice">Current Price (LTP):</label>
+                    <input type="text" id="modalStockCurrentPrice" class="portfolio-modal-input" readonly value="Loading...">
+                </div>
+                <div class="portfolio-modal-input-group">
+                    <label for="modalStockQuantity">Quantity:</label>
+                    <input type="number" id="modalStockQuantity" class="portfolio-modal-input" min="1" value="1">
+                </div>
+                <div class="portfolio-modal-input-group">
+                    <label for="modalStockValue">Total Value:</label>
+                    <input type="text" id="modalStockValue" class="portfolio-modal-input" readonly value="$0.00">
+                </div>
+                <div class="portfolio-modal-input-group">
+                    <label for="modalPortfolioName">Portfolio Name:</label> <!-- New input for portfolio name -->
+                    <input type="text" id="modalPortfolioName" class="portfolio-modal-input" placeholder="e.g., My Growth Stocks" required>
+                </div>
+                <p id="modalErrorMessage" class="portfolio-modal-error-message portfolio-hidden"></p>
+            </div>
+            <div class="portfolio-modal-footer">
+                <button id="modalSaveButton" class="portfolio-btn portfolio-btn-primary">Save to Portfolio</button>
+                <button id="modalCancelButton" class="portfolio-btn portfolio-btn-secondary">Cancel</button>
+            </div>
         </div>
+    </div>
 
     <script>
         let watchlists = [[], [], []]; // Initialize an empty watchlist array
@@ -170,25 +207,32 @@
         let loadChartBtn; // Chart load button
         let currentSymbolElement; // Added for the symbol label
 
+        // --- Portfolio Modal Globals (specific to home.html's modal) ---
+        let modalCurrentStockPrice = 0; // Distinct variable for modal's current price
+        // Defer getting mainSearchBarInput until needed or DOMContentLoaded
+        let mainSearchBarInput; // This is the search bar in the top navbar
+        let stockInput; // This is the search bar inside myHome.html content
+        let addStockToPortfolioButton; // This button is inside myHome.html content
+        let modal, modalStockSymbol, modalCompanyName, modalStockCurrentPrice, modalStockQuantity, modalStockValue, modalPortfolioName, modalSaveButton, modalCancelButton, modalErrorMessage;
+
+
         function displayErrorMessage(message) {
-            // Check if errorMessageDisplay exists before trying to manipulate it
             if (errorMessageDisplay) {
                 errorMessageDisplay.textContent = message;
                 errorMessageDisplay.classList.remove('hidden');
             }
             if (videoContainer) {
-                videoContainer.classList.add('hidden'); // Hide video container on error
+                videoContainer.classList.add('hidden');
             }
         }
 
         function clearErrorMessage() {
-            // Check if errorMessageDisplay exists before trying to manipulate it
             if (errorMessageDisplay) {
                 errorMessageDisplay.textContent = '';
                 errorMessageDisplay.classList.add('hidden');
             }
             if (videoContainer) {
-                videoContainer.classList.remove('hidden'); // Show video container when no error
+                videoContainer.classList.remove('hidden');
             }
         }
 
@@ -198,7 +242,6 @@
             }
             clearErrorMessage();
             try {
-                // This call goes to your server.js /search endpoint, which proxies to YouTube API
                 const response = await fetch(`${API_BASE_URL}/search?query=${query}`);
                 if (!response.ok) {
                     let message = `HTTP error! status: ${response.status}`;
@@ -227,17 +270,15 @@
         }
 
         function displayVideos(videos) {
-            if (!videoContainer) return; // Ensure videoContainer exists
-            videoContainer.innerHTML = ''; // Clear previous videos
+            if (!videoContainer) return;
+            videoContainer.innerHTML = '';
             if (videos.length === 0) {
                 displayErrorMessage('No videos found for your search query.');
                 return;
             }
 
             videos.forEach(video => {
-                // CORRECTED YouTube URL (using https as it's safer)
                 const youtubeUrl = `https://www.youtube.com/watch?v=${video.id}`; 
-
                 const videoCard = document.createElement('div');
                 videoCard.classList.add('video-card');
 
@@ -259,9 +300,8 @@
             });
         }
 
-        // --- Dynamic Page Loading ---
         function loadPage(page) {
-            const url = `${API_BASE_URL}/${page}`; // Use API_BASE_URL for pages as well
+            const url = `${API_BASE_URL}/${page}`;
             fetch(url)
                 .then(res => {
                     if (!res.ok) throw new Error("Page not found");
@@ -271,49 +311,55 @@
                     document.getElementById("content").innerHTML = html;
                     window.scrollTo({ top: 0, behavior: "smooth" });
 
-                    // Re-initialize elements and logic specific to each loaded page
+                    // THIS IS WHERE myHome.html specific elements are loaded and listeners attached
                     if (page === 'myHome.html') {
-                        // Initialize watchlist elements first, then fetch data
                         const watchlistTabs = document.querySelector(".watchlist-tabs");
                         const watchlistDisplay = document.getElementById("watchlistDisplay");
-                        const stockInput = document.getElementById("stockInput");
+                        // Assign stockInput here as it's part of myHome.html
+                        stockInput = document.getElementById("stockInput"); 
                         const addStockButton = document.getElementById("addStockButton");
 
-                        // Add event listener for addStockButton AFTER it's in the DOM
                         if (addStockButton) {
                             addStockButton.onclick = addStock;
                         }
 
-                        // Set up watchlist tabs (ensure buttons exist in myHome.html)
+                        // Get the addStockToPortfolioButton ONLY when myHome.html is loaded
+                        addStockToPortfolioButton = document.getElementById('addStocktoportfolioButton'); 
+                        if (addStockToPortfolioButton) {
+                            console.log("Attaching listener to addStocktoportfolioButton for myHome.html");
+                            addStockToPortfolioButton.addEventListener('click', showAddStockModal);
+                        } else {
+                            console.warn("addStocktoportfolioButton not found in myHome.html content.");
+                        }
+
+
                         const tabButtons = document.querySelectorAll('.watchlist-tabs button');
                         tabButtons.forEach((button, index) => {
                             button.onclick = () => switchWatchlist(index);
                         });
 
-                        fetchWatchlistsFromServer(); // THIS WILL CALL renderWatchlist() INTERNALLY
+                        fetchWatchlistsFromServer();
                         
-                        // NEW: Initialize chart elements after myHome.html content is loaded
                         const stockChartContainer = document.getElementById('stockChartContainer');
-                        symbolInput = document.getElementById('symbolInput'); // Assign to global variable
-                        loadChartBtn = document.getElementById('loadChartBtn'); // Assign to global variable
-                        currentSymbolElement = document.getElementById('currentSymbol'); // Assign to global variable
+                        symbolInput = document.getElementById('symbolInput');
+                        loadChartBtn = document.getElementById('loadChartBtn');
+                        currentSymbolElement = document.getElementById('currentSymbol');
 
                         if (stockChartContainer && symbolInput && loadChartBtn) {
-                            // Destroy existing chart instance if it exists to prevent duplicates
                             if (stockChart) {
                                 stockChart.remove();
-                                stockChart = null; // Clear the reference
+                                stockChart = null;
                                 stockLineSeries = null;
                             }
                             stockChart = LightweightCharts.createChart(stockChartContainer, {
-                                width: stockChartContainer.clientWidth, // Use container width
+                                width: stockChartContainer.clientWidth,
                                 height: 650,
                                 layout: {
-                                    background: { color: '#ffffff' }, // Set background to white
-                                    textColor: '#333', // Set text color to dark gray
+                                    background: { color: '#ffffff' },
+                                    textColor: '#333',
                                 },
                                 grid: {
-                                    vertLines: { color: '#e0e0e0' }, // Lighter grid lines
+                                    vertLines: { color: '#e0e0e0' },
                                     horzLines: { color: '#e0e0e0' },
                                 },
                                 crosshair: {
@@ -329,11 +375,10 @@
                                 },
                             });
                             stockLineSeries = stockChart.addLineSeries({
-                                color: '#2bc2e7', // A nice blue for the line
+                                color: '#2bc2e7',
                                 lineWidth: 2,
                             });
 
-                            // Add event listener for the chart load button
                             loadChartBtn.onclick = () => {
                                 const symbol = symbolInput.value.trim().toUpperCase();
                                 if (symbol) {
@@ -343,19 +388,14 @@
                                 }
                             };
 
-                            // Optional: Load a default chart on page load
-                            fetchStockChartData('AAPL'); // Load Apple's chart by default
+                            fetchStockChartData('AAPL');
 
-                            // Adjust chart size on window resize
                             const resizeChart = () => {
                                 if (stockChartContainer && stockChart) {
-                                    stockChart.resize(stockChartContainer.clientWidth, 650); // Maintain height
+                                    stockChart.resize(stockChartContainer.clientWidth, 650);
                                 }
                             };
-                            // Only add event listener if it's not already there.
-                            // Better: use a flag or remove all listeners before adding.
-                            // For simplicity, directly add here, assuming it's only called once per page load.
-                            window.removeEventListener('resize', resizeChart); // Prevent multiple listeners if navigating quickly
+                            window.removeEventListener('resize', resizeChart);
                             window.addEventListener('resize', resizeChart);
 
                         } else {
@@ -363,7 +403,6 @@
                         }
 
                     } else if (page === 'Videos.html') {
-                        // Initialize video elements after Videos.html content is loaded
                         videoContainer = document.getElementById('video-container');
                         searchInput = document.getElementById('search-input');
                         searchButton = document.getElementById('search-button');
@@ -371,7 +410,7 @@
                         errorMessageDisplay = document.getElementById('error-message');
 
                         if (videoContainer && searchInput && searchButton && loadingIndicator && errorMessageDisplay) {
-                            fetchVideos('Indian stock market'); // Initial load
+                            fetchVideos('Indian stock market');
 
                             searchButton.addEventListener('click', () => {
                                 const query = searchInput.value.trim();
@@ -391,7 +430,6 @@
                             console.error("Video elements not found in loaded Videos.html");
                         }
                     } else if (page === 'News.html') {
-                        // News HTML structure is dynamically created in loadPage, then populated
                         const newsContainer = document.createElement('div');
                         newsContainer.id = 'news-container';
 
@@ -402,28 +440,20 @@
 
                         const errorMessageDiv = document.createElement('p');
                         errorMessageDiv.id = 'error-message';
-                        errorMessageDiv.className = 'error-message hidden'; // Ensure it starts hidden
+                        errorMessageDiv.className = 'error-message hidden';
 
-                        // Clear existing content and append news specific elements
-                        document.getElementById('content').innerHTML = ''; 
+                        document.getElementById('content').innerHTML = '';
                         document.getElementById('content').appendChild(newsContainer);
                         document.getElementById('content').appendChild(errorMessageDiv);
 
-                        // This call goes to an external NewsAPI.org directly from frontend
                         fetchStockNews(newsContainer, errorMessageDiv, loadingIndicatorElement);
                     }
                     else if (page === 'Markets.html') {
-                        // Ensure D3.js is loaded if you're calling D3 functions here
-                        // For the D3 charts, you'd typically have an SVG element with specific IDs
-                        // in your Markets.html where the chart will be rendered.
-                        // Then, you call these functions to draw into those SVGs.
                         console.log("Markets.html loaded. Attempting to draw charts...");
-                        // Assuming your Markets.html contains:
-                        // <svg id="watchlistPieChart" width="400" height="400"></svg>
-                        // <svg id="sectorChart" width="600" height="400"></svg>
                         loadWatchlistPieChart();
                         loadSectorPerformance();
                     }
+                     // No specific initialization for Portfolio.html here, as it's a separate file now.
                 })
                 .catch(error => {
                     console.error("Error loading page:", error);
@@ -433,9 +463,9 @@
 
         function signOut() {
             localStorage.removeItem("token");
-            alert("You have been signed out."); // Consider a custom modal for better UX
-            watchlists = [[], [], []]; // Reset watchlists on sign out
-            window.location.href = "index.html"; // Redirect to login/home page
+            alert("You have been signed out.");
+            watchlists = [[], [], []];
+            window.location.href = "index.html";
         }
 
         function switchWatchlist(index) {
@@ -448,14 +478,13 @@
             const input = document.getElementById("stockInput");
             const symbol = input.value.trim().toUpperCase();
             if (symbol && !watchlists[currentWatchlist].includes(symbol)) {
-                // You could add client-side validation here, e.g., regex for stock symbols
                 watchlists[currentWatchlist].push(symbol);
-                await renderWatchlist(); // Await rendering to ensure prices are fetched and displayed immediately
-                saveWatchlistsToServer(); // Save the updated watchlists to the server
+                await renderWatchlist();
+                saveWatchlistsToServer();
             } else if (watchlists[currentWatchlist].includes(symbol)) {
                 alert(`${symbol} is already in this watchlist.`);
             }
-            input.value = ""; // Clear input after adding
+            input.value = "";
         }
 
         async function getStockPrice(symbol) {
@@ -464,28 +493,25 @@
                 return { price: 'N/A', previousClose: 'N/A', companyName: 'N/A' };
             }
             try {
-                // This call goes to your server.js /stock-data/:symbol endpoint, which proxies to FMP API
                 const response = await fetch(`${API_BASE_URL}/stock-data/${symbol}`, {
                     headers: {
-                        'Authorization': `Bearer ${authToken}`, // Include token for backend authentication
+                        'Authorization': `Bearer ${authToken}`,
                     },
                 });
                 if (!response.ok) {
                     const errorText = await response.text();
                     console.error(`Backend error for ${symbol}: ${response.status} - ${errorText}`);
-                    // Handle specific 404 for stock not found vs. other errors
                     if (response.status === 404) {
                         return { price: 'N/A', previousClose: 'N/A', companyName: 'N/A' };
                     }
                     throw new Error(`Failed to fetch price for ${symbol}. Server response: ${errorText}`);
                 }
                 const data = await response.json();
-                // FMP's /quote endpoint returns an array, so access the first element
                 if (data && data.length > 0 && data[0].price !== undefined) {
                     return {
                         price: data[0].price,
                         previousClose: data[0].previousClose,
-                        companyName: data[0].name || symbol // Use company name if available, else symbol
+                        companyName: data[0].name || symbol
                     };
                 } else {
                     console.warn(`No price data or invalid data format found for ${symbol} from FMP via backend.`);
@@ -497,168 +523,150 @@
             }
         }
 
-        // In Home.html, inside your <script> tag
+        async function renderWatchlist() {
+            const list = document.getElementById("watchlistDisplay");
+            if (!list) return;
+            list.innerHTML = "";
 
-    // In Home.html, inside your <script> tag
+            const currentStocks = watchlists[currentWatchlist] || [];
 
-    async function renderWatchlist() {
-        const list = document.getElementById("watchlistDisplay"); // This ID should now be on the <tbody>
-        if (!list) return; // Exit if watchlistDisplay is not present in the current DOM
-        list.innerHTML = ""; // Clear existing table rows
-
-        // Ensure watchlists[currentWatchlist] is correctly defined and an array of symbols
-        const currentStocks = watchlists[currentWatchlist] || [];
-
-        if (currentStocks.length === 0) {
-            // Display message in a table row spanning all columns
-            list.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #777;">No stocks in this watchlist.</td></tr>';
-            return;
-        }
-
-        // Prepare an array of promises for fetching stock prices
-        const pricePromises = currentStocks.map(symbol => getStockPrice(symbol));
-
-        // Fetch all stock data concurrently
-        const stockDataArray = await Promise.all(pricePromises);
-
-        currentStocks.forEach((symbol, index) => {
-            const stockData = stockDataArray[index];
-            // Ensure stockData is valid and not null/undefined before destructuring
-            const price = stockData?.price !== undefined ? stockData.price : 'N/A';
-            const previousClose = stockData?.previousClose !== undefined ? stockData.previousClose : 'N/A';
-            const companyName = stockData?.name || ''; // Use empty string if name is not available
-
-            const tr = document.createElement("tr"); // Changed from <li> to <tr>
-            tr.classList.add('stock-item'); // Add a class for styling table rows
-
-            // --- Column 1: Symbol and Company Name (in one <td>) ---
-            const symbolCompanyNameTd = document.createElement("td");
-            const stockDetailsDiv = document.createElement("div");
-            stockDetailsDiv.classList.add('stock-details');
-            stockDetailsDiv.innerHTML = `
-            <span class="stock-symbol">${symbol}</span>
-            <span class="company-name">${companyName !== 'N/A' && companyName !== '' ? companyName : ''}</span>
-        `;
-            symbolCompanyNameTd.appendChild(stockDetailsDiv);
-            tr.appendChild(symbolCompanyNameTd);
-
-            // --- Column 2: LTP (in its own <td>) ---
-            const ltpTd = document.createElement("td");
-            const priceSpan = document.createElement("span");
-            priceSpan.classList.add('stock-price');
-            priceSpan.textContent = price !== 'N/A' ? `${parseFloat(price).toFixed(2)}$` : 'N/A';
-            ltpTd.appendChild(priceSpan);
-            tr.appendChild(ltpTd);
-
-            // --- Calculate Changes ---
-            let amountChange = 'N/A';
-            let percentageChange = 'N/A';
-            let changeClass = '';
-
-            if (price !== 'N/A' && previousClose !== 'N/A' && parseFloat(previousClose) !== 0) {
-                const currentPriceNum = parseFloat(price);
-                const previousCloseNum = parseFloat(previousClose);
-
-                if (!isNaN(currentPriceNum) && !isNaN(previousCloseNum)) {
-                    amountChange = (currentPriceNum - previousCloseNum).toFixed(2);
-                    percentageChange = ((amountChange / previousCloseNum) * 100).toFixed(2);
-                    changeClass = amountChange >= 0 ? 'change-positive' : 'change-negative';
-                }
+            if (currentStocks.length === 0) {
+                list.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #777;">No stocks in this watchlist.</td></tr>';
+                return;
             }
 
-            // --- Column 3: Change Amount (in its own <td>) ---
-            const amountChangeTd = document.createElement("td");
-            const amountChangeSpan = document.createElement("span");
-            amountChangeSpan.classList.add(changeClass); // Apply color class
-            amountChangeSpan.textContent = amountChange !== 'N/A' ? `${amountChange > 0 ? '+' : ''}${amountChange}` : 'N/A';
-            amountChangeTd.appendChild(amountChangeSpan);
-            tr.appendChild(amountChangeTd);
+            const pricePromises = currentStocks.map(symbol => getStockPrice(symbol));
+            const stockDataArray = await Promise.all(pricePromises);
 
-            // --- Column 4: Percentage Change (in its own <td>) ---
-            const percentageChangeTd = document.createElement("td");
-            const percentageChangeSpan = document.createElement("span");
-            percentageChangeSpan.classList.add(changeClass); // Apply color class
-            percentageChangeSpan.textContent = percentageChange !== 'N/A' ? `(${percentageChange > 0 ? '+' : ''}${percentageChange}%)` : 'N/A';
-            percentageChangeTd.appendChild(percentageChangeSpan);
-            tr.appendChild(percentageChangeTd);
+            currentStocks.forEach((symbol, index) => {
+                const stockData = stockDataArray[index];
+                const price = stockData?.price !== undefined ? stockData.price : 'N/A';
+                const previousClose = stockData?.previousClose !== undefined ? stockData.previousClose : 'N/A';
+                const companyName = stockData?.companyName || ''; // Use companyName from getStockPrice
 
-            // --- Column 5: Actions (Refresh and Remove Buttons in their own <td>) ---
-            const actionsTd = document.createElement("td");
-            const actionsDiv = document.createElement('div');
-            actionsDiv.classList.add('stock-actions'); // For flex arrangement of buttons
+                const tr = document.createElement("tr");
+                tr.classList.add('stock-item');
 
-            const refreshBtn = document.createElement("button");
-            refreshBtn.innerHTML = `↻`; // Unicode for refresh arrow
-            refreshBtn.classList.add('refresh-btn');
-            refreshBtn.title = `Refresh price for ${symbol}`;
-            refreshBtn.onclick = async (event) => {
-                event.stopPropagation(); // Prevent any parent row click
-                // Show loading state
-                priceSpan.textContent = `Loading...`;
-                amountChangeSpan.textContent = '';
-                percentageChangeSpan.textContent = '';
-                amountChangeSpan.classList.remove('change-positive', 'change-negative');
-                percentageChangeSpan.classList.remove('change-positive', 'change-negative');
+                const symbolCompanyNameTd = document.createElement("td");
+                const stockDetailsDiv = document.createElement("div");
+                stockDetailsDiv.classList.add('stock-details');
+                stockDetailsDiv.innerHTML = `
+                <span class="stock-symbol">${symbol}</span>
+                <span class="company-name">${companyName !== 'N/A' && companyName !== '' ? companyName : ''}</span>
+            `;
+                symbolCompanyNameTd.appendChild(stockDetailsDiv);
+                tr.appendChild(symbolCompanyNameTd);
+
+                const ltpTd = document.createElement("td");
+                const priceSpan = document.createElement("span");
+                priceSpan.classList.add('stock-price');
+                priceSpan.textContent = price !== 'N/A' ? `${parseFloat(price).toFixed(2)}$` : 'N/A';
+                ltpTd.appendChild(priceSpan);
+                tr.appendChild(ltpTd);
+
+                let amountChange = 'N/A';
+                let percentageChange = 'N/A';
+                let changeClass = '';
+
+                if (price !== 'N/A' && previousClose !== 'N/A' && parseFloat(previousClose) !== 0) {
+                    const currentPriceNum = parseFloat(price);
+                    const previousCloseNum = parseFloat(previousClose);
+
+                    if (!isNaN(currentPriceNum) && !isNaN(previousCloseNum)) {
+                        amountChange = (currentPriceNum - previousCloseNum).toFixed(2);
+                        percentageChange = ((amountChange / previousCloseNum) * 100).toFixed(2);
+                        changeClass = amountChange >= 0 ? 'change-positive' : 'change-negative';
+                    }
+                }
+
+                const amountChangeTd = document.createElement("td");
+                const amountChangeSpan = document.createElement("span");
+                amountChangeSpan.classList.add(changeClass);
+                amountChangeSpan.textContent = amountChange !== 'N/A' ? `${amountChange > 0 ? '+' : ''}${amountChange}` : 'N/A';
+                amountChangeTd.appendChild(amountChangeSpan);
+                tr.appendChild(amountChangeTd);
+
+                const percentageChangeTd = document.createElement("td");
+                const percentageChangeSpan = document.createElement("span");
+                percentageChangeSpan.classList.add(changeClass);
+                percentageChangeSpan.textContent = percentageChange !== 'N/A' ? `(${percentageChange > 0 ? '+' : ''}${percentageChange}%)` : 'N/A';
+                percentageChangeTd.appendChild(percentageChangeSpan);
+                tr.appendChild(percentageChangeTd);
+
+                const actionsTd = document.createElement("td");
+                const actionsDiv = document.createElement('div');
+                actionsDiv.classList.add('stock-actions');
+
+                const refreshBtn = document.createElement("button");
+                refreshBtn.innerHTML = `↻`;
+                refreshBtn.classList.add('refresh-btn');
+                refreshBtn.title = `Refresh price for ${symbol}`;
+                refreshBtn.onclick = async (event) => {
+                    event.stopPropagation();
+                    priceSpan.textContent = `Loading...`;
+                    amountChangeSpan.textContent = '';
+                    percentageChangeSpan.textContent = '';
+                    amountChangeSpan.classList.remove('change-positive', 'change-negative');
+                    percentageChangeSpan.classList.remove('change-positive', 'change-negative');
 
 
-                const updatedStockData = await getStockPrice(symbol);
-                const updatedPrice = updatedStockData?.price !== undefined ? updatedStockData.price : 'N/A';
-                const updatedPreviousClose = updatedStockData?.previousClose !== undefined ? updatedStockData.previousClose : 'N/A';
+                    const updatedStockData = await getStockPrice(symbol);
+                    const updatedPrice = updatedStockData?.price !== undefined ? updatedStockData.price : 'N/A';
+                    const updatedPreviousClose = updatedStockData?.previousClose !== undefined ? updatedStockData.previousClose : 'N/A';
 
-                priceSpan.textContent = updatedPrice !== 'N/A' ? `${parseFloat(updatedPrice).toFixed(2)}$` : 'N/A';
+                    priceSpan.textContent = updatedPrice !== 'N/A' ? `${parseFloat(updatedPrice).toFixed(2)}$` : 'N/A';
 
-                if (updatedPrice !== 'N/A' && updatedPreviousClose !== 'N/A' && parseFloat(updatedPreviousClose) !== 0) {
-                    const updatedCurrentPriceNum = parseFloat(updatedPrice);
-                    const updatedPreviousCloseNum = parseFloat(updatedPreviousClose);
+                    if (updatedPrice !== 'N/A' && updatedPreviousClose !== 'N/A' && parseFloat(updatedPreviousClose) !== 0) {
+                        const updatedCurrentPriceNum = parseFloat(updatedPrice);
+                        const updatedPreviousCloseNum = parseFloat(updatedPreviousClose);
 
-                    if (!isNaN(updatedCurrentPriceNum) && !isNaN(updatedPreviousCloseNum)) {
-                        const updatedAmountChange = (updatedCurrentPriceNum - updatedPreviousCloseNum).toFixed(2);
-                        const updatedPercentageChange = ((updatedAmountChange / updatedPreviousCloseNum) * 100).toFixed(2);
-                        const updatedChangeClass = updatedAmountChange >= 0 ? 'change-positive' : 'change-negative';
+                        if (!isNaN(updatedCurrentPriceNum) && !isNaN(updatedPreviousCloseNum)) {
+                            const updatedAmountChange = (updatedCurrentPriceNum - updatedPreviousCloseNum).toFixed(2);
+                            const updatedPercentageChange = ((updatedAmountChange / updatedPreviousCloseNum) * 100).toFixed(2);
+                            const updatedChangeClass = updatedAmountChange >= 0 ? 'change-positive' : 'change-negative';
 
-                        amountChangeSpan.className = updatedChangeClass; // Reset classes and add new
-                        percentageChangeSpan.className = updatedChangeClass; // Reset classes and add new
+                            amountChangeSpan.className = updatedChangeClass;
+                            percentageChangeSpan.className = updatedChangeClass;
 
-                        amountChangeSpan.textContent = `${updatedAmountChange > 0 ? '+' : ''}${updatedAmountChange}`;
-                        percentageChangeSpan.textContent = `(${updatedPercentageChange > 0 ? '+' : ''}${updatedPercentageChange}%)`;
+                            amountChangeSpan.textContent = `${updatedAmountChange > 0 ? '+' : ''}${updatedAmountChange}`;
+                            percentageChangeSpan.textContent = `(${updatedPercentageChange > 0 ? '+' : ''}${updatedPercentageChange}%)`;
+                        } else {
+                            amountChangeSpan.textContent = 'N/A';
+                            percentageChangeSpan.textContent = 'N/A';
+                            amountChangeSpan.className = '';
+                            percentageChangeSpan.className = '';
+                        }
                     } else {
                         amountChangeSpan.textContent = 'N/A';
                         percentageChangeSpan.textContent = 'N/A';
                         amountChangeSpan.className = '';
                         percentageChangeSpan.className = '';
                     }
-                } else {
-                    amountChangeSpan.textContent = 'N/A';
-                    percentageChangeSpan.textContent = 'N/A';
-                    amountChangeSpan.className = '';
-                    percentageChangeSpan.className = '';
-                }
-            };
+                };
 
-            const removeBtn = document.createElement("button");
-            removeBtn.textContent = "−"; // Minus symbol
-            removeBtn.classList.add('remove-btn');
-            removeBtn.title = `Remove ${symbol}`;
-            removeBtn.onclick = () => {
-                // Find the index of the symbol in the current watchlist array
-                const symbolIndex = watchlists[currentWatchlist].indexOf(symbol);
-                if (symbolIndex > -1) {
-                    watchlists[currentWatchlist].splice(symbolIndex, 1); // Remove from array
-                }
-                renderWatchlist(); // Re-render the entire list
-                saveWatchlistsToServer(); // Save changes to server
-            };
+                const removeBtn = document.createElement("button");
+                removeBtn.textContent = "−";
+                removeBtn.classList.add('remove-btn');
+                removeBtn.title = `Remove ${symbol}`;
+                removeBtn.onclick = () => {
+                    const symbolIndex = watchlists[currentWatchlist].indexOf(symbol);
+                    if (symbolIndex > -1) {
+                        watchlists[currentWatchlist].splice(symbolIndex, 1);
+                    }
+                    renderWatchlist();
+                    saveWatchlistsToServer();
+                };
 
-            actionsDiv.appendChild(refreshBtn);
-            actionsDiv.appendChild(removeBtn);
-            actionsTd.appendChild(actionsDiv);
-            tr.appendChild(actionsTd);
+                actionsDiv.appendChild(refreshBtn);
+                actionsDiv.appendChild(removeBtn);
+                actionsTd.appendChild(actionsDiv);
+                tr.appendChild(actionsTd);
 
-            list.appendChild(tr); // Append the completed table row to the tbody
-        });
+                list.appendChild(tr);
+            });
 
-        highlightActiveButton(currentWatchlist); // Ensure active button is highlighted after rendering
-    }
+            highlightActiveButton(currentWatchlist);
+        }
         function highlightActiveButton(index) {
             const buttons = document.querySelectorAll(".watchlist-tabs button");
             buttons.forEach((btn, i) => {
@@ -670,13 +678,12 @@
             if (!authToken) {
                 console.log("No token found, cannot fetch watchlists. Initializing empty watchlists.");
                 watchlists = [[], [], []];
-                renderWatchlist(); // Render empty watchlists
+                renderWatchlist();
                 highlightActiveButton(0);
                 return;
             }
 
             try {
-                // This call goes to your server.js /watchlists endpoint
                 const response = await fetch(`${API_BASE_URL}/watchlists`, {
                     headers: {
                         'Authorization': `Bearer ${authToken}`,
@@ -693,21 +700,22 @@
                         errorMessage += ` - ${errorText.substring(0, 100)}...`;
                     }
                     console.error("Error fetching watchlists:", errorMessage);
-                    watchlists = [[], [], []]; // Reset watchlists on error
-                    renderWatchlist(); // Render empty watchlists
+                    watchlists = [[], [], []];
+                    renderWatchlist();
                     highlightActiveButton(0);
                     return;
                 }
 
                 const data = await response.json();
-                watchlists = data.watchlists; // Update global watchlists array
+                watchlists = data.watchlists;
 
-                renderWatchlist(); // THIS IS THE ONLY PLACE renderWatchlist() SHOULD BE CALLED AFTER FETCH
-                highlightActiveButton(currentWatchlist); // Highlight based on current index
-            } catch (error) {
+                renderWatchlist();
+                highlightActiveButton(currentWatchlist);
+            }
+            catch (error) {
                 console.error("Error fetching watchlists (network or parsing):", error);
-                watchlists = [[], [], []]; // Reset watchlists on network error
-                renderWatchlist(); // Render empty watchlists
+                watchlists = [[], [], []];
+                renderWatchlist();
                 highlightActiveButton(0);
             }
         }
@@ -719,7 +727,6 @@
             }
 
             try {
-                // This call goes to your server.js /watchlists endpoint
                 const response = await fetch(`${API_BASE_URL}/watchlists`, {
                     method: 'PUT',
                     headers: {
@@ -758,7 +765,6 @@
                 const loadingChartIndicator = document.getElementById('chartLoadingIndicator');
                 if (loadingChartIndicator) loadingChartIndicator.classList.remove('hidden');
 
-                // This call goes to your server.js /api/stock-history/:symbol endpoint, which proxies to FMP API
                 const response = await fetch(`${API_BASE_URL}/api/stock-history/${symbol}`, {
                     headers: {
                         'Authorization': `Bearer ${authToken}`,
@@ -778,20 +784,18 @@
                     console.warn("stockLineSeries not initialized yet.");
                 }
 
-                // Update symbol label beside Load button
                 if (currentSymbolElement) {
                     currentSymbolElement.textContent = `📊 ${symbol}`;
                 }
 
             } catch (err) {
                 console.error('Error loading chart:', err);
-                alert('Error loading chart: ' + err.message); // Consider a custom modal for better UX
+                alert('Error loading chart: ' + err.message);
 
                 if (stockLineSeries) {
-                    stockLineSeries.setData([]); // Clear chart data on error
+                    stockLineSeries.setData([]);
                 }
 
-                // Clear symbol label on error
                 if (currentSymbolElement) {
                     currentSymbolElement.textContent = '';
                 }
@@ -801,9 +805,8 @@
             }
         }
 
-        // --- News Fetching Function ---
         async function fetchStockNews(newsContainer, errorMessageDiv, loadingIndicatorElement) {
-            const NEWS_API_KEY = '5b9dc55198084f319b1bb3d2e8ffb8dc'; // DUMMY KEY - REPLACE WITH YOUR ACTUAL KEY
+            const NEWS_API_KEY = '5b9dc55198084f319b1bb3d2e8ffb8dc';
             const NEWS_BASE_URL = 'https://newsapi.org/v2';
 
             const query = 'stock market';
@@ -812,14 +815,14 @@
             const apiKeyParam = `apiKey=${NEWS_API_KEY}`;
             let apiUrl = `${NEWS_BASE_URL}/everything?q=${encodeURIComponent(query)}&pageSize=${pageSize}&sortBy=publishedAt&${apiKeyParam}`;
 
-            newsContainer.innerHTML = ''; // Clear previous news
-            if (loadingIndicatorElement) loadingIndicatorElement.style.display = 'block'; // Show loading
-            errorMessageDiv.classList.add('hidden'); // Hide error initially
+            newsContainer.innerHTML = '';
+            if (loadingIndicatorElement) loadingIndicatorElement.style.display = 'block';
+            errorMessageDiv.classList.add('hidden');
 
             try {
                 const response = await fetch(apiUrl);
                 if (!response.ok) {
-                    const errorData = await response.json(); // NewsAPI often sends JSON errors
+                    const errorData = await response.json();
                     throw new Error(`HTTP error! status: ${response.status} - ${errorData.message || 'Unknown error'}`);
                 }
                 const data = await response.json();
@@ -843,12 +846,11 @@
                 errorMessageDiv.classList.remove('hidden');
             } finally {
                 if (loadingIndicatorElement) {
-                    loadingIndicatorElement.style.display = 'none'; // Hide loading regardless of success/fail
+                    loadingIndicatorElement.style.display = 'none';
                 }
             }
         }
 
-        // Function for Markets page (as per your console logs, these are expected)
         async function loadWatchlistPieChart() {
             console.log("loadWatchlistPieChart function started.");
             const watchlistPieChartSvg = document.getElementById('watchlistPieChart');
@@ -856,7 +858,6 @@
                 console.warn("Watchlist pie chart SVG element not found.");
                 return;
             }
-            // Clear previous chart content
             watchlistPieChartSvg.innerHTML = '';
 
             console.log(`Attempted to getElementById('watchlistPieChart'). Result: ${watchlistPieChartSvg}`);
@@ -882,12 +883,10 @@
                 }
                 
                 console.log(`Total stocks in watchlists: ${totalStocks}`);
-                // Example: Draw with D3 (placeholder logic)
-                if (window.d3) { // Check if d3 is loaded
-                    // Basic D3 pie chart creation (requires d3.js to be loaded)
+                if (window.d3) {
                     const width = watchlistPieChartSvg.width.baseVal.value;
                     const height = watchlistPieChartSvg.height.baseVal.value;
-                    const radius = Math.min(width, height) / 2 - 10; // Slightly smaller to prevent overflow
+                    const radius = Math.min(width, height) / 2 - 10;
 
                     const svg = window.d3.select("#watchlistPieChart")
                         .attr("width", width)
@@ -915,7 +914,7 @@
                         .attr("text-anchor", "middle")
                         .text(d => `${d.data.watchlistName}: ${d.data.stockCount}`)
                         .style("font-size", "12px")
-                        .style("fill", "white"); // Text color for contrast
+                        .style("fill", "white");
 
                     console.log("Watchlist pie chart drawn successfully.");
                 } else {
@@ -937,7 +936,6 @@
                 console.warn("Sector performance SVG element not found.");
                 return;
             }
-            // Clear previous chart content
             sectorChartSvg.innerHTML = '';
 
             console.log(`Attempted to getElementById('sectorChart'). Result: ${sectorChartSvg}`);
@@ -945,7 +943,7 @@
 
             console.log("Fetching sector performance data...");
             try {
-                const response = await fetch(`${API_BASE_URL}/api/sector-performance`); // Not authenticated
+                const response = await fetch(`${API_BASE_URL}/api/sector-performance`);
                 if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(`HTTP error! status: ${response.status} - ${errorData.message || 'Unknown error'}`);
@@ -955,9 +953,7 @@
 
                 if (data.sectorPerformance && data.sectorPerformance.length > 0) {
                     console.log(`First sector: ${data.sectorPerformance[0].sector}, Performance: ${data.sectorPerformance[0].changesPercentage}%`);
-                    // Example: Draw with D3 (placeholder logic)
-                    if (window.d3) { // Check if d3 is loaded
-                        // Basic D3 bar chart creation (requires d3.js to be loaded)
+                    if (window.d3) {
                         const width = sectorChartSvg.width.baseVal.value;
                         const height = sectorChartSvg.height.baseVal.value;
                         const margin = { top: 20, right: 30, bottom: 40, left: 90 };
@@ -970,7 +966,6 @@
                             .append("g")
                             .attr("transform", `translate(${margin.left},${margin.top})`);
                         
-                        // Sort data by changesPercentage for better visualization
                         const sortedData = data.sectorPerformance.sort((a, b) => b.changesPercentage - a.changesPercentage);
 
 
@@ -985,7 +980,7 @@
 
                         svg.append("g")
                             .attr("transform", `translate(0,${chartHeight})`)
-                            .call(window.d3.axisBottom(x).tickFormat(d => `${d}%`)); // Add % to tick labels
+                            .call(window.d3.axisBottom(x).tickFormat(d => `${d}%`));
 
                         svg.append("g")
                             .call(window.d3.axisLeft(y));
@@ -998,9 +993,8 @@
                             .attr("y", d => y(d.sector))
                             .attr("width", d => Math.abs(x(d.changesPercentage) - x(0)))
                             .attr("height", y.bandwidth())
-                            .attr("fill", d => d.changesPercentage >= 0 ? "#28a745" : "#dc3545"); // Green for positive, red for negative
+                            .attr("fill", d => d.changesPercentage >= 0 ? "#28a745" : "#dc3545");
 
-                        // Add value labels
                         svg.selectAll(".text")
                             .data(sortedData)
                             .enter().append("text")
@@ -1032,7 +1026,182 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             loadPage('myHome.html'); // Load Home by default
+
+            // Initialize modal related elements here as they are part of the main index.html
+            // This ensures they are available from the start if the user doesn't navigate
+            // away and back to myHome.html
+            mainSearchBarInput = document.getElementById('mainSearchBarInput');
+            modal = document.getElementById('addStockModal');
+            modalStockSymbol = document.getElementById('modalStockSymbol');
+            modalCompanyName = document.getElementById('modalCompanyName');
+            modalStockCurrentPrice = document.getElementById('modalStockCurrentPrice');
+            modalStockQuantity = document.getElementById('modalStockQuantity');
+            modalStockValue = document.getElementById('modalStockValue');
+            modalPortfolioName = document.getElementById('modalPortfolioName');
+            modalSaveButton = document.getElementById('modalSaveButton');
+            modalCancelButton = document.getElementById('modalCancelButton');
+            modalErrorMessage = document.getElementById('modalErrorMessage');
+
+            // Attach listeners for modal buttons if they exist
+            if (modalCancelButton) {
+                modalCancelButton.addEventListener('click', hideAddStockModal);
+            }
+            if (modalSaveButton) {
+                modalSaveButton.addEventListener('click', saveStockToPortfolio);
+            }
+            if (modalStockQuantity) {
+                modalStockQuantity.addEventListener('input', calculateTotalValue);
+            }
         });
+
+
+        // --- Portfolio Modal Specific JavaScript (Now directly in home.html) ---
+
+        // Function to fetch a stock's current price and company name (using your backend proxy)
+        async function getStockCurrentPriceAndNameForModal(symbol) { // Renamed for clarity
+            console.log(`Fetching current price and name for ${symbol} for modal...`);
+            modalStockCurrentPrice.value = "Loading...";
+            modalCompanyName.textContent = "Loading..."; // Update company name as well
+            modalErrorMessage.classList.add('portfolio-hidden');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/stock-data/${symbol}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                    },
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`Backend error for ${symbol}: ${response.status} - ${errorText}`);
+                    if (response.status === 404) {
+                        throw new Error("Stock not found or invalid symbol.");
+                    }
+                    throw new Error(`Failed to fetch price: ${response.status} - ${errorText}`);
+                }
+                const data = await response.json();
+                if (data && data.length > 0 && data[0].price !== undefined) {
+                    return { price: data[0].price, companyName: data[0].name || symbol }; // Return both
+                } else {
+                    throw new Error("No valid price data received.");
+                }
+            } catch (error) {
+                console.error("Error fetching stock price and name for modal:", error);
+                modalErrorMessage.textContent = `Could not fetch price/name for ${symbol}: ${error.message}`;
+                modalErrorMessage.classList.remove('portfolio-hidden');
+                return { price: 0, companyName: 'N/A' }; // Return 0 price on error
+            }
+        }
+
+        // Show the modal
+        async function showAddStockModal() {
+            modal.classList.remove('portfolio-hidden');
+            // MODIFIED: Get symbol from the stockInput within myHome.html, not mainSearchBarInput
+            const symbol = stockInput ? stockInput.value.trim().toUpperCase() : ''; 
+            console.log("Symbol from myHome.html stockInput:", symbol); // DEBUG: Log the symbol here
+            
+            modalStockSymbol.value = symbol;
+            modalStockQuantity.value = 1;
+            modalStockValue.value = '$0.00';
+            modalPortfolioName.value = ''; // Clear portfolio name on open
+            modalErrorMessage.classList.add('portfolio-hidden');
+
+            if (symbol) {
+                const stockData = await getStockCurrentPriceAndNameForModal(symbol);
+                modalCurrentStockPrice = stockData.price; // Store the fetched price
+
+                if (modalCurrentStockPrice > 0) {
+                    modalStockCurrentPrice.value = `$${modalCurrentStockPrice.toFixed(2)}`;
+                    modalCompanyName.textContent = stockData.companyName; // Display company name
+                    calculateTotalValue();
+                } else {
+                    modalStockCurrentPrice.value = "N/A";
+                    modalCompanyName.textContent = "N/A";
+                    modalStockValue.value = "$0.00";
+                    modalErrorMessage.textContent = `Could not get current price for ${symbol}. Please try again or check symbol.`;
+                    modalErrorMessage.classList.remove('portfolio-hidden');
+                }
+            } else {
+                modalStockCurrentPrice.value = "N/A";
+                modalCompanyName.textContent = "N/A";
+                modalStockValue.value = "$0.00";
+                modalErrorMessage.textContent = "Please type a stock symbol into the 'Add stock symbol' field.";
+                modalErrorMessage.classList.remove('portfolio-hidden');
+            }
+        }
+
+        // Hide the modal
+        function hideAddStockModal() {
+            modal.classList.add('portfolio-hidden');
+            modalStockCurrentPrice.value = "Loading...";
+            modalCompanyName.textContent = ""; // Clear company name
+            modalCurrentStockPrice = 0;
+            modalPortfolioName.value = ''; // Also clear portfolio name
+        }
+
+        // Calculate total value based on quantity and current price
+        function calculateTotalValue() {
+            const quantity = parseInt(modalStockQuantity.value, 10);
+            if (isNaN(quantity) || quantity <= 0 || modalCurrentStockPrice <= 0) {
+                modalStockValue.value = '$0.00';
+                return;
+            }
+            const totalValue = quantity * modalCurrentStockPrice;
+            modalStockValue.value = `$${totalValue.toFixed(2)}`;
+        }
+
+        // Save stock to portfolio
+        async function saveStockToPortfolio() {
+            const symbol = modalStockSymbol.value.trim().toUpperCase();
+            const quantity = parseInt(modalStockQuantity.value, 10);
+            const purchasePrice = modalCurrentStockPrice; // Use modal's current price as purchase price
+            const portfolioName = modalPortfolioName.value.trim(); // Get portfolio name
+            const totalValue = quantity * purchasePrice; // Calculate total value here before sending
+
+            if (!authToken) {
+                alert('You need to be logged in to add stocks to your portfolio.'); // Consider custom modal
+                return;
+            }
+
+            if (!symbol || isNaN(quantity) || quantity <= 0 || isNaN(purchasePrice) || purchasePrice <= 0 || !portfolioName) {
+                modalErrorMessage.textContent = 'Please enter a valid symbol, quantity, price, and portfolio name.';
+                modalErrorMessage.classList.remove('portfolio-hidden');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/portfolio/add`, { // Use /portfolio/add endpoint
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`,
+                    },
+                    body: JSON.stringify({
+                        symbol: symbol,
+                        quantity: quantity,
+                        purchasePrice: purchasePrice,
+                        totalValue: totalValue, // Include totalValue in the payload
+                        portfolioName: portfolioName, // Include portfolio name
+                        dateAdded: new Date().toISOString() // Send as ISO string
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `Failed to add stock: HTTP status ${response.status}`);
+                }
+
+                console.log("Stock added to portfolio successfully via server!");
+                hideAddStockModal();
+                alert(`${quantity} shares of ${symbol} added to your portfolio '${portfolioName}'!`); // Simple confirmation
+                // If you want to refresh the watchlist or anything on home.html, do it here.
+                // Otherwise, the user would navigate to Portfolio.html to see the full list.
+            } catch (error) {
+                console.error("Error adding stock to portfolio:", error);
+                modalErrorMessage.textContent = `Failed to add stock: ${error.message}`;
+                modalErrorMessage.classList.remove('portfolio-hidden');
+            }
+        }
     </script>
 
 </body>

@@ -1,357 +1,328 @@
-    /* General Body Styles */
-    body {
-        font-family: 'Inter', sans-serif;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        background-color: #f3f4f6;
-        /* Equivalent to bg-gray-100 */
-        min-height: 100vh;
-        /* Equivalent to min-h-screen */
-        display: flex;
-        flex-direction: column;
-        padding: 0;
-        /* Changed to 0 to remove padding from the body */
+/* General Body Styles */
+body { /* Changed from .portfolio-body to body to directly apply */
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #f3f4f6; /* Equivalent to bg-gray-100 */
+    min-height: 100vh; /* Equivalent to min-h-screen */
+    display: flex;
+    flex-direction: column;
+    padding: 0; /* Changed to 0 to remove padding from the body */
+    margin: 0; /* Ensure no default body margin */
+}
+
+/* Container for main content */
+.portfolio-container {
+    max-width: 1200px; /* Specific max-width for the main content */
+    margin: 2rem auto; /* Equivalent to mt-8 and mx-auto */
+    padding: 1.5rem; /* Equivalent to p-6 */
+    background-color: #fff; /* Equivalent to bg-white */
+    border-radius: 0.75rem; /* Equivalent to rounded-xl */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Equivalent to shadow-lg */
+    flex-grow: 1; /* Equivalent to flex-grow */
+    width: 100%; /* Ensure it takes full width within its context before max-width applies */
+    box-sizing: border-box; /* Include padding in element's total width and height */
+}
+
+/* Header Styles */
+.portfolio-header {
+    text-align: center;
+    margin-bottom: 1rem; /* Reduced from 1.5rem */
+}
+
+/* Adjusted H1 font sizes with !important */
+.portfolio-h1 {
+    font-size: 1.3rem !important; /* Further reduced from 1.5rem */
+    line-height: 1.25; /* Equivalent to leading-tight */
+    font-weight: 800; /* Equivalent to font-extrabold */
+    color: #1a202c; /* Equivalent to text-gray-900 */
+}
+
+/* Portfolio Selection Dropdown */
+.portfolio-dropdown-container {
+    margin-bottom: 1.5rem; /* Equivalent to mb-6 */
+    display: flex; /* Equivalent to flex */
+    align-items: center; /* Equivalent to items-center */
+    gap: 1rem; /* Equivalent to gap-4 */
+}
+
+.portfolio-dropdown-label {
+    font-size: 1.125rem; /* Equivalent to text-lg */
+    font-weight: 600; /* Equivalent to font-semibold */
+    color: #4b5563; /* Equivalent to text-gray-700 */
+}
+
+.portfolio-dropdown-select {
+    padding: 0.5rem; /* Equivalent to p-2 */
+    border: 1px solid #d1d5db; /* Equivalent to border border-gray-300 */
+    border-radius: 0.375rem; /* Equivalent to rounded-md */
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* Equivalent to shadow-sm */
+    /* focus styles require `:focus` pseudo-class */
+    display: block; /* Equivalent to block */
+    width: auto; /* Allow content sizing */
+    font-size: 0.875rem; /* Equivalent to sm:text-sm */
+}
+.portfolio-dropdown-select:focus {
+    outline: none;
+    border-color: #6366f1; /* Equivalent to focus:border-indigo-500 */
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5); /* Equivalent to focus:ring-indigo-500 */
+}
+
+
+/* Section Gap (flex-col lg:flex-row mb-8) */
+.portfolio-section-gap {
+    display: flex;
+    flex-direction: column;
+    gap: 5rem; /* Reintroduced and increased gap for spacing between columns */
+    margin-bottom: 2rem; /* Equivalent to mb-8, adjusted based on original Tailwind */
+    min-height: 520px; /* Increased from 200px to 300px */
+    overflow: hidden; /* Added to hide overflow if content exceeds height */
+}
+
+@media (min-width: 1024px) { /* lg breakpoint */
+    .portfolio-section-gap {
+        flex-direction: row;
+    }
+}
+
+/* Bottom Section: Daily Changes and Watchlist Highlights */
+.portfolio-bottom-grid-section {
+    display: grid;
+    grid-template-columns: 1fr; /* Default to single column */
+    gap: 1.5rem; /* Equivalent to gap-6 */
+    margin-top: 2rem; /* Equivalent to mt-8 */
+}
+
+@media (min-width: 768px) { /* md breakpoint */
+    .portfolio-bottom-grid-section {
+        grid-template-columns: repeat(3, 1fr); /* Equivalent to md:grid-cols-3 */
+    }
+}
+
+/* Left Column: Portfolio Metrics */
+.portfolio-metrics-column { /* Renamed from .portfolio-metrics */
+    display: flex;
+    flex-direction: column;
+    gap: 4rem;
+    padding-left: 100px; /* Added padding to the left */
+    padding-top: 50px;
+    width: 100%; /* Default to full width on small screens */
+}
+
+@media (min-width: 1024px) { /* lg breakpoint */
+    .portfolio-metrics-column {
+        width: 32%; /* Adjusted to accommodate the gap */
+    }
+}
+
+.portfolio-metric-box { /* Renamed from .metric-box */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* Equivalent to shadow-sm */
+}
+
+.portfolio-metric-label { /* Renamed from .metric-label */
+    font-size: 1.125rem; /* Equivalent to text-lg */
+    font-weight: 600; /* Equivalent to font-semibold */
+    color: #4b5563; /* Equivalent to text-gray-700 */
+}
+
+.portfolio-metric-value { /* Renamed from .metric-value */
+    font-size: 1.25rem; /* Equivalent to text-xl */
+    font-weight: 700; /* Equivalent to font-bold */
+}
+
+/* Specific colors for metric boxes */
+.portfolio-bg-blue-50 { background-color: #eff6ff; }
+.portfolio-text-blue-700 { color: #1d4ed8; }
+
+.portfolio-bg-green-50 { background-color: #ecfdf5; } /* Updated from f0fdf4 */
+.portfolio-text-green-700 { color: #047857; } /* Updated from 15803d */
+
+.portfolio-bg-purple-50 { background-color: #faf5ff; }
+.portfolio-text-purple-700 { color: #6d28d9; }
+
+.portfolio-bg-red-50 { background-color: #fef2f2; }
+.portfolio-text-red-700 { color: #b91c1c; }
+
+
+/* Right Column: Holdings Value Chart */
+.portfolio-chart-section { /* Renamed from .chart-section */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%; /* Default to full width on small screens */
+}
+
+@media (min-width: 1024px) { /* lg breakpoint */
+    .portfolio-chart-section {
+        width: 64%; /* Adjusted to accommodate the gap */
+    }
+}
+
+.portfolio-h2 { /* Renamed from h2 */
+    font-size: 1.5rem; /* Equivalent to text-2xl */
+    font-weight: 700; /* Equivalent to font-bold */
+    color: #2d3748; /* Equivalent to text-gray-800 */
+    margin-bottom: 1rem; /* Adjusted from 0.1rem, more typical for H2 spacing */
+}
+
+.portfolio-chart-visual-container { /* Renamed from .chart-visual-container */
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 350px; /* Restored original min-height, important for Chart.js */
+    width: 100%; /* Equivalent to w-full */
+    background-color: #ffffff; /* Equivalent to bg-white */
+    border-radius: 0.75rem; /* Equivalent to rounded-xl */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); /* Equivalent to shadow-lg */
+    overflow: hidden; /* Added to clip content if it pushes out */
+}
+
+.portfolio-canvas { /* Renamed for clarity, though it targets the <canvas> tag */
+    display: block;
+    background-color: #f0f4f8; /* Light gray background for chart drawing area */
+    border-radius: 0.75rem;
+    max-width: 100%;
+    height: 100% !important; /* Explicitly set canvas height to 100% of parent */
+}
+
+#portfolio-chart-placeholder-text { /* Renamed from #chartPlaceholderText */
+    position: absolute;
+    z-index: 10;
+    background-color: rgba(255, 255, 255, 0.7);
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    color: #6b7280; /* Equivalent to text-gray-500 */
+    text-align: center;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Card item styles */
+.portfolio-card-item { /* Renamed from .card-item */
+    padding: 1.5rem; /* Equivalent to p-6 */
+    background-color: #ffffff; /* Equivalent to bg-white */
+    border-radius: 0.75rem; /* Equivalent to rounded-xl */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); /* Equivalent to shadow-lg */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.portfolio-card-title { /* Renamed from .card-title */
+    font-size: 1.125rem; /* Equivalent to text-lg */
+    font-weight: 600; /* Equivalent to font-semibold */
+    color: #2d3748; /* Equivalent to text-gray-800 */
+    margin-bottom: 0.5rem; /* Equivalent to mb-2 */
+}
+
+.portfolio-card-value-large { /* Renamed from .card-value-large */
+    font-size: 1.875rem; /* Equivalent to text-3xl */
+    font-weight: 700; /* Equivalent to font-bold */
+    margin-bottom: 0.25rem; /* Equivalent to mb-1 */
+}
+
+.portfolio-card-value-medium { /* Renamed from .card-value-medium */
+    font-size: 1.25rem; /* Equivalent to text-xl */
+    font-weight: 700; /* Equivalent to font-bold */
+}
+
+.portfolio-card-sub-text { /* Renamed from .card-sub-text */
+    font-size: 1.125rem; /* Equivalent to text-xl */
+    color: #4a5568; /* Equivalent to text-gray-600 */
+    margin-top: 0.25rem; /* Equivalent to mt-1 */
+}
+
+/* Specific colors for text within cards */
+.text-green-600 { color: #16a34a; }
+.text-indigo-700 { color: #4338ca; }
+.text-red-700 { color: #b91c1c; }
+
+/* Responsive adjustments for header h1 */
+@media (min-width: 640px) {
+    .portfolio-h1 { /* Added this for consistency */
+        font-size: 1.5rem !important; /* Adjusted from 1.75rem to match sm:text-xl from original */
+    }
+    .portfolio-card-title { /* Renamed from .card-title */
+        font-size: 1.25rem; /* text-xl */
     }
 
-    /* Container for main content */
-    .container {
-        max-width: 100%;
-        /* Changed to 100% to fit full width */
-        margin-left: auto;
-        margin-right: auto;
-        width: 100%;
+    .portfolio-card-value-large { /* Renamed from .card-value-large */
+        font-size: 2.25rem; /* text-3xl */
     }
 
-    /* Main content wrapper - Outer box removed */
-    main {
-        margin-top: 0rem;
-        /* Reduced to 0 to remove gap with navbar */
-        padding: 1.5rem;
-        /* Equivalent to p-6, keeps inner spacing for content */
-        background-color: transparent;
-        /* Removed background color */
-        border-radius: 0;
-        /* Removed border-radius */
-        box-shadow: none;
-        /* Removed box-shadow */
-        flex-grow: 1;
-        /* Equivalent to flex-grow */
+    .portfolio-card-value-medium { /* Renamed from .card-value-medium */
+        font-size: 1.5rem; /* text-2xl */
     }
 
-    /* Header Styles */
-    header {
-        text-align: center;
-        margin-bottom: 1rem;
-        /* Reduced from 1.5rem */
+    .portfolio-card-sub-text { /* Renamed from .card-sub-text */
+        font-size: 1.25rem; /* text-xl */
+    }
+}
+
+@media (min-width: 1024px) { /* lg breakpoint */
+    .portfolio-h1 { /* Renamed from h1 */
+        font-size: 1.75rem !important; /* Reduced from 2rem */
     }
 
-    /* Adjusted H1 font sizes with !important */
-    h1 {
-        font-size: 1.3rem !important;
-        /* Further reduced from 1.5rem */
-        line-height: 1.25;
-        /* Equivalent to leading-tight */
-        font-weight: 800;
-        /* Equivalent to font-extrabold */
-        color: #1a202c;
-        /* Equivalent to text-gray-900 */
+    .portfolio-header { /* Renamed from header */
+        margin-bottom: 1.5rem; /* Reduced from 2rem */
     }
+}
 
-    /* Section Gap (flex-col lg:flex-row gap-6 mb-8) */
-    .section-gap {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        /* Reduced from 1.5rem */
-        margin-bottom: 2rem;
-        /* Equivalent to mb-8 */
-        height: 550px;
-        /* Increased from 200px to 300px */
-        overflow: hidden;
-        /* Added to hide overflow if content exceeds height */
-    }
+/* Table styles */
+.portfolio-table-container {
+    background-color: #fff;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    margin-top: 2rem;
+    overflow-x: auto; /* For responsive tables */
+}
+.portfolio-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+    min-width: 600px; /* Ensure table doesn't get too squished */
+}
+.portfolio-table th, .portfolio-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0; /* slate-200 */
+}
+.portfolio-table th {
+    background-color: #f8fafc; /* slate-50 */
+    color: #475569; /* slate-700 */
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.portfolio-table tbody tr:last-child td {
+    border-bottom: none;
+}
+.portfolio-table tbody tr.even-row {
+    background-color: #f1f5f9; /* slate-100 */
+}
+.portfolio-table .gain { color: #22c55e; font-weight: 600; } /* green-500 */
+.portfolio-table .loss { color: #ef4444; font-weight: 600; } /* red-500 */
+.portfolio-table .neutral { color: #475569; } /* slate-700 */
 
-    @media (min-width: 1024px) {
+/* Utility for hidden elements */
+.hidden {
+    display: none !important;
+}
 
-        /* lg breakpoint */
-        .section-gap {
-            flex-direction: row;
-        }
-    }
-
-    /* Bottom Section: Daily Changes and Watchlist Highlights */
-    .bottom-grid-section {
-        display: grid;
-        grid-template-columns: 1fr;
-        /* Default to single column */
-        gap: 1.5rem;
-        /* Equivalent to gap-6 */
-    }
-
-    @media (min-width: 768px) {
-
-        /* md breakpoint */
-        .bottom-grid-section {
-            grid-template-columns: repeat(3, 1fr);
-            /* Equivalent to md:grid-cols-3 */
-        }
-    }
-
-    /* Left Column: Portfolio Metrics */
-    .portfolio-metrics {
-        display: flex;
-        flex-direction: column;
-        gap: 4rem;
-        padding-left: 20px;
-        padding-top: 50px;
-        /* Reduced from 1.5rem */
-    }
-
-    @media (min-width: 1024px) {
-
-        /* lg breakpoint */
-        .portfolio-metrics {
-            width: 33.333333%;
-            /* Equivalent to lg:w-1/3 */
-        }
-    }
-
-    .metric-box {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0.75rem;
-        border-radius: 0.5rem;
-    }
-
-    .metric-label {
-        font-size: 1.125rem;
-        /* Equivalent to text-lg */
-        font-weight: 600;
-        /* Equivalent to font-semibold */
-        color: #4a5568;
-        /* Equivalent to text-gray-700 */
-    }
-
-    .metric-value {
-        font-size: 1.25rem;
-        /* Equivalent to text-xl */
-        font-weight: 700;
-        /* Equivalent to font-bold */
-    }
-
-    /* Specific colors for metric boxes */
-    .bg-blue-50 {
-        background-color: #eff6ff;
-    }
-
-    .text-blue-700 {
-        color: #1d4ed8;
-    }
-
-    .bg-green-50 {
-        background-color: #ecfdf5;
-    }
-
-    .text-green-700 {
-        color: #047857;
-    }
-
-    .bg-purple-50 {
-        background-color: #faf5ff;
-    }
-
-    .text-purple-700 {
-        color: #6d28d9;
-    }
-
-    .bg-red-50 {
-        background-color: #fef2f2;
-    }
-
-    .text-red-700 {
-        color: #b91c1c;
-    }
-
-
-    /* Right Column: Holdings Value Chart */
-    .chart-section {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-
-    @media (min-width: 1024px) {
-
-        /* lg breakpoint */
-        .chart-section {
-            width: 66.666667%;
-            /* Equivalent to lg:w-2/3 */
-        }
-    }
-
-    h2 {
-        font-size: 1.5rem;
-        /* Equivalent to text-2xl */
-        font-weight: 700;
-        /* Equivalent to font-bold */
-        color: #2d3748;
-        /* Equivalent to text-gray-800 */
-        margin-bottom: 0.1rem;
-        /* Reduced from 0.25rem to 0.1rem */
-    }
-
-    .chart-visual-container {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        /* Removed min-height */
-        height: 100px !important;
-        /* Kept at 100px */
-        width: 100%;
-        /* Equivalent to w-full */
-        background-color: #ffffff;
-        /* Equivalent to bg-white */
-        border-radius: 0.75rem;
-        /* Equivalent to rounded-xl */
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-        /* Equivalent to shadow-lg */
-        overflow: hidden;
-        /* Added to clip content if it pushes out */
-    }
-
-    canvas {
-        display: block;
-        background-color: #f0f4f6;
-        /* Light gray background for chart drawing area */
-        border-radius: 0.75rem;
-        max-width: 100%;
-        height: 100% !important;
-        /* Explicitly set canvas height to 100% of parent */
-    }
-
-    #chartPlaceholderText {
-        position: absolute;
-        z-index: 10;
-        background-color: rgba(255, 255, 255, 0.7);
-        padding: 0.5rem 1rem;
-        border-radius: 0.5rem;
-        color: #6b7280;
-        /* Equivalent to text-gray-500 */
-        text-align: center;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
-
-    /* Card item styles */
-    .card-item {
-        padding: 1.5rem;
-        /* Equivalent to p-6 */
-        background-color: #ffffff;
-        /* Equivalent to bg-white */
-        border-radius: 0.75rem;
-        /* Equivalent to rounded-xl */
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-        /* Equivalent to shadow-lg */
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-    }
-
-    .card-title {
-        font-size: 1.125rem;
-        /* Equivalent to text-lg */
-        font-weight: 600;
-        /* Equivalent to font-semibold */
-        color: #2d3748;
-        /* Equivalent to text-gray-800 */
-        margin-bottom: 0.5rem;
-        /* Equivalent to mb-2 */
-    }
-
-    .card-value-large {
-        font-size: 1.875rem;
-        /* Equivalent to text-3xl */
-        font-weight: 700;
-        /* Equivalent to font-bold */
-        margin-bottom: 0.25rem;
-        /* Equivalent to mb-1 */
-    }
-
-    .card-value-medium {
-        font-size: 1.25rem;
-        /* Equivalent to text-xl */
-        font-weight: 700;
-        /* Equivalent to font-bold */
-    }
-
-    .card-sub-text {
-        font-size: 1.125rem;
-        /* Equivalent to text-xl */
-        color: #4a5568;
-        /* Equivalent to text-gray-600 */
-        margin-top: 0.25rem;
-        /* Equivalent to mt-1 */
-    }
-
-    /* Specific colors for text within cards */
-    .text-green-600 {
-        color: #16a34a;
-    }
-
-    .text-indigo-700 {
-        color: #4338ca;
-    }
-
-    .text-red-700 {
-        color: #b91c1c;
-    }
-
-    /* Responsive adjustments for header h1 */
-    @media (min-width: 640px) {
-
-        /* sm breakpoint */
-        h1 {
-            font-size: 1.5rem !important;
-            /* Further reduced from 1.75rem */
-        }
-
-        .card-title {
-            font-size: 1.25rem;
-            /* text-xl */
-        }
-
-        .card-value-large {
-            font-size: 2.25rem;
-            /* text-3xl */
-        }
-
-        .card-value-medium {
-            font-size: 1.5rem;
-            /* text-2xl */
-        }
-
-        .card-sub-text {
-            font-size: 1.25rem;
-            /* text-xl */
-        }
-    }
-
-    @media (min-width: 1024px) {
-
-        /* lg breakpoint */
-        h1 {
-            font-size: 1.75rem !important;
-            /* Reduced from 2rem */
-        }
-
-        header {
-            margin-bottom: 1.5rem;
-            /* Reduced from 2rem */
-        }
-    }
+.loading-indicator {
+    color: #007bff;
+    text-align: center;
+    margin-top: 20px;
+}
