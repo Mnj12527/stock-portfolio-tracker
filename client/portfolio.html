@@ -4,14 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Track Your Portfolio</title>
-    <!-- Link to your custom CSS file -->
     <link rel="stylesheet" href="portfolio.css">
-    <!-- Chart.js CDN for drawing charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body class="portfolio-body">
-    <!-- Main Content Area -->
     <main class="portfolio-container portfolio-main">
         <header class="portfolio-header">
             <h1 class="portfolio-h1">
@@ -19,7 +16,6 @@
             </h1>
         </header>
 
-        <!-- Portfolio Selection Dropdown -->
         <div class="portfolio-dropdown-container">
             <label for="portfolioSelect" class="portfolio-dropdown-label">Select Portfolio:</label>
             <select id="portfolioSelect" class="portfolio-dropdown-select">
@@ -27,9 +23,7 @@
             </select>
         </div>
 
-        <!-- Portfolio Details and Chart Section -->
         <div class="portfolio-section-gap">
-            <!-- Left Column: Portfolio Metrics (Boxed) -->
             <section class="portfolio-metrics-column">
                 <div class="portfolio-metric-box portfolio-bg-blue-50">
                     <span class="portfolio-metric-label portfolio-text-gray-700">Total Portfolio Value</span>
@@ -49,7 +43,6 @@
                 </div>
             </section>
 
-            <!-- Right Column: Holdings Value Chart (Larger Area) -->
             <section class="portfolio-chart-section">
                 <h2 class="portfolio-h2">Holdings Allocation</h2>
                 <div class="portfolio-chart-visual-container">
@@ -61,13 +54,12 @@
             </section>
         </div>
 
-        <!-- Portfolio Holdings Table -->
         <div class="portfolio-table-container">
             <h2 class="portfolio-h2 mb-4">Current Holdings</h2>
             <table class="portfolio-table">
                 <thead>
                     <tr>
-                        <th>Symbol</th>
+                        <th>Date/Time Added</th> <th>Symbol</th>
                         <th>Company Name</th>
                         <th>Quantity</th>
                         <th>Avg. Purchase Price</th>
@@ -77,15 +69,13 @@
                     </tr>
                 </thead>
                 <tbody id="holdingsTableBody">
-                    <tr><td colspan="7" class="text-center text-gray-500 py-4">No holdings in this portfolio.</td></tr>
+                    <tr><td colspan="8" class="text-center text-gray-500 py-4">No holdings in this portfolio.</td></tr>
                 </tbody>
             </table>
             <p id="holdingsLoadingIndicator" class="loading-indicator text-center py-4 hidden">Loading holdings...</p>
         </div>
 
-        <!-- Bottom Section: Daily Changes and Watchlist Highlights (Grid Layout) -->
         <section class="portfolio-bottom-grid-section mt-8">
-            <!-- Day Change -->
             <div class="portfolio-card-item">
                 <h3 class="portfolio-card-title">Day Change</h3>
                 <p id="dayChangePercent" class="portfolio-card-value-large text-green-600">
@@ -96,7 +86,6 @@
                 </p>
             </div>
 
-            <!-- Highest Gainer -->
             <div class="portfolio-card-item">
                 <h3 class="portfolio-card-title">Highest Gainer</h3>
                 <p id="highestGainerSymbol" class="portfolio-card-value-medium text-indigo-700">
@@ -107,7 +96,6 @@
                 </p>
             </div>
 
-            <!-- Looser Stock -->
             <div class="portfolio-card-item">
                 <h3 class="portfolio-card-title">Looser Stock</h3>
                 <p id="looserStockSymbol" class="portfolio-card-value-medium text-red-700">
@@ -123,7 +111,7 @@
     <script>
         const API_BASE_URL = 'http://localhost:5000';
         // authToken will now be received from the parent page or localStorage
-        let authToken = localStorage.getItem('token'); 
+        let authToken = localStorage.getItem('token');
         let allUserPortfolios = []; // Stores all portfolio entries from the backend
         let currentChart; // To hold the Chart.js instance
 
@@ -148,7 +136,7 @@
         // Function to fetch all portfolio holdings for the user
         async function fetchUserPortfolios() {
             // Re-check authToken here, as it might have been passed
-            if (!authToken) { 
+            if (!authToken) {
                 authToken = localStorage.getItem('token'); // Try getting it again from localStorage
                 if (!authToken) {
                     console.log("No token found, cannot fetch portfolios. Please log in.");
@@ -218,11 +206,11 @@
             holdingsLoadingIndicator.classList.remove('hidden');
             const filteredHoldings = allUserPortfolios.filter(holding => holding.portfolioName === selectedPortfolioName);
             console.log(`Filtering for portfolio: ${selectedPortfolioName}. Found ${filteredHoldings.length} holdings.`); // Debug log
-            
+
             // Fetch current prices for all stocks in the filtered holdings
             const symbolsToFetch = [...new Set(filteredHoldings.map(h => h.symbol))];
             const currentPrices = {};
-            
+
             // Use Promise.allSettled to allow some fetches to fail without stopping others
             const pricePromises = symbolsToFetch.map(async symbol => {
                 try {
@@ -252,7 +240,7 @@
                 const currentPrice = currentPriceData?.price || holding.purchasePrice; // Fallback to purchase price if fetch fails
                 const companyName = currentPriceData?.name || 'N/A';
                 const previousClose = currentPriceData?.previousClose || holding.purchasePrice; // Fallback for day change
-                
+
                 const currentValue = holding.quantity * currentPrice;
                 const gainLoss = currentValue - holding.totalValue; // totalValue is purchaseValue
                 const gainLossPercent = holding.totalValue > 0 ? (gainLoss / holding.totalValue) * 100 : 0;
@@ -293,7 +281,7 @@
             let totalValue = 0;
             let totalStocks = 0;
             let totalUnrealizedGainLoss = 0;
-            
+
             holdings.forEach(h => {
                 totalValue += h.currentValue;
                 totalStocks += h.quantity;
@@ -305,7 +293,7 @@
 
             totalPortfolioValueEl.textContent = `$${totalValue.toFixed(2)}`;
             totalStocksHeldEl.textContent = holdings.length; // Count of unique stocks
-            
+
             unrealizedGainLossEl.textContent = `${totalUnrealizedGainLoss >= 0 ? '+' : ''}$${totalUnrealizedGainLoss.toFixed(2)} (${unrealizedPercent >= 0 ? '+' : ''}${unrealizedPercent.toFixed(2)}%)`;
             // Remove previous color classes before adding new one
             unrealizedGainLossEl.classList.remove('portfolio-text-green-700', 'portfolio-text-red-700', 'portfolio-text-purple-700');
@@ -316,11 +304,11 @@
             } else {
                 unrealizedGainLossEl.classList.add('portfolio-text-purple-700'); // Neutral color
             }
-            
+
             // Realized gain/loss calculation is not included as it requires transaction history (sell data)
             // For now, it remains placeholder
             realizedGainLossEl.textContent = '+$0.00 (0.00%)';
-            realizedGainLossEl.classList.remove('portfolio-text-green-700', 'portfolio-text-red-700'); // Clean up classes
+            realizedGainLossEl.classList.remove('portfolio-text-green-700', 'text-red-700'); // Clean up classes
             realizedGainLossEl.classList.add('portfolio-text-red-700'); // Keep default color for now
         }
 
@@ -328,7 +316,8 @@
         function renderHoldingsTable(holdings) {
             holdingsTableBody.innerHTML = '';
             if (holdings.length === 0) {
-                holdingsTableBody.innerHTML = '<tr><td colspan="7" class="text-center text-gray-500 py-4">No holdings in this portfolio.</td></tr>';
+                // Adjusted colspan to 8 for the new column
+                holdingsTableBody.innerHTML = '<tr><td colspan="8" class="text-center text-gray-500 py-4">No holdings in this portfolio.</td></tr>';
                 chartPlaceholderText.style.display = 'block'; // Show placeholder if no holdings
                 return;
             }
@@ -336,13 +325,18 @@
 
             holdings.forEach((h, index) => {
                 const row = document.createElement('tr');
-                row.classList.add(index % 2 === 0 ? '' : 'even-row'); // For alternating row colors
+if (index % 2 !== 0) { // Only add 'even-row' for odd indices
+    row.classList.add('even-row');
+}
 
                 const gainLossText = `${h.gainLoss >= 0 ? '+' : ''}${h.gainLoss.toFixed(2)} (${h.gainLossPercent >= 0 ? '+' : ''}${h.gainLossPercent.toFixed(2)}%)`;
                 const gainLossClass = h.gainLoss > 0 ? 'gain' : (h.gainLoss < 0 ? 'loss' : 'neutral');
 
+                // Format the date for display
+                const formattedDate = h.dateAdded ? new Date(h.dateAdded).toLocaleString() : 'N/A';
+
                 row.innerHTML = `
-                    <td>${h.symbol}</td>
+                    <td>${formattedDate}</td> <td>${h.symbol}</td>
                     <td>${h.companyName}</td>
                     <td>${h.quantity}</td>
                     <td>$${h.purchasePrice.toFixed(2)}</td>
@@ -465,7 +459,7 @@
 
             dayChangePercentEl.textContent = `${dayChangePercent >= 0 ? '+' : ''}${dayChangePercent.toFixed(2)}%`;
             dayChangePercentEl.className = `portfolio-card-value-large ${dayChangePercent >= 0 ? 'text-green-600' : 'text-red-700'}`;
-            
+
             dayChangeAmountEl.textContent = `${totalDayChangeAmount >= 0 ? '+' : ''}$${totalDayChangeAmount.toFixed(2)}`;
             dayChangeAmountEl.className = `portfolio-card-value-medium ${totalDayChangeAmount >= 0 ? 'text-green-600' : 'text-red-700'}`;
 

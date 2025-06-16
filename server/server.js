@@ -500,53 +500,6 @@ app.get('/:pageName.html', (req, res) => {
     });
 });
 
-
-const fetch = require('node-fetch'); // or axios
-
-const TWELVE_DATA_API_KEY=process.env.TWELVE_DATA_API_KEY; // Get from environment variable
-
-// Middleware to verify JWT token (as per your existing client-side code)
-// ... (your authentication middleware here)
-
-app.get('/api/twelvedata/quote/:symbol', async (req, res) => {
-    const symbol = req.params.symbol;
-    if (!TWELVE_DATA_API_KEY) {
-        return res.status(500).json({ message: "Server API key for Twelve Data is not configured." });
-    }
-    try {
-        const response = await fetch(`https://api.twelvedata.com/quote?symbol=<span class="math-inline">\{symbol\}&apikey\=</span>{TWELVE_DATA_API_KEY}`);
-        if (!response.ok) {
-            const errorData = await response.json();
-            return res.status(response.status).json(errorData);
-        }
-        const data = await response.json();
-        res.json(data);
-    } catch (error) {
-        console.error("Error fetching quote from Twelve Data:", error);
-        res.status(500).json({ message: "Failed to fetch data from Twelve Data API." });
-    }
-});
-
-app.get('/api/twelvedata/time_series/:symbol', async (req, res) => {
-    const symbol = req.params.symbol;
-    if (!TWELVE_DATA_API_KEY) {
-        return res.status(500).json({ message: "Server API key for Twelve Data is not configured." });
-    }
-    try {
-        // Adjust interval as needed, e.g., '1min', '5min', '1day'
-        const response = await fetch(`https://api.twelvedata.com/time_series?symbol=<span class="math-inline">\{symbol\}&interval\=1min&outputsize\=30&apikey\=</span>{TWELVE_DATA_API_KEY}`);
-        if (!response.ok) {
-            const errorData = await response.json();
-            return res.status(response.status).json(errorData);
-        }
-        const data = await response.json();
-        res.json(data);
-    } catch (error) {
-        console.error("Error fetching time series from Twelve Data:", error);
-        res.status(500).json({ message: "Failed to fetch time series data from Twelve Data API." });
-    }
-});
-
 // Root route for the main page (e.g., when accessing http://localhost:5000/)
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../client/index.html')); // Assuming your login/entry point is index.html
