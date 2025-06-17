@@ -361,6 +361,65 @@ app.get("/portfolio", authenticate, async (req, res) => {
     }
 });
 
+// NEW: Delete a specific stock holding from portfolio
+app.delete("/portfolio/delete-holding/:holdingId", authenticate, async (req, res) => {
+    const { holdingId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(holdingId)) {
+        return res.status(400).json({ message: "Invalid holding ID." });
+    }
+
+    try {
+        const updatedUser = await User.findByIdAndUpdate(
+            req.user._id,
+            { $pull: { portfolio: { _id: holdingId } } }, // Remove the specific holding by _id
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        if (!updatedUser.portfolio.some(holding => holding._id.toString() === holdingId)) {
+            // This check might be redundant if $pull works as expected, but good for explicit confirmation
+            // It means the holding wasn't found in the first place or was already removed
+            // Alternatively, you could check if the document was modified
+            // const result = await User.updateOne(
+            //     { _id: req.user._id },
+            //     { $pull: { portfolio: { _id: holdingId } } }
+            // );
+            // if (result.modifiedCount === 0) { ... }
+        }
+
+        res.json({ success: true, message: "Stock holding deleted successfully.", portfolio: updatedUser.portfolio });
+    } catch (error) {
+        console.error("Error deleting stock holding:", error);
+        res.status(500).json({ message: "Error deleting stock holding." });
+    }
+});
+
+// NEW: Delete an entire portfolio by name
+app.delete("/portfolio/delete-portfolio/:portfolioName", authenticate, async (req, res) => {
+    const { portfolioName } = req.params;
+
+    try {
+        const updatedUser = await User.findByIdAndUpdate(
+            req.user._id,
+            { $pull: { portfolio: { portfolioName: portfolioName } } }, // Remove all holdings with this portfolioName
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        res.json({ success: true, message: `Portfolio "${portfolioName}" and all its holdings deleted successfully.`, portfolio: updatedUser.portfolio });
+    } catch (error) {
+        console.error("Error deleting portfolio:", error);
+        res.status(500).json({ message: "Error deleting portfolio." });
+    }
+});
+
 
 // --- Youtube Endpoint ---
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
@@ -498,6 +557,53 @@ app.get('/:pageName.html', (req, res) => {
             res.status(404).send('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>404 Not Found</title><style>body { font-family: sans-serif; text-align: center; margin-top: 50px; } h1 { color: #dc3545; }</style></head><body><h1>404 Page Not Found</h1><p>The page you requested could not be found.</p><a href="/">Go to Home</a></body></html>');
         }
     });
+});
+
+
+const fetch = require('node-fetch'); // or axios
+
+const TWELVE_DATA_API_KEY=process.env.TWELVE_DATA_API_KEY; // Get from environment variable
+
+// Middleware to verify JWT token (as per your existing client-side code)
+// ... (your authentication middleware here)
+
+app.get('/api/twelvedata/quote/:symbol', async (req, res) => {
+    const symbol = req.params.symbol;
+    if (!TWELVE_DATA_API_KEY) {
+        return res.status(500).json({ message: "Server API key for Twelve Data is not configured." });
+    }
+    try {
+        const response = await fetch(`https://api.twelvedata.com/quote?symbol=${symbol}&apikey=${TWELVE_DATA_API_KEY}`);
+        if (!response.ok) {
+            const errorData = await response.json();
+            return res.status(response.status).json(errorData);
+        }
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error("Error fetching quote from Twelve Data:", error);
+        res.status(500).json({ message: "Failed to fetch data from Twelve Data API." });
+    }
+});
+
+app.get('/api/twelvedata/time_series/:symbol', async (req, res) => {
+    const symbol = req.params.symbol;
+    if (!TWELVE_DATA_API_KEY) {
+        return res.status(500).json({ message: "Server API key for Twelve Data is not configured." });
+    }
+    try {
+        // Adjust interval as needed, e.g., '1min', '5min', '1day'
+        const response = await fetch(`https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1min&outputsize=30&apikey=${TWELVE_DATA_API_KEY}`);
+        if (!response.ok) {
+            const errorData = await response.json();
+            return res.status(response.status).json(errorData);
+        }
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error("Error fetching time series from Twelve Data:", error);
+        res.status(500).json({ message: "Failed to fetch time series data from Twelve Data API." });
+    }
 });
 
 // Root route for the main page (e.g., when accessing http://localhost:5000/)
