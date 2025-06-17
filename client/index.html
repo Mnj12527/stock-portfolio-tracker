@@ -23,8 +23,6 @@
       padding: 60px 20px;
       background: linear-gradient(to right, #00c49f, #6f2cff);
       color: white;
-    
-      /* Center contents vertically & horizontally */
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -64,19 +62,16 @@
       grid-template-columns: repeat(3, 1fr);
       row-gap: 100px;
       column-gap: 100px;
-      
-      /* Push down to avoid overlapping with fixed header */
       padding: 300px 100px 100px;
       margin: 0 auto;
     }
-    
-    
+
     .feature-box {
       background: white;
       border-radius: 10px;
       padding: 30px;
-      width: 500px;          /* Fixed width */
-      height: 250px;         /* Fixed height */
+      width: 500px;
+      height: 250px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       text-align: center;
     }
@@ -89,6 +84,76 @@
     .feature-box p {
       font-size: 15px;
       color: #444;
+    }
+
+    .footer {
+      background: #333;
+      color: white;
+      padding: 40px 20px;
+    }
+
+    .footer-content {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .footer-links p, .footer-contact p {
+      margin: 10px 0;
+      cursor: pointer;
+    }
+
+    .footer-links p:hover {
+      text-decoration: underline;
+    }
+
+    .footer-bottom {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1001;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.6);
+    }
+
+    .modal-content {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 30px;
+      border-radius: 10px;
+      width: 70%;
+      max-width: 700px;
+      position: relative;
+      animation: fadeIn 0.3s;
+    }
+
+    .modal-content h2 {
+      color: #6f2cff;
+    }
+
+    .close-btn {
+      background-color: #6f2cff;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      margin-top: 20px;
+      float: right;
+    }
+
+    @keyframes fadeIn {
+      from {opacity: 0;}
+      to {opacity: 1;}
     }
   </style>
 </head>
@@ -127,16 +192,15 @@
     </div>
   </div>
 
-
   <footer class="footer">
     <div class="footer-content">
       <div class="footer-links">
-        <p><strong>ABOUT</strong></p>
-        <p><strong>Data Disclaimer</strong></p>
-        <p><strong>Help</strong></p>
-        <p><strong>Terms and Privacy Policy</strong></p>
+        <p onclick="showModal('about')"><strong>ABOUT</strong></p>
+        <p onclick="showModal('disclaimer')"><strong>Data Disclaimer</strong></p>
+        <p onclick="showModal('help')"><strong>Help</strong></p>
+        <p onclick="showModal('terms')"><strong>Terms and Privacy Policy</strong></p>
       </div>
-      
+
       <div class="footer-contact">
         <p><strong>Customer Service</strong></p>
         <p>Monday to Friday: 9AM to 6PM – IST</p>
@@ -145,12 +209,81 @@
         <p>📧 Email us at:<br><a href="mailto:service.finance@Prasham.com">service.finance@Prasham.com</a></p>
       </div>
     </div>
-  
+
     <div class="footer-bottom">
       <p>© 2025 Prasham. All rights reserved.</p>
     </div>
   </footer>
-  
-  
+
+  <!-- Modals -->
+  <div id="modal" class="modal">
+    <div class="modal-content" id="modal-content">
+      <h2 id="modal-title"></h2>
+      <p id="modal-text"></p>
+      <button class="close-btn" onclick="closeModal()">Back</button>
+    </div>
+  </div>
+
+  <script>
+    function showModal(type) {
+      const title = document.getElementById("modal-title");
+      const text = document.getElementById("modal-text");
+      const modal = document.getElementById("modal");
+
+      const data = {
+  about: {
+    title: "About",
+    text: `Prasham is a stock market companion platform that helps users track their portfolio, monitor watchlists, view real-time stock charts, stay updated with market news, and explore educational videos — all in one place. Whether you're a beginner or an experienced investor, Prasham aims to simplify your financial journey with clarity and confidence.`
+  },
+  disclaimer: {
+    title: "Data Disclaimer",
+    text: `The data provided on Prasham is for informational purposes only. While we strive to ensure accuracy and timely updates, we do not guarantee the completeness or reliability of market data, stock prices, charts, or news content.
+
+Users are advised to perform their own due diligence before making any investment decisions. Prasham does not offer financial advice or investment recommendations.`
+  },
+  help: {
+    title: "Help",
+    text: `Need assistance? Here's how we can help:
+
+- Having trouble logging in? Make sure your credentials are correct.
+- Want to add stocks to your watchlist? Use the "+" button next to any stock.
+- Data not loading? Check your internet connection or try refreshing the page.
+- For additional support, contact us at: support@prasham.com
+
+We’re here to make your experience smooth and insightful.`
+  },
+  terms: {
+    title: "Terms and Privacy Policy",
+    text: `By using Prasham, you agree to the following terms:
+
+- Your data is stored securely and will not be shared without your consent.
+- We use cookies to enhance user experience and analyze site traffic.
+- Do not use Prasham for illegal or unauthorized activities.
+- We reserve the right to update terms and policies at any time.
+
+Privacy is important to us. Any personal information you provide is protected and handled responsibly in compliance with applicable laws.
+
+Read the full policy at: prasham.com/privacy`
+  }
+};
+
+      title.innerText = data[type].title;
+      text.innerText = data[type].text;
+      modal.style.display = "block";
+    }
+
+    function closeModal() {
+      document.getElementById("modal").style.display = "none";
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+      const modal = document.getElementById("modal");
+      if (event.target === modal) {
+        modal.style.display = "none";
+      }
+    };
+  </script>
+
 </body>
 </html>

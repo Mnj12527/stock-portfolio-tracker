@@ -4,131 +4,151 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Financial Market Dashboard</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f0f2f5;
-            color: #333;
-        }
+<style>
+    /* General Body Styles - MODIFIED for scrollability */
+    html, body { /* Ensure html also takes full height for proper scrolling context */
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
 
-        h1 {
-            text-align: center;
-            color: #0056b3;
-            margin-bottom: 30px;
-        }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        /* Removed background-color from body - it will now be covered by .dashboard-container */
+        color: #333;
+        /* height: 100vh; - REMOVE THIS from body */
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        /* justify-content: stretch; - Not needed if body is handling scroll */
 
-        h2 {
-            margin-top: 35px;
-            margin-bottom: 15px;
-            color: #007bff;
-            border-bottom: 2px solid #e9ecef;
-            padding-bottom: 8px;
-        }
+        /* ALLOW SCROLLING */
+        overflow-y: auto; /* Allow vertical scrolling if content overflows */
+        overflow-x: hidden; /* Keep horizontal overflow hidden if you don't want it */
+    }
 
-        .dashboard-container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            padding: 30px;
-        }
+    h1 {
+        text-align: center;
+        color: #0056b3;
+        margin-bottom: 30px;
+    }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            font-size: 0.95em;
-        }
+    h2 {
+        margin-top: 35px;
+        margin-bottom: 15px;
+        color: #007bff;
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 8px;
+    }
 
-        th, td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #e0e0e0;
-        }
+    /* Dashboard Container - MODIFIED to allow content to push height */
+    .dashboard-container {
+        /* max-width: 1000px; */ /* To make it fit the page width (already removed) */
+        margin: 0; /* To make it fit the page with no outer gaps (already removed) */
+        /* background-color: #ffffff;  Keep this - it will be your new page background */
+        border-radius: 0; /* To make corners flush with page edges (already removed) */
+        box-shadow: none; /* Shadow effect typically not desired for full-page background (already removed) */
+        padding: 30px; /* Keep internal padding for content */
+        width: 100%; /* Ensure it takes full available width */
+        box-sizing: border-box; /* Include padding in total width/height */
+        flex-grow: 1; /* Allow it to grow and fill available height in the flex body */
+        /* min-height: 100vh; - REMOVE THIS from dashboard-container */
+        /* Its height will now be determined by its content, and flex-grow will ensure it takes at least 100% of body's height */
+    }
 
-        th {
-            background-color: #f8f9fa;
-            color: #555;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+        font-size: 0.95em;
+    }
 
-        tbody tr:hover {
-            background-color: #f2f2f2;
-        }
+    th, td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #e0e0e0;
+    }
 
-        .price-up {
-            color: #28a745; /* Green */
-            font-weight: bold;
-        }
+    th {
+        background-color: #f8f9fa;
+        color: #555;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
 
-        .price-down {
-            color: #dc3545; /* Red */
-            font-weight: bold;
-        }
+    tbody tr:hover {
+        background-color: #f2f2f2;
+    }
 
-        .refresh-item-btn {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 8px 12px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            font-size: 1em;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px; /* Make button square */
-            height: 40px; /* Make button square */
-        }
+    .price-up {
+        color: #28a745; /* Green */
+        font-weight: bold;
+    }
 
-        .refresh-item-btn:hover {
-            background-color: #0056b3;
-        }
+    .price-down {
+        color: #dc3545; /* Red */
+        font-weight: bold;
+    }
 
-        .refresh-item-btn:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
+    .refresh-item-btn {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        font-size: 1em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px; /* Make button square */
+        height: 40px; /* Make button square */
+    }
 
-        .spinner {
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-top: 3px solid #fff;
-            border-radius: 50%;
-            width: 16px;
-            height: 16px;
-            animation: spin 1s linear infinite;
-        }
+    .refresh-item-btn:hover {
+        background-color: #0056b3;
+    }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+    .refresh-item-btn:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+    }
 
-        .loading-row td {
-            text-align: center;
-            font-style: italic;
-            color: #777;
-            padding: 20px;
-        }
+    .spinner {
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top: 3px solid #fff;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        animation: spin 1s linear infinite;
+    }
 
-        .error-message {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-            border-radius: 5px;
-            padding: 10px;
-            margin-top: 10px;
-            margin-bottom: 20px;
-            display: none; /* Hidden by default */
-            text-align: center;
-            font-weight: bold;
-        }
-    </style>
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .loading-row td {
+        text-align: center;
+        font-style: italic;
+        color: #777;
+        padding: 20px;
+    }
+
+    .error-message {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        border-radius: 5px;
+        padding: 10px;
+        margin-top: 10px;
+        margin-bottom: 20px;
+        display: none; /* Hidden by default */
+        text-align: center;
+        font-weight: bold;
+    }
+</style>
 </head>
 <body>
 

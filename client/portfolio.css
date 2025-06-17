@@ -1,71 +1,82 @@
 /* General Body Styles */
-body { /* Changed from .portfolio-body to body to directly apply */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+body {
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #f3f4f6; /* Equivalent to bg-gray-100 */
-    min-height: 100vh; /* Equivalent to min-h-screen */
+    /* Removed background-color from body - it will now be covered by the container */
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
-    padding: 0; /* Changed to 0 to remove padding from the body */
-    margin: 0; /* Ensure no default body margin */
+    /* Optional: If you want to absolutely ensure no gaps, set align-items and justify-content */
+    align-items: stretch; /* Ensures flex children (like portfolio-container) stretch to fill width */
+    justify-content: stretch; /* Ensures flex children stretch to fill height */
 }
 
-/* Container for main content */
+/* Container for main content - MODIFIED */
 .portfolio-container {
-    max-width: 1200px; /* Specific max-width for the main content */
-    margin: 2rem auto; /* Equivalent to mt-8 and mx-auto */
-    padding: 1.5rem; /* Equivalent to p-6 */
-    background-color: #fff; /* Equivalent to bg-white */
-    border-radius: 0.75rem; /* Equivalent to rounded-xl */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Equivalent to shadow-lg */
-    flex-grow: 1; /* Equivalent to flex-grow */
-    width: 100%; /* Ensure it takes full width within its context before max-width applies */
+    /* REMOVED max-width: 1200px; to make it fit the page width */
+    margin: 0; /* REMOVED margin: 2rem auto; - Now it fills all edges */
+    padding: 1.5rem; /* Keep internal padding for content */
+    background-color: #fff; /* This will now be the main page background */
+    border-radius: 0; /* REMOVED border-radius: 0.75rem; for full-bleed corners */
+    box-shadow: none; /* REMOVED box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); if you don't want a shadow on the entire page */
+    flex-grow: 1; /* Allows it to grow and fill available height within the flex body */
+    width: 100%; /* Ensures it takes full width */
     box-sizing: border-box; /* Include padding in element's total width and height */
+    /* Ensure it takes full height of the viewport */
+    min-height: 100vh; /* Set min-height to 100vh to ensure it covers the whole viewport */
 }
+
+/* ... rest of your CSS remains the same ... */
 
 /* Header Styles */
 .portfolio-header {
     text-align: center;
-    margin-bottom: 1rem; /* Reduced from 1.5rem */
+    margin-bottom: 1rem;
 }
 
 /* Adjusted H1 font sizes with !important */
 .portfolio-h1 {
-    font-size: 1.3rem !important; /* Further reduced from 1.5rem */
-    line-height: 1.25; /* Equivalent to leading-tight */
-    font-weight: 800; /* Equivalent to font-extrabold */
-    color: #1a202c; /* Equivalent to text-gray-900 */
+    font-size: 1.3rem !important;
+    line-height: 1.25;
+    font-weight: 800;
+    color: #1a202c;
 }
 
 /* Portfolio Selection Dropdown */
 .portfolio-dropdown-container {
-    margin-bottom: 1.5rem; /* Equivalent to mb-6 */
-    display: flex; /* Equivalent to flex */
-    align-items: center; /* Equivalent to items-center */
-    gap: 1rem; /* Equivalent to gap-4 */
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
 .portfolio-dropdown-label {
-    font-size: 1.125rem; /* Equivalent to text-lg */
-    font-weight: 600; /* Equivalent to font-semibold */
-    color: #4b5563; /* Equivalent to text-gray-700 */
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #4b5563;
 }
 
 .portfolio-dropdown-select {
-    padding: 0.5rem; /* Equivalent to p-2 */
-    border: 1px solid #d1d5db; /* Equivalent to border border-gray-300 */
-    border-radius: 0.375rem; /* Equivalent to rounded-md */
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* Equivalent to shadow-sm */
-    /* focus styles require `:focus` pseudo-class */
-    display: block; /* Equivalent to block */
-    width: auto; /* Allow content sizing */
-    font-size: 0.875rem; /* Equivalent to sm:text-sm */
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    display: block;
+    width: auto;
+    font-size: 0.875rem;
 }
 .portfolio-dropdown-select:focus {
     outline: none;
-    border-color: #6366f1; /* Equivalent to focus:border-indigo-500 */
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5); /* Equivalent to focus:ring-indigo-500 */
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5);
 }
 
 
@@ -73,74 +84,77 @@ body { /* Changed from .portfolio-body to body to directly apply */
 .portfolio-section-gap {
     display: flex;
     flex-direction: column;
-    gap: 5rem; /* Reintroduced and increased gap for spacing between columns */
-    margin-bottom: 2rem; /* Equivalent to mb-8, adjusted based on original Tailwind */
-    min-height: 520px; /* Increased from 200px to 300px */
-    overflow: hidden; /* Added to hide overflow if content exceeds height */
+    gap: 10rem; /* Keep this gap as it's between columns, not above the chart */
+    margin-bottom: 2rem;
+    min-height: 520px;
+    overflow: hidden;
+    /* align-items: center; - This might be implicitly centering if you don't change padding-top */
+    /* Consider changing to 'flex-start' if you want top-alignment, or leave if 'center' is desired after other changes */
 }
-
 @media (min-width: 1024px) { /* lg breakpoint */
     .portfolio-section-gap {
         flex-direction: row;
+        /* To make sure both columns start from the top of this row */
+        align-items: flex-start; /* ADDED/CHANGED: Aligns items to the top of the flex container */
     }
 }
 
 /* Bottom Section: Daily Changes and Watchlist Highlights */
 .portfolio-bottom-grid-section {
     display: grid;
-    grid-template-columns: 1fr; /* Default to single column */
-    gap: 1.5rem; /* Equivalent to gap-6 */
-    margin-top: 2rem; /* Equivalent to mt-8 */
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-top: 2rem;
 }
 
-@media (min-width: 768px) { /* md breakpoint */
+@media (min-width: 768px) {
     .portfolio-bottom-grid-section {
-        grid-template-columns: repeat(3, 1fr); /* Equivalent to md:grid-cols-3 */
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 
 /* Left Column: Portfolio Metrics */
-.portfolio-metrics-column { /* Renamed from .portfolio-metrics */
+.portfolio-metrics-column {
     display: flex;
     flex-direction: column;
     gap: 4rem;
-    padding-left: 100px; /* Added padding to the left */
-    padding-top: 50px;
-    width: 100%; /* Default to full width on small screens */
+    padding-left: 100px;
+    padding-top: 100px;
+    width: 100%;
 }
 
-@media (min-width: 1024px) { /* lg breakpoint */
+@media (min-width: 1024px) {
     .portfolio-metrics-column {
-        width: 32%; /* Adjusted to accommodate the gap */
+        width: 32%;
     }
 }
 
-.portfolio-metric-box { /* Renamed from .metric-box */
+.portfolio-metric-box {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0.75rem;
     border-radius: 0.5rem;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* Equivalent to shadow-sm */
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
-.portfolio-metric-label { /* Renamed from .metric-label */
-    font-size: 1.125rem; /* Equivalent to text-lg */
-    font-weight: 600; /* Equivalent to font-semibold */
-    color: #4b5563; /* Equivalent to text-gray-700 */
+.portfolio-metric-label {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #4b5563;
 }
 
-.portfolio-metric-value { /* Renamed from .metric-value */
-    font-size: 1.25rem; /* Equivalent to text-xl */
-    font-weight: 700; /* Equivalent to font-bold */
+.portfolio-metric-value {
+    font-size: 1.25rem;
+    font-weight: 700;
 }
 
 /* Specific colors for metric boxes */
 .portfolio-bg-blue-50 { background-color: #eff6ff; }
 .portfolio-text-blue-700 { color: #1d4ed8; }
 
-.portfolio-bg-green-50 { background-color: #ecfdf5; } /* Updated from f0fdf4 */
-.portfolio-text-green-700 { color: #047857; } /* Updated from 15803d */
+.portfolio-bg-green-50 { background-color: #ecfdf5; }
+.portfolio-text-green-700 { color: #047857; }
 
 .portfolio-bg-purple-50 { background-color: #faf5ff; }
 .portfolio-text-purple-700 { color: #6d28d9; }
@@ -150,55 +164,56 @@ body { /* Changed from .portfolio-body to body to directly apply */
 
 
 /* Right Column: Holdings Value Chart */
-.portfolio-chart-section { /* Renamed from .chart-section */
+.portfolio-chart-section {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 100%; /* Default to full width on small screens */
+    width: 100%;
+    height: 600px;
 }
 
-@media (min-width: 1024px) { /* lg breakpoint */
+@media (min-width: 1024px) {
     .portfolio-chart-section {
-        width: 64%; /* Adjusted to accommodate the gap */
+        width: 64%;
     }
 }
 
-.portfolio-h2 { /* Renamed from h2 */
-    font-size: 1.5rem; /* Equivalent to text-2xl */
-    font-weight: 700; /* Equivalent to font-bold */
-    color: #2d3748; /* Equivalent to text-gray-800 */
-    margin-bottom: 1rem; /* Adjusted from 0.1rem, more typical for H2 spacing */
+.portfolio-h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 1rem;
 }
 
-.portfolio-chart-visual-container { /* Renamed from .chart-visual-container */
+.portfolio-chart-visual-container {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 350px; /* Restored original min-height, important for Chart.js */
-    width: 100%; /* Equivalent to w-full */
-    background-color: #ffffff; /* Equivalent to bg-white */
-    border-radius: 0.75rem; /* Equivalent to rounded-xl */
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); /* Equivalent to shadow-lg */
-    overflow: hidden; /* Added to clip content if it pushes out */
+    min-height: 350px;
+    width: 100%;
+    background-color: #ffffff;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
 }
 
-.portfolio-canvas { /* Renamed for clarity, though it targets the <canvas> tag */
+.portfolio-canvas {
     display: block;
-    background-color: #f0f4f8; /* Light gray background for chart drawing area */
+    background-color: #f0f4f8;
     border-radius: 0.75rem;
     max-width: 100%;
-    height: 100% !important; /* Explicitly set canvas height to 100% of parent */
+    height: 100% !important;
 }
 
-#portfolio-chart-placeholder-text { /* Renamed from #chartPlaceholderText */
+#portfolio-chart-placeholder-text {
     position: absolute;
     z-index: 10;
     background-color: rgba(255, 255, 255, 0.7);
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
-    color: #6b7280; /* Equivalent to text-gray-500 */
+    color: #6b7280;
     text-align: center;
     top: 50%;
     left: 50%;
@@ -206,11 +221,11 @@ body { /* Changed from .portfolio-body to body to directly apply */
 }
 
 /* Card item styles */
-.portfolio-card-item { /* Renamed from .card-item */
-    padding: 1.5rem; /* Equivalent to p-6 */
-    background-color: #ffffff; /* Equivalent to bg-white */
-    border-radius: 0.75rem; /* Equivalent to rounded-xl */
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); /* Equivalent to shadow-lg */
+.portfolio-card-item {
+    padding: 1.5rem;
+    background-color: #ffffff;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -218,28 +233,28 @@ body { /* Changed from .portfolio-body to body to directly apply */
     text-align: center;
 }
 
-.portfolio-card-title { /* Renamed from .card-title */
-    font-size: 1.125rem; /* Equivalent to text-lg */
-    font-weight: 600; /* Equivalent to font-semibold */
-    color: #2d3748; /* Equivalent to text-gray-800 */
-    margin-bottom: 0.5rem; /* Equivalent to mb-2 */
+.portfolio-card-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
 }
 
-.portfolio-card-value-large { /* Renamed from .card-value-large */
-    font-size: 1.875rem; /* Equivalent to text-3xl */
-    font-weight: 700; /* Equivalent to font-bold */
-    margin-bottom: 0.25rem; /* Equivalent to mb-1 */
+.portfolio-card-value-large {
+    font-size: 1.875rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
 }
 
-.portfolio-card-value-medium { /* Renamed from .card-value-medium */
-    font-size: 1.25rem; /* Equivalent to text-xl */
-    font-weight: 700; /* Equivalent to font-bold */
+.portfolio-card-value-medium {
+    font-size: 1.25rem;
+    font-weight: 700;
 }
 
-.portfolio-card-sub-text { /* Renamed from .card-sub-text */
-    font-size: 1.125rem; /* Equivalent to text-xl */
-    color: #4a5568; /* Equivalent to text-gray-600 */
-    margin-top: 0.25rem; /* Equivalent to mt-1 */
+.portfolio-card-sub-text {
+    font-size: 1.125rem;
+    color: #4a5568;
+    margin-top: 0.25rem;
 }
 
 /* Specific colors for text within cards */
@@ -249,33 +264,33 @@ body { /* Changed from .portfolio-body to body to directly apply */
 
 /* Responsive adjustments for header h1 */
 @media (min-width: 640px) {
-    .portfolio-h1 { /* Added this for consistency */
-        font-size: 1.5rem !important; /* Adjusted from 1.75rem to match sm:text-xl from original */
+    .portfolio-h1 {
+        font-size: 1.5rem !important;
     }
-    .portfolio-card-title { /* Renamed from .card-title */
-        font-size: 1.25rem; /* text-xl */
-    }
-
-    .portfolio-card-value-large { /* Renamed from .card-value-large */
-        font-size: 2.25rem; /* text-3xl */
+    .portfolio-card-title {
+        font-size: 1.25rem;
     }
 
-    .portfolio-card-value-medium { /* Renamed from .card-value-medium */
-        font-size: 1.5rem; /* text-2xl */
+    .portfolio-card-value-large {
+        font-size: 2.25rem;
     }
 
-    .portfolio-card-sub-text { /* Renamed from .card-sub-text */
-        font-size: 1.25rem; /* text-xl */
+    .portfolio-card-value-medium {
+        font-size: 1.5rem;
+    }
+
+    .portfolio-card-sub-text {
+        font-size: 1.25rem;
     }
 }
 
-@media (min-width: 1024px) { /* lg breakpoint */
-    .portfolio-h1 { /* Renamed from h1 */
-        font-size: 1.75rem !important; /* Reduced from 2rem */
+@media (min-width: 1024px) {
+    .portfolio-h1 {
+        font-size: 1.75rem !important;
     }
 
-    .portfolio-header { /* Renamed from header */
-        margin-bottom: 1.5rem; /* Reduced from 2rem */
+    .portfolio-header {
+        margin-bottom: 1.5rem;
     }
 }
 
@@ -286,22 +301,22 @@ body { /* Changed from .portfolio-body to body to directly apply */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     padding: 1.5rem;
     margin-top: 2rem;
-    overflow-x: auto; /* For responsive tables */
+    overflow-x: auto;
 }
 .portfolio-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.9em;
-    min-width: 600px; /* Ensure table doesn't get too squished */
+    min-width: 600px;
 }
 .portfolio-table th, .portfolio-table td {
     padding: 12px 15px;
     text-align: left;
-    border-bottom: 1px solid #e2e8f0; /* slate-200 */
+    border-bottom: 1px solid #e2e8f0;
 }
 .portfolio-table th {
-    background-color: #f8fafc; /* slate-50 */
-    color: #475569; /* slate-700 */
+    background-color: #f8fafc;
+    color: #475569;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -310,11 +325,11 @@ body { /* Changed from .portfolio-body to body to directly apply */
     border-bottom: none;
 }
 .portfolio-table tbody tr.even-row {
-    background-color: #f1f5f9; /* slate-100 */
+    background-color: #f1f5f9;
 }
-.portfolio-table .gain { color: #22c55e; font-weight: 600; } /* green-500 */
-.portfolio-table .loss { color: #ef4444; font-weight: 600; } /* red-500 */
-.portfolio-table .neutral { color: #475569; } /* slate-700 */
+.portfolio-table .gain { color: #22c55e; font-weight: 600; }
+.portfolio-table .loss { color: #ef4444; font-weight: 600; }
+.portfolio-table .neutral { color: #475569; }
 
 /* Utility for hidden elements */
 .hidden {
@@ -325,4 +340,53 @@ body { /* Changed from .portfolio-body to body to directly apply */
     color: #007bff;
     text-align: center;
     margin-top: 20px;
+}
+
+/* Styles for the Delete Stock button */
+.delete-stock-btn {
+    background-color: #ef4444;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.delete-stock-btn:hover {
+    background-color: #dc2626;
+}
+
+/* Styles for the Delete Portfolio button */
+.portfolio-delete-btn {
+    background-color: #dc2626;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-left: 15px;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.portfolio-delete-btn:hover {
+    background-color: #b91c1c;
+}
+
+.portfolio-delete-btn:disabled {
+    background-color: #fda4af;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Ensure dropdown and button are aligned */
+.portfolio-dropdown-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
 }
