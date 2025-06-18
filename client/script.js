@@ -45,7 +45,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (response.ok) { // Check for a successful HTTP status (e.g., 200 OK)
                 if (data.token && data.username) { // Ensure both token and username are in the response
                     localStorage.setItem("token", data.token);
-                    localStorage.setItem("username", data.username); // <--- ADDED THIS CRUCIAL LINE
+                    localStorage.setItem("username", data.username);
                     outputElement.textContent = data.message || "Sign in successful!";
                     outputElement.style.color = "green";
                     window.location.replace("/Home.html"); // Redirect to Home
@@ -99,13 +99,12 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
+// IMPORTANT: Ensure this signOut function is present and consistent across all relevant files
 function signOut() {
-    // Clear session or token
     localStorage.removeItem("token"); // Clear the authentication token
-    localStorage.removeItem("username"); // Clear the username as well (from home.html script)
-    alert("You have been signed out.");
-    // Redirect to login page
-    window.location.replace("index.html"); // Corrected to use index.html for login
+    localStorage.removeItem("username"); // Clear the username
+    // Redirect to login page and replace the current history entry
+    window.location.replace("index.html"); 
 }
 
 const apiKey = '5b9dc55198084f319b1bb3d2e8ffb8dc'; // Replace with your real key
@@ -145,10 +144,3 @@ async function fetchNews() {
         newsList.innerHTML = '<p>Failed to load news.</p>';
     }
 }
-
-// Only call fetchNews if newsList exists (i.e., if this script is loaded on News.html or a page with news-list)
-// You might need to move this call or adapt it based on where newsList is expected to be present.
-// Given your structure, fetchNews is likely now handled by loadPage in home.html for News.html.
-// So, this direct call here might not be necessary or could cause errors if newsList isn't on login.html.
-// I'll comment it out for safety, assuming home.html's loadPage handles news fetching.
-// fetchNews();

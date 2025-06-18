@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>My Home</title>
     <link rel="stylesheet" href="/style.css">
-    <link rel="stylesheet" href="/Home.css"> <link rel="stylesheet" href="/videos.css">
+    <link rel="stylesheet" href="/Home.css"> 
+    <link rel="stylesheet" href="/videos.css">
     <link rel="stylesheet" href="/news.css">
+    <!-- No portfolio.css link here as its content is now in Home.css or Portfolio.html -->
     <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
     <script src="https://unpkg.com/d3@7"></script>
     <style>
@@ -132,6 +134,12 @@
             font-weight: bold;
             margin-right: 20px; /* Space between greeting and nav links */
         }
+
+        /* Padding for navbar content from corners */
+        .navbar {
+            padding: 10px 20px; /* Example: 10px top/bottom, 20px left/right */
+            box-sizing: border-box; /* Ensures padding is included in element's total width */
+        }
     </style>
 </head>
 <body>
@@ -148,6 +156,7 @@
             <a href="portfolio.html">Portfolio</a>
             <a onclick="loadPage('Analysis.html')">Analysis</a>
             <a onclick="loadPage('Videos.html')">Videos</a>
+            <a href="Profile.html">Profile</a>
             <a class="signout-btn" onclick="signOut()">Sign Out</a>
         </div>
     </div>
@@ -188,10 +197,21 @@
     </div>
 
     <script>
+        // Start authentication check immediately
+        // This must be at the very top of your script for security
+        let authToken = localStorage.getItem('token');
+        if (!authToken) {
+            console.log("No token found on page load, redirecting to index.html");
+            window.location.replace("index.html"); // Redirect to login if not authenticated
+            // Prevent further script execution if not authenticated
+            // document.body.style.display = 'none'; // Hide content briefly to prevent flicker
+            // return;
+        }
+
         let watchlists = [[], [], []]; // Initialize an empty watchlist array
         let currentWatchlist = 0;
-        let authToken = localStorage.getItem('token'); // Get the token
-        // let storedUsername = localStorage.getItem('username'); // This variable is now set within DOMContentLoaded for immediate display
+        // authToken is already declared above and fetched
+
         const API_BASE_URL = 'http://localhost:5000'; // Base URL for your Node.js backend
 
         // --- Video Elements (used by Videos.html content) ---
@@ -451,6 +471,9 @@
                         console.log("Markets.html loaded. Attempting to draw charts...");
                         loadWatchlistPieChart();
                         loadSectorPerformance();
+                    } else if (page === 'Profile.html') { // NEW: Handle loading Profile.html
+                         // The script within profile.html handles its own DOMContentLoaded and data fetching
+                         console.log("Profile.html loaded. Its script will handle content.");
                     }
                      // No specific initialization for Portfolio.html here, as it's a separate file now.
                 })
@@ -462,11 +485,16 @@
 
         // MODIFIED signOut function
         function signOut() {
-            localStorage.removeItem("token"); // Clear the authentication token
-            localStorage.removeItem("username"); // Clear the username as well
-            alert("You have been signed out.");
+            // It's good practice to clear local storage items related to auth
+            localStorage.removeItem("token");
+            localStorage.removeItem("username");
+            
+            // This is crucial for clearing browser history related to the current state
+            // and ensuring a fresh load of the login page.
+            window.location.replace("index.html"); 
+            // alert("You have been signed out."); // Use custom modal instead of alert
             watchlists = [[], [], []]; // Clear client-side watchlists
-            window.location.replace("index.html"); // Redirect and replace history entry
+            // No return needed here as replace() stops execution
         }
 
         function switchWatchlist(index) {
@@ -1028,16 +1056,6 @@
 
 
         document.addEventListener("DOMContentLoaded", () => {
-            // AUTHENTICATION CHECK: Redirect if no token
-            authToken = localStorage.getItem('token');
-            console.log("Auth token on DOMContentLoaded:", authToken ? "Exists" : "Does Not Exist");
-
-            if (!authToken) {
-                console.log("No token found, redirecting to index.html");
-                window.location.replace("index.html"); // Redirect to login if not authenticated
-                return; // Stop further execution of this script
-            }
-
             // Display user greeting
             const userGreetingElement = document.getElementById('userGreeting');
             if (userGreetingElement) {
@@ -1083,6 +1101,20 @@
             if (modalStockQuantity) {
                 modalStockQuantity.addEventListener('input', calculateTotalValue);
             }
+
+            // Listen for custom event to update username in navbar after profile update
+            window.addEventListener('usernameUpdated', () => {
+                console.log("usernameUpdated event received in home.html. Updating greeting.");
+                const userGreetingElement = document.getElementById('userGreeting');
+                if (userGreetingElement) {
+                    const storedUsername = localStorage.getItem('username');
+                    if (storedUsername) {
+                        userGreetingElement.textContent = `Hi, ${storedUsername}`;
+                    } else {
+                        userGreetingElement.textContent = `Hi, User`; // Fallback
+                    }
+                }
+            });
         });
 
 
@@ -1118,7 +1150,7 @@
                 }
             } catch (error) {
                 console.error("Error fetching stock price and name for modal:", error);
-                modalErrorMessage.textContent = `Could not fetch price/name for ${symbol}: ${error.message}`;
+                modalErrorMessage.textContent = `Could not fetch price/name for ${symbol}. Please try again or check symbol.`;
                 modalErrorMessage.classList.remove('portfolio-hidden');
                 return { price: 0, companyName: 'N/A' }; // Return 0 price on error
             }
