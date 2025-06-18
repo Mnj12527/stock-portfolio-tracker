@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <link rel="stylesheet" href="/style.css"> <!-- General styles -->
+    <link rel="stylesheet" href="/profile.css"> <!-- Specific profile styles -->
+</head>
+<body>
+    <div class="profile-container">
+        <h2>Your Profile</h2>
+
+        <!-- Profile Update Form -->
+        <form id="profileForm" class="profile-form">
+            <h3>Personal Information</h3>
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" readonly>
+                <small>(Email cannot be changed from here)</small>
+            </div>
+            <div class="form-group">
+                <label for="mobileNumber">Mobile Number:</label>
+                <input type="tel" id="mobileNumber" name="mobileNumber" placeholder="e.g., +919876543210">
+            </div>
+            <div class="form-group">
+                <label for="address">Address:</label>
+                <textarea id="address" name="address" rows="3" placeholder="Your full address"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="profession">Profession:</label>
+                <input type="text" id="profession" name="profession" placeholder="e.g., Software Engineer">
+            </div>
+            <button type="submit" class="profile-btn profile-btn-primary">Save Profile</button>
+            <p id="profileMessage" class="message"></p>
+        </form>
+
+        <!-- Change Password Form -->
+        <form id="changePasswordForm" class="profile-form">
+            <h3>Change Password</h3>
+            <div class="form-group">
+                <label for="currentPassword">Current Password:</label>
+                <input type="password" id="currentPassword" name="currentPassword" required>
+            </div>
+            <div class="form-group">
+                <label for="newPassword">New Password:</label>
+                <input type="password" id="newPassword" name="newPassword" required>
+            </div>
+            <div class="form-group">
+                <label for="confirmNewPassword">Confirm New Password:</label>
+                <input type="password" id="confirmNewPassword" name="confirmNewPassword" required>
+            </div>
+            <button type="submit" class="profile-btn profile-btn-secondary">Change Password</button>
+            <p id="passwordMessage" class="message"></p>
+        </form>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000';
+        const authToken = localStorage.getItem('token');
+        const profileForm = document.getElementById('profileForm');
+        const changePasswordForm = document.getElementById('changePasswordForm');
+
+        const profileMessage = document.getElementById('profileMessage');
+        const passwordMessage = document.getElementById('passwordMessage');
+
+        // Function to display messages in the UI
+        function showMessage(element, message, isSuccess) {
+            element.textContent = message;
+            element.className = 'message'; // Reset class
+            if (isSuccess) {
+                element.classList.add('success');
+            } else {
+                element.classList.add('error');
+            }
+            // Clear message after a few seconds
+            setTimeout(() => {
+                element.textContent = '';
+                element.classList.remove('success', 'error');
+            }, 5000);
+        }
+
+        // Fetch user profile data and populate the form
+        async function fetchUserProfile() {
+            if (!authToken) {
+                showMessage(profileMessage, 'Authentication token not found. Please log in.', false);
+                return;
+            }
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                const data = await response.json();
+                console.log('Received profile data:', data); // DEBUG: Log the received data
+
+                if (response.ok) {
+                    document.getElementById('username').value = data.username || '';
+                    document.getElementById('email').value = data.email || ''; // Should populate email
+                    document.getElementById('mobileNumber').value = data.mobileNumber || '';
+                    document.getElementById('address').value = data.address || '';
+                    document.getElementById('profession').value = data.profession || '';
+                } else {
+                    showMessage(profileMessage, data.message || 'Failed to fetch profile data.', false);
+                }
+            } catch (error) {
+                console.error('Error fetching profile:', error);
+                showMessage(profileMessage, 'Network error or server unavailable.', false);
+            }
+        }
+
+        // Handle profile update submission
+        profileForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            if (!authToken) {
+                showMessage(profileMessage, 'Authentication token not found. Please log in.', false);
+                return;
+            }
+
+            const updatedProfile = {
+                username: document.getElementById('username').value,
+                mobileNumber: document.getElementById('mobileNumber').value,
+                address: document.getElementById('address').value,
+                profession: document.getElementById('profession').value
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/profile`, {
+                    method: 'PUT', // Use PUT method for updates
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(updatedProfile)
+                });
+                const data = await response.json();
+                console.log('Profile update response:', data); // DEBUG: Log update response
+                if (response.ok) {
+                    showMessage(profileMessage, data.message || 'Profile updated successfully!', true);
+                    // Update username in localStorage if it was changed by the server and returned
+                    if (data.username && localStorage.getItem('username') !== data.username) {
+                        localStorage.setItem('username', data.username);
+                        // Dispatch a custom event to notify other parts of the app (like navbar in home.html)
+                        window.dispatchEvent(new Event('usernameUpdated')); 
+                    }
+                } else {
+                    showMessage(profileMessage, data.message || 'Failed to update profile.', false);
+                }
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                showMessage(profileMessage, 'Network error or server unavailable.', false);
+            }
+        });
+
+        // Handle password change submission
+        changePasswordForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            if (!authToken) {
+                showMessage(passwordMessage, 'Authentication token not found. Please log in.', false);
+                return;
+            }
+
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+            if (newPassword !== confirmNewPassword) {
+                showMessage(passwordMessage, 'New password and confirmation do not match.', false);
+                return;
+            }
+            if (newPassword.length < 6) { // Basic password policy, adjust as needed
+                showMessage(passwordMessage, 'New password must be at least 6 characters long.', false);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/profile/change-password`, {
+                    method: 'PUT', // Use PUT method for updates
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+                const data = await response.json();
+                console.log('Password change response:', data); // DEBUG: Log password change response
+                if (response.ok) {
+                    showMessage(passwordMessage, data.message || 'Password changed successfully!', true);
+                    changePasswordForm.reset(); // Clear form on success
+                    // Consider logging out the user after password change for security
+                    // alert("Password changed. Please log in with your new password.");
+                    // window.location.replace("index.html"); 
+                } else {
+                    showMessage(passwordMessage, data.message || 'Failed to change password.', false);
+                }
+            } catch (error) {
+                console.error('Error changing password:', error);
+                showMessage(passwordMessage, 'Network error or server unavailable.', false);
+            }
+        });
+
+        // Fetch profile data when the page loads
+        document.addEventListener('DOMContentLoaded', fetchUserProfile);
+
+        // Listen for a custom event to re-fetch profile if username changed (e.g., from an external script)
+        // This is useful if profile data might change outside this page (less likely for this app, but good practice)
+        window.addEventListener('usernameUpdated', fetchUserProfile);
+    </script>
+</body>
+</html>
