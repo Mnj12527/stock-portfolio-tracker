@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>My Home</title>
     <link rel="stylesheet" href="/style.css">
-    <link rel="stylesheet" href="/Home.css"> <!-- This will now contain modal styles -->
-    <link rel="stylesheet" href="/videos.css">
+    <link rel="stylesheet" href="/Home.css"> <link rel="stylesheet" href="/videos.css">
     <link rel="stylesheet" href="/news.css">
-    <!-- No portfolio.css link here as its content is now in Home.css or Portfolio.html -->
     <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
     <script src="https://unpkg.com/d3@7"></script>
     <style>
@@ -126,16 +124,22 @@
         #watchlistDisplay .remove-btn:hover {
             background-color: #ffe6e6;
         }
+
+        /* Added style for user greeting */
+        .user-greeting {
+            color: #fff; /* White text for greeting */
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-right: 20px; /* Space between greeting and nav links */
+        }
     </style>
 </head>
 <body>
 
     <div class="navbar">
         <div class="logo"><span>✦ PRASHAM</span><span class="finance"> ✦ Your Market Companion</span></div>
-        <div class="search-bar">
-            <input type="text" id="mainSearchBarInput" placeholder="Search for news, symbols or company..." style="background-color: white; color: black;">
-            <button>🔍</button>
-        </div>
+        
+        <div id="userGreeting" class="user-greeting"></div>
 
         <div class="nav-links">
             <a onclick="loadPage('myHome.html')">Home</a>
@@ -149,10 +153,8 @@
     </div>
 
     <div id="content" class="content-below-navbar">
-        <!-- Dynamic content for myHome.html, News.html etc. will be loaded here -->
-    </div>
+        </div>
 
-    <!-- Add Stock Modal (This modal is directly in home.html now) -->
     <div id="addStockModal" class="portfolio-modal-overlay portfolio-hidden">
         <div class="portfolio-modal-content">
             <h3 class="portfolio-modal-title">Add Stock to Portfolio</h3>
@@ -160,8 +162,7 @@
                 <div class="portfolio-modal-input-group">
                     <label for="modalStockSymbol">Stock Symbol:</label>
                     <input type="text" id="modalStockSymbol" class="portfolio-modal-input" readonly>
-                    <span id="modalCompanyName" class="portfolio-company-name"></span> <!-- Added for company name -->
-                </div>
+                    <span id="modalCompanyName" class="portfolio-company-name"></span> </div>
                 <div class="portfolio-modal-input-group">
                     <label for="modalStockCurrentPrice">Current Price (LTP):</label>
                     <input type="text" id="modalStockCurrentPrice" class="portfolio-modal-input" readonly value="Loading...">
@@ -175,8 +176,7 @@
                     <input type="text" id="modalStockValue" class="portfolio-modal-input" readonly value="$0.00">
                 </div>
                 <div class="portfolio-modal-input-group">
-                    <label for="modalPortfolioName">Portfolio Name:</label> <!-- New input for portfolio name -->
-                    <input type="text" id="modalPortfolioName" class="portfolio-modal-input" placeholder="e.g., My Growth Stocks" required>
+                    <label for="modalPortfolioName">Portfolio Name:</label> <input type="text" id="modalPortfolioName" class="portfolio-modal-input" placeholder="e.g., My Growth Stocks" required>
                 </div>
                 <p id="modalErrorMessage" class="portfolio-modal-error-message portfolio-hidden"></p>
             </div>
@@ -191,6 +191,7 @@
         let watchlists = [[], [], []]; // Initialize an empty watchlist array
         let currentWatchlist = 0;
         let authToken = localStorage.getItem('token'); // Get the token
+        // let storedUsername = localStorage.getItem('username'); // This variable is now set within DOMContentLoaded for immediate display
         const API_BASE_URL = 'http://localhost:5000'; // Base URL for your Node.js backend
 
         // --- Video Elements (used by Videos.html content) ---
@@ -209,8 +210,6 @@
 
         // --- Portfolio Modal Globals (specific to home.html's modal) ---
         let modalCurrentStockPrice = 0; // Distinct variable for modal's current price
-        // Defer getting mainSearchBarInput until needed or DOMContentLoaded
-        let mainSearchBarInput; // This is the search bar in the top navbar
         let stockInput; // This is the search bar inside myHome.html content
         let addStockToPortfolioButton; // This button is inside myHome.html content
         let modal, modalStockSymbol, modalCompanyName, modalStockCurrentPrice, modalStockQuantity, modalStockValue, modalPortfolioName, modalSaveButton, modalCancelButton, modalErrorMessage;
@@ -461,11 +460,13 @@
                 });
         }
 
+        // MODIFIED signOut function
         function signOut() {
-            localStorage.removeItem("token");
+            localStorage.removeItem("token"); // Clear the authentication token
+            localStorage.removeItem("username"); // Clear the username as well
             alert("You have been signed out.");
-            watchlists = [[], [], []];
-            window.location.href = "index.html";
+            watchlists = [[], [], []]; // Clear client-side watchlists
+            window.location.replace("index.html"); // Redirect and replace history entry
         }
 
         function switchWatchlist(index) {
@@ -697,6 +698,7 @@
                         const errorJson = JSON.parse(errorText);
                         errorMessage = errorJson.message || errorMessage;
                     } catch (e) {
+                        console.error("Error parsing error response:", e);
                         errorMessage += ` - ${errorText.substring(0, 100)}...`;
                     }
                     console.error("Error fetching watchlists:", errorMessage);
@@ -743,6 +745,7 @@
                         const errorJson = JSON.parse(errorText);
                         errorMessage = errorJson.message || errorMessage;
                     } catch (e) {
+                        console.error("Error parsing error response:", e);
                         errorMessage += ` - ${errorText.substring(0, 100)}...`;
                     }
                     console.error("Error saving watchlists:", errorMessage);
@@ -1025,12 +1028,40 @@
 
 
         document.addEventListener("DOMContentLoaded", () => {
+            // AUTHENTICATION CHECK: Redirect if no token
+            authToken = localStorage.getItem('token');
+            console.log("Auth token on DOMContentLoaded:", authToken ? "Exists" : "Does Not Exist");
+
+            if (!authToken) {
+                console.log("No token found, redirecting to index.html");
+                window.location.replace("index.html"); // Redirect to login if not authenticated
+                return; // Stop further execution of this script
+            }
+
+            // Display user greeting
+            const userGreetingElement = document.getElementById('userGreeting');
+            if (userGreetingElement) {
+                const storedUsername = localStorage.getItem('username'); // Get username from localStorage
+                console.log("Attempting to display username. Value from localStorage:", storedUsername); // DEBUG LINE
+                if (storedUsername) {
+                    userGreetingElement.textContent = `Hi, ${storedUsername}`; // Display username if found
+                } else {
+                    userGreetingElement.textContent = `Hi, User`; // Default if username not found
+                    console.log("Username not found in localStorage, showing 'Hi, User'."); // DEBUG LINE
+                    // Optional: If you always expect a username, you could
+                    // consider a backend call here to fetch user details if needed,
+                    // but it's usually better to store it at login.
+                }
+            } else {
+                console.warn("User greeting element with ID 'userGreeting' not found in DOM.");
+            }
+
+
             loadPage('myHome.html'); // Load Home by default
 
             // Initialize modal related elements here as they are part of the main index.html
             // This ensures they are available from the start if the user doesn't navigate
             // away and back to myHome.html
-            mainSearchBarInput = document.getElementById('mainSearchBarInput');
             modal = document.getElementById('addStockModal');
             modalStockSymbol = document.getElementById('modalStockSymbol');
             modalCompanyName = document.getElementById('modalCompanyName');
@@ -1163,7 +1194,7 @@
                 return;
             }
 
-            if (!symbol || isNaN(quantity) || quantity <= 0 || isNaN(purchasePrice) || purchasePrice <= 0 || !portfolioName) {
+            if (!symbol || isNaN(quantity) || quantity <= 0 || isNaN(purchasePrice) || purchasePrice <= 0 || !totalValue || totalValue <= 0 || !portfolioName) {
                 modalErrorMessage.textContent = 'Please enter a valid symbol, quantity, price, and portfolio name.';
                 modalErrorMessage.classList.remove('portfolio-hidden');
                 return;

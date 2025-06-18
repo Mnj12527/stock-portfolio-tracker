@@ -111,7 +111,9 @@ app.post("/signin", async (req, res) => {
             return res.status(401).json({ message: "Invalid credentials." });
         }
         const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
-        res.status(200).json({ message: "Login successful", token });
+        // --- START OF CHANGE ---
+        res.status(200).json({ message: "Login successful", token, username: user.username }); // Added username
+        // --- END OF CHANGE ---
     } catch (error) {
         console.error("Error during signin:", error);
         res.status(500).json({ message: "Error logging in." });
