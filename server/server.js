@@ -20,11 +20,14 @@ mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("MongoDB Connected"))
     .catch(err => console.error("MongoDB connection error:", err)); // More descriptive error
 
-// User schema with watchlists and portfolio
+// User schema with watchlists, portfolio, and new profile fields
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true }, // Added validation
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    mobileNumber: { type: String, default: '' }, // New field
+    address: { type: String, default: '' },       // New field
+    profession: { type: String, default: '' },   // New field
     watchlists: {
         type: [[String]],
         default: [[], [], []],
@@ -77,17 +80,21 @@ const authenticate = async (req, res, next) => {
 // Sign-Up
 app.post("/signup", async (req, res) => {
     const { username, email, password } = req.body;
+    console.log("Signup attempt:", { username, email });
     if (!username || !email || !password) {
         return res.status(400).json({ message: "Please provide all required fields." });
     }
     try {
         const existingUser = await User.findOne({ $or: [{ email }, { username }] }); // Check both email and username
         if (existingUser) {
+            console.log("Signup failed: User already exists.");
             return res.status(400).json({ message: "User with this email or username already exists." });
         }
         const hashedPassword = await bcrypt.hash(password, 10);
+        // Do not ask for mobileNumber, address, profession during signup, they default to empty string
         const newUser = new User({ username, email, password: hashedPassword });
         await newUser.save();
+        console.log("User registered successfully:", username);
         res.status(201).json({ success: true, message: "User registered successfully" });
     } catch (error) {
         console.error("Error during signup:", error);
@@ -98,27 +105,147 @@ app.post("/signup", async (req, res) => {
 // Sign-In
 app.post("/signin", async (req, res) => {
     const { email, password } = req.body;
+    console.log("Signin attempt for email:", email);
     if (!email || !password) {
         return res.status(400).json({ message: "Please provide both email and password." });
     }
     try {
         const user = await User.findOne({ email });
         if (!user) {
+            console.log("Signin failed: User not found for email:", email);
             return res.status(404).json({ message: "User not found." });
         }
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
+            console.log("Signin failed: Invalid credentials for email:", email);
             return res.status(401).json({ message: "Invalid credentials." });
         }
         const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
-        // --- START OF CHANGE ---
+        console.log("Login successful for user:", user.username);
         res.status(200).json({ message: "Login successful", token, username: user.username }); // Added username
-        // --- END OF CHANGE ---
     } catch (error) {
         console.error("Error during signin:", error);
         res.status(500).json({ message: "Error logging in." });
     }
 });
+
+// --- NEW PROFILE MANAGEMENT ENDPOINTS ---
+
+// GET User Profile
+app.get("/api/profile", authenticate, async (req, res) => {
+    console.log("GET /api/profile requested by user ID:", req.user._id);
+    try {
+        const user = await User.findById(req.user._id).select('-password'); // Exclude password from response
+        if (!user) {
+            console.log("GET /api/profile failed: User not found for ID:", req.user._id);
+            return res.status(404).json({ message: "User not found." });
+        }
+        console.log("Successfully fetched profile for user:", user.username);
+        res.json({
+            username: user.username,
+            email: user.email,
+            mobileNumber: user.mobileNumber,
+            address: user.address,
+            profession: user.profession
+        });
+    } catch (error) {
+        console.error("Error fetching user profile for ID:", req.user._id, error);
+        res.status(500).json({ message: "Error fetching user profile." });
+    }
+});
+
+// PUT Update User Profile
+app.put("/api/profile", authenticate, async (req, res) => {
+    // Only allow updating these fields from the profile page
+    const { username, mobileNumber, address, profession } = req.body;
+    console.log("PUT /api/profile requested by user ID:", req.user._id);
+    console.log("Received profile data for update:", { username, mobileNumber, address, profession });
+
+    try {
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            console.log("PUT /api/profile failed: User not found for ID:", req.user._id);
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        // Validate username change to avoid conflicts
+        if (username && username !== user.username) {
+            const existingUserWithNewUsername = await User.findOne({ username: username });
+            if (existingUserWithNewUsername && existingUserWithNewUsername._id.toString() !== user._id.toString()) {
+                console.log("PUT /api/profile failed: Username already taken:", username);
+                return res.status(400).json({ message: "This username is already taken." });
+            }
+            user.username = username; // Update if valid and changed
+            console.log("Username updated to:", user.username);
+        }
+        
+        // Update other fields if provided, otherwise retain current value
+        // Note: Using '!== undefined' to allow saving empty strings if intended
+        if (mobileNumber !== undefined) user.mobileNumber = mobileNumber;
+        if (address !== undefined) user.address = address;
+        if (profession !== undefined) user.profession = profession;
+
+        await user.save({ validateBeforeSave: true }); // Mongoose validates schema before saving
+        console.log("Profile updated successfully for user ID:", req.user._id);
+
+        res.json({
+            success: true,
+            message: "Profile updated successfully.",
+            username: user.username, // Send back updated username
+            mobileNumber: user.mobileNumber,
+            address: user.address,
+            profession: user.profession,
+            email: user.email // Email is display-only, but returned for confirmation
+        });
+    } catch (error) {
+        console.error("Error updating user profile for ID:", req.user._id, error);
+        if (error.name === 'ValidationError') {
+            console.error("Profile update validation error:", error.message);
+            return res.status(400).json({ message: error.message });
+        }
+        res.status(500).json({ message: "Error updating user profile." });
+    }
+});
+
+// PUT Change User Password
+app.put("/api/profile/change-password", authenticate, async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    console.log("PUT /api/profile/change-password requested by user ID:", req.user._id);
+
+    if (!currentPassword || !newPassword) {
+        console.log("Password change failed: Missing current or new password.");
+        return res.status(400).json({ message: "Please provide both current and new passwords." });
+    }
+    if (newPassword.length < 6) { // Basic password policy, adjust as needed
+        console.log("Password change failed: New password too short.");
+        return res.status(400).json({ message: "New password must be at least 6 characters long." });
+    }
+
+    try {
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            console.log("Password change failed: User not found for ID:", req.user._id);
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            console.log("Password change failed: Incorrect current password for user ID:", req.user._id);
+            return res.status(401).json({ message: "Incorrect current password." });
+        }
+
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedNewPassword; // Update the password
+        await user.save(); // Save the user document
+        console.log("Password updated successfully for user ID:", req.user._id);
+
+        res.json({ success: true, message: "Password updated successfully." });
+    } catch (error) {
+        console.error("Error changing password for user ID:", req.user._id, error);
+        res.status(500).json({ message: "Error changing password." });
+    }
+});
+
 
 // --- FMP API Proxy Endpoints (for Home) ---
 // Endpoint to fetch single stock data from FMP (for watchlist price display)
@@ -230,8 +357,8 @@ app.get('/api/sector-performance', async (req, res) => { // NOTE: Not authentica
     } catch (error) {
         console.error("Error fetching sector performance:", error.message);
         if (axios.isAxiosError(error)) {
-            console.error('Axios error response data for sector performance:', error.response?.data);
-            console.error('Axios error status for sector performance:', error.response?.status);
+            console.error('Axios error response data:', error.response?.data);
+            console.error('Axios error status:', error.response?.status);
             if (error.response?.status === 401) {
                 return res.status(500).json({ message: "FMP API key invalid or expired for sector performance." });
             }
@@ -254,7 +381,8 @@ app.get("/watchlists", authenticate, async (req, res) => {
             return res.status(404).json({ message: "User not found." });
         }
         res.json({ watchlists: user.watchlists });
-    } catch (error) {
+    }
+    catch (error) {
         console.error("Error fetching watchlists:", error);
         res.status(500).json({ message: "Error fetching watchlists." });
     }
@@ -385,12 +513,6 @@ app.delete("/portfolio/delete-holding/:holdingId", authenticate, async (req, res
         if (!updatedUser.portfolio.some(holding => holding._id.toString() === holdingId)) {
             // This check might be redundant if $pull works as expected, but good for explicit confirmation
             // It means the holding wasn't found in the first place or was already removed
-            // Alternatively, you could check if the document was modified
-            // const result = await User.updateOne(
-            //     { _id: req.user._id },
-            //     { $pull: { portfolio: { _id: holdingId } } }
-            // );
-            // if (result.modifiedCount === 0) { ... }
         }
 
         res.json({ success: true, message: "Stock holding deleted successfully.", portfolio: updatedUser.portfolio });
@@ -525,7 +647,7 @@ app.get('/api/twelvedata/time_series/:symbol', authenticate, async (req, res) =>
         if (response.data.status === 'error') {
             return res.status(400).json({ message: response.data.message || `Invalid symbol: ${symbol}` });
         }
-        res.json(response.data);
+        res.json(response.data); // Corrected to use response.data
     } catch (error) {
         console.error(`Error fetching Twelve Data time series for ${symbol}:`, error.message);
         if (axios.isAxiosError(error)) {
@@ -561,52 +683,6 @@ app.get('/:pageName.html', (req, res) => {
     });
 });
 
-
-const fetch = require('node-fetch'); // or axios
-
-const TWELVE_DATA_API_KEY=process.env.TWELVE_DATA_API_KEY; // Get from environment variable
-
-// Middleware to verify JWT token (as per your existing client-side code)
-// ... (your authentication middleware here)
-
-app.get('/api/twelvedata/quote/:symbol', async (req, res) => {
-    const symbol = req.params.symbol;
-    if (!TWELVE_DATA_API_KEY) {
-        return res.status(500).json({ message: "Server API key for Twelve Data is not configured." });
-    }
-    try {
-        const response = await fetch(`https://api.twelvedata.com/quote?symbol=${symbol}&apikey=${TWELVE_DATA_API_KEY}`);
-        if (!response.ok) {
-            const errorData = await response.json();
-            return res.status(response.status).json(errorData);
-        }
-        const data = await response.json();
-        res.json(data);
-    } catch (error) {
-        console.error("Error fetching quote from Twelve Data:", error);
-        res.status(500).json({ message: "Failed to fetch data from Twelve Data API." });
-    }
-});
-
-app.get('/api/twelvedata/time_series/:symbol', async (req, res) => {
-    const symbol = req.params.symbol;
-    if (!TWELVE_DATA_API_KEY) {
-        return res.status(500).json({ message: "Server API key for Twelve Data is not configured." });
-    }
-    try {
-        // Adjust interval as needed, e.g., '1min', '5min', '1day'
-        const response = await fetch(`https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1min&outputsize=30&apikey=${TWELVE_DATA_API_KEY}`);
-        if (!response.ok) {
-            const errorData = await response.json();
-            return res.status(response.status).json(errorData);
-        }
-        const data = await response.json();
-        res.json(data);
-    } catch (error) {
-        console.error("Error fetching time series from Twelve Data:", error);
-        res.status(500).json({ message: "Failed to fetch time series data from Twelve Data API." });
-    }
-});
 
 // Root route for the main page (e.g., when accessing http://localhost:5000/)
 app.get('/', (req, res) => {
