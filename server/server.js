@@ -16,9 +16,40 @@ app.use(cors());
 const PORT = process.env.PORT || 5000;
 
 // MongoDB Connection
+// ... (rest of your server.js code)
+
+// MongoDB Connection
 mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log("MongoDB Connected"))
-    .catch(err => console.error("MongoDB connection error:", err)); // More descriptive error
+    .then(() => {
+        console.log("MongoDB Connected");
+        // Optional: Create an admin user if not exists (for development)
+        async function createAdminUser() {
+            const adminEmail = "mnj12527@gmail.com";
+            const adminPassword = "Mnj@12527";
+            const adminUsername = "MNJ";
+
+            const existingAdmin = await User.findOne({ email: adminEmail });
+            // Add this line for debugging:
+            console.log("DEBUG: Result of User.findOne for admin:", existingAdmin ? existingAdmin.email : "NOT FOUND"); // Will show the email if found, or 'NOT FOUND'
+
+            if (!existingAdmin) {
+                const hashedPassword = await bcrypt.hash(adminPassword, 10);
+                const newAdmin = new User({
+                    username: adminUsername,
+                    email: adminEmail,
+                    password: hashedPassword,
+                    role: 'admin'
+                });
+                await newAdmin.save();
+                console.log("Admin user created:", adminEmail);
+            } else {
+                console.log("Admin user already exists.");
+            }
+        }
+        createAdminUser();
+    })
+    .catch(err => console.error("MongoDB connection error:", err));
+// ... (rest of your server.js code)
 
 // User schema with watchlists, portfolio, and new profile fields
 const UserSchema = new mongoose.Schema({
@@ -28,6 +59,7 @@ const UserSchema = new mongoose.Schema({
     mobileNumber: { type: String, default: '' }, // New field
     address: { type: String, default: '' },       // New field
     profession: { type: String, default: '' },   // New field
+    role: { type: String, default: 'user', enum: ['user', 'admin'] }, // NEW: Added role field
     watchlists: {
         type: [[String]],
         default: [[], [], []],
@@ -76,6 +108,21 @@ const authenticate = async (req, res, next) => {
     }
 };
 
+// NEW: Middleware to authenticate and check for admin role
+const authenticateAdmin = (req, res, next) => {
+    authenticate(req, res, () => { // First, authenticate the user
+        if (!req.user) {
+            // This case should be handled by 'authenticate'
+            return res.status(401).json({ message: "Authentication required." });
+        }
+        if (req.user.role !== 'admin') {
+            console.warn("Unauthorized access attempt by user:", req.user.username, "Role:", req.user.role);
+            return res.status(403).json({ message: "Access forbidden: Admin privilege required." });
+        }
+        next();
+    });
+};
+
 // --- Authentication Routes ---
 // Sign-Up
 app.post("/signup", async (req, res) => {
@@ -92,7 +139,7 @@ app.post("/signup", async (req, res) => {
         }
         const hashedPassword = await bcrypt.hash(password, 10);
         // Do not ask for mobileNumber, address, profession during signup, they default to empty string
-        const newUser = new User({ username, email, password: hashedPassword });
+        const newUser = new User({ username, email, password: hashedPassword, role: 'user' }); // Default role is 'user'
         await newUser.save();
         console.log("User registered successfully:", username);
         res.status(201).json({ success: true, message: "User registered successfully" });
@@ -120,9 +167,11 @@ app.post("/signin", async (req, res) => {
             console.log("Signin failed: Invalid credentials for email:", email);
             return res.status(401).json({ message: "Invalid credentials." });
         }
-        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
-        console.log("Login successful for user:", user.username);
-        res.status(200).json({ message: "Login successful", token, username: user.username }); // Added username
+        // Include user's role in the JWT payload
+        const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
+        console.log("Login successful for user:", user.username, "Role:", user.role);
+        // Also send the role in the response
+        res.status(200).json({ message: "Login successful", token, username: user.username, role: user.role });
     } catch (error) {
         console.error("Error during signin:", error);
         res.status(500).json({ message: "Error logging in." });
@@ -146,7 +195,8 @@ app.get("/api/profile", authenticate, async (req, res) => {
             email: user.email,
             mobileNumber: user.mobileNumber,
             address: user.address,
-            profession: user.profession
+            profession: user.profession,
+            role: user.role // Include role in profile API response
         });
     } catch (error) {
         console.error("Error fetching user profile for ID:", req.user._id, error);
@@ -178,7 +228,7 @@ app.put("/api/profile", authenticate, async (req, res) => {
             user.username = username; // Update if valid and changed
             console.log("Username updated to:", user.username);
         }
-        
+
         // Update other fields if provided, otherwise retain current value
         // Note: Using '!== undefined' to allow saving empty strings if intended
         if (mobileNumber !== undefined) user.mobileNumber = mobileNumber;
@@ -195,7 +245,8 @@ app.put("/api/profile", authenticate, async (req, res) => {
             mobileNumber: user.mobileNumber,
             address: user.address,
             profession: user.profession,
-            email: user.email // Email is display-only, but returned for confirmation
+            email: user.email, // Email is display-only, but returned for confirmation
+            role: user.role // Include role in profile API response
         });
     } catch (error) {
         console.error("Error updating user profile for ID:", req.user._id, error);

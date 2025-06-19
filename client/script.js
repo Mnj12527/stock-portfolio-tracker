@@ -43,17 +43,23 @@ document.addEventListener("DOMContentLoaded", function () {
             const data = await response.json();
 
             if (response.ok) { // Check for a successful HTTP status (e.g., 200 OK)
-                if (data.token && data.username) { // Ensure both token and username are in the response
+                if (data.token && data.username && data.role) { // Ensure token, username, and role are in the response
                     localStorage.setItem("token", data.token);
                     localStorage.setItem("username", data.username);
+                    localStorage.setItem("userRole", data.role); // Store the user's role
                     outputElement.textContent = data.message || "Sign in successful!";
                     outputElement.style.color = "green";
-                    window.location.replace("/Home.html"); // Redirect to Home
+
+                    if (data.role === 'admin') {
+                        window.location.replace("/admin.html"); // Redirect to admin page for admins
+                    } else {
+                        window.location.replace("/Home.html"); // Redirect to home page for regular users
+                    }
                 } else {
                     // This scenario should ideally not happen if server is working correctly
-                    outputElement.textContent = data.message || 'Login successful, but username or token missing from response.';
+                    outputElement.textContent = data.message || 'Login successful, but username, token, or role missing from response.';
                     outputElement.style.color = 'orange';
-                    console.error('Missing token or username in server response:', data);
+                    console.error('Missing token, username, or role in server response:', data);
                 }
             } else {
                 // Handle non-200 responses (e.g., 401 Unauthorized, 404 Not Found)
@@ -97,14 +103,24 @@ document.addEventListener("DOMContentLoaded", function () {
             alert('An error occurred during sign-up. Please try again later.');
         }
     });
+
+    // Add listener for "Go to Dashboard" button (if it exists on the page)
+    const goToHomeBtn = document.getElementById("goToHomeBtn");
+    if (goToHomeBtn) {
+        goToHomeBtn.addEventListener("click", function() {
+            window.location.replace("/Home.html");
+        });
+    }
+
 });
 
 // IMPORTANT: Ensure this signOut function is present and consistent across all relevant files
 function signOut() {
     localStorage.removeItem("token"); // Clear the authentication token
     localStorage.removeItem("username"); // Clear the username
+    localStorage.removeItem("userRole"); // Clear the user's role
     // Redirect to login page and replace the current history entry
-    window.location.replace("index.html"); 
+    window.location.replace("index.html");
 }
 
 const apiKey = '5b9dc55198084f319b1bb3d2e8ffb8dc'; // Replace with your real key

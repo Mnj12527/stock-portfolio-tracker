@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Prasham Finance Admin</title>
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+  <div class="sidebar">
+  <img src="logo2.jpg" alt="Prasham Finance Logo" style="display: block; margin: 0 auto; padding: 0; width: 150px; height: 150px; object-fit: contain;" />
+    <ul>
+      <li><a href="#">Dashboard</a></li>
+      <li><a href="#">Accounts</a></li>
+      <li><a href="#">Transactions</a></li>
+      <li><a href="#">Reports</a></li>
+      <li><a href="#">Settings</a></li>
+    </ul>
+  </div>
+
+  <div class="main-content">
+    <div class="header">
+      <h1>Welcome to Prasham Finance Admin</h1>
+      <p>Manage accounts, transactions, and reports efficiently</p>
+      <button id="startBtn">Get Started</button>
+
+      <button id="goToHomePageBtn" style="margin-top: 15px; padding: 10px 20px; border: none; background: #28a745; color: white; border-radius: 5px; cursor: pointer; font-weight: bold;">Go to User Dashboard</button>
+    </div>
+
+    <div class="stats">
+      <div class="card">
+        <h3>Total Users</h3>
+        <p>1,254</p>
+      </div>
+      <div class="card">
+        <h3>Total Buying/Selling</h3>
+        <p>5,378</p>
+      </div>
+      <div class="card">
+        <h3>Total stocks</h3>
+        <p>$34,892</p>
+      </div>
+      <div class="card">
+      <h3>Top Performer</h3>
+      <p style="color: green;">TCS (+4.5%)</p>
+      <small>Today</small>
+      </div>
+      <div class="card">
+      <h3>Worst Performer</h3>
+      <p style="color: red;">Paytm (–3.2%)</p>
+      <small>Today</small>
+      </div>
+    </div>
+
+    <div class="transactions">
+      <h2>Recent Transactions</h2>
+      <ul id="transactionList">
+        </ul>
+    </div>
+  </div>
+
+  <script src="admin.js"></script>
+  <script src="script.js"></script> <script>
+        // Check if the user is an admin on page load
+        document.addEventListener("DOMContentLoaded", function() {
+            const userRole = localStorage.getItem("userRole");
+            if (userRole !== 'admin') {
+                alert("You do not have permission to access the admin dashboard. Redirecting to home.");
+                window.location.replace("/Home.html"); // Redirect to home if not admin
+            }
+        });
+    </script>
+</body>
+</html>
