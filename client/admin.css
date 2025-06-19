@@ -7,7 +7,7 @@
 
 body {
   display: flex;
-  height: 100vh;
+  height: 100vh;  
   background-color: #f4f6f9;
 }
 
@@ -17,6 +17,9 @@ body {
   color: white;
   padding: 20px;
   margin: 0;
+  position: fixed; /* Keep sidebar fixed */
+  height: 100%; /* Full height */
+  overflow-y: auto; /* Enable scrolling for sidebar content */
 }
 
 .sidebar h2 {
@@ -28,6 +31,7 @@ body {
 
 .sidebar ul {
   list-style: none;
+  padding: 0; /* Ensure no default padding */
 }
 
 .sidebar ul li {
@@ -38,20 +42,42 @@ body {
   color: white;
   text-decoration: none;
   font-size: 18px;
+  padding: 10px 15px; /* Add padding to make links clickable area larger */
+  display: block; /* Make the entire link area clickable */
+  border-radius: 5px; /* Apply rounded corners to links */
+  transition: background-color 0.2s ease; /* Smooth transition for hover/active */
+}
+
+.sidebar ul li a:hover {
+  background-color: #3d5a6c; /* Darker shade on hover */
+}
+
+.sidebar ul li a.active {
+  background-color: #4CAF50; /* Example active color */
+  color: white;
+  font-weight: bold;
 }
 
 .main-content {
+  margin-left: 250px; /* Adjust main content to start after sidebar */
+  padding: 30px; /* Original padding */
   flex-grow: 1;
-  padding: 30px;
+  height: 100vh; /* Ensure main content takes full viewport height */
+  overflow-y: auto; /* Enable scrolling for main content */
 }
 
 .header {
   background: linear-gradient(to right, #00c6ff, #0072ff);
   color: white;
-  padding: 30px;
+  padding: 30px; /* Original padding */
   border-radius: 10px;
-  margin-bottom: 30px;
+  margin-bottom: 30px; /* Original margin */
   text-align: center;
+  position: sticky; /* Keep header fixed at top of main-content */
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  padding-top: 0; /* Adjust to ensure it sticks to the very top */
 }
 
 .header button {
@@ -69,10 +95,17 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 20px;
-  margin-bottom: 30px;
+  margin-bottom: 30px; /* Original margin */
+  position: sticky; /* Keep stats fixed below header */
+  top: 90px; /* Adjust based on header height (approx 90px) */
+  z-index: 99; /* Ensure it's below header but above dynamic content */
+  background-color: #f4f6f9; /* Match body background */
+  padding-top: 0; /* Remove top padding */
+  padding-bottom: 20px;
+  margin-top: -20px; /* Pull it up to reduce gap from header */
 }
 
-.card-container {
+.card-container { /* This class seems unused or needs to be applied to .stats directly */
   display: flex;
   gap: 20px;
   margin-top: 20px;
@@ -89,7 +122,7 @@ body {
 }
 
 .card h3 {
-  color: #333;
+  color: #555; /* Adjusted to a slightly darker grey for better readability */
   margin-bottom: 10px;
 }
 
@@ -98,8 +131,12 @@ body {
   color: #0072ff;
   font-weight: bold;
 }
+.card small {
+    color: #777; /* Standard grey for small text */
+}
 
-.transactions {
+
+.transactions { /* This class is now used by the dynamic content area */
   background: white;
   padding: 20px;
   border-radius: 10px;
@@ -113,9 +150,118 @@ body {
 
 .transactions ul {
   list-style-type: none;
+  padding: 0; /* Ensure no default padding for lists */
 }
 
 .transactions ul li {
   padding: 10px 0;
   border-bottom: 1px solid #ccc;
+}
+
+
+/* --- NEW STYLES FOR DYNAMIC CONTENT --- */
+.dynamic-content {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 10px; /* Changed from 8px for consistency */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Matched existing card shadow */
+  margin-top: 30px; /* Space from stats cards */
+  overflow-x: auto; /* For table responsiveness */
+}
+
+.dynamic-content h2 {
+  color: #333;
+  margin-bottom: 15px;
+  font-size: 1.5em;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.dynamic-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.dynamic-content th, .dynamic-content td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+  font-size: 0.9em;
+}
+
+.dynamic-content th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.dynamic-content tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.minus-btn {
+  background-color: #dc3545; /* Red */
+  color: white;
+  border: none;
+  border-radius: 50%; /* Make it round */
+  width: 24px;
+  height: 24px;
+  font-size: 1.2em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  line-height: 1; /* Adjust line height to center the minus sign */
+  transition: background-color 0.2s ease;
+}
+
+.minus-btn:hover {
+  background-color: #c82333; /* Darker red on hover */
+}
+
+.chart-container {
+  width: 100%;
+  max-width: 800px; /* Limit chart width */
+  margin: 20px auto;
+  background-color: #f8f8f8;
+  padding: 15px;
+  border-radius: 10px; /* Changed from 8px for consistency */
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Matched existing card shadow */
+}
+canvas {
+  width: 100% !important;
+  height: 400px !important; /* Fixed height for chart */
+}
+
+/* Message box for alerts/notifications */
+.message-box {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: 8px;
+    font-weight: bold;
+    z-index: 1000;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    background-color: #333;
+    color: white;
+    animation: fadeOut 5s forwards;
+}
+
+/* Utility classes for text colors */
+.text-green-600 { color: #28a745; }
+.text-red-700 { color: #dc3545; }
+
+/* Basic error message style for dynamic content */
+.error-message {
+    color: #dc3545;
+    font-weight: bold;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Keyframes for message fade out (defined here for CSS, also reference in JS) */
+@keyframes fadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-20px); }
 }

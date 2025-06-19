@@ -16,9 +16,6 @@ app.use(cors());
 const PORT = process.env.PORT || 5000;
 
 // MongoDB Connection
-// ... (rest of your server.js code)
-
-// MongoDB Connection
 mongoose.connect(process.env.MONGO_URI)
     .then(() => {
         console.log("MongoDB Connected");
@@ -29,8 +26,7 @@ mongoose.connect(process.env.MONGO_URI)
             const adminUsername = "MNJ";
 
             const existingAdmin = await User.findOne({ email: adminEmail });
-            // Add this line for debugging:
-            console.log("DEBUG: Result of User.findOne for admin:", existingAdmin ? existingAdmin.email : "NOT FOUND"); // Will show the email if found, or 'NOT FOUND'
+            console.log("DEBUG: Result of User.findOne for admin:", existingAdmin ? existingAdmin.email : "NOT FOUND");
 
             if (!existingAdmin) {
                 const hashedPassword = await bcrypt.hash(adminPassword, 10);
@@ -49,35 +45,56 @@ mongoose.connect(process.env.MONGO_URI)
         createAdminUser();
     })
     .catch(err => console.error("MongoDB connection error:", err));
-// ... (rest of your server.js code)
+
+// --- Mongoose Models ---
+
+// Activity Schema for logging user actions
+const ActivitySchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    username: { type: String, required: true },
+    type: { type: String, required: true, enum: ['signup', 'profile_update', 'stock_added', 'stock_removed', 'portfolio_deleted'] },
+    description: { type: String, required: true },
+    date: { type: Date, default: Date.now }
+});
+const Activity = mongoose.model("Activity", ActivitySchema);
+
 
 // User schema with watchlists, portfolio, and new profile fields
 const UserSchema = new mongoose.Schema({
-    username: { type: String, required: true, unique: true }, // Added validation
+    username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    mobileNumber: { type: String, default: '' }, // New field
-    address: { type: String, default: '' },       // New field
-    profession: { type: String, default: '' },   // New field
-    role: { type: String, default: 'user', enum: ['user', 'admin'] }, // NEW: Added role field
+    mobileNumber: { type: String, default: '' },
+    address: { type: String, default: '' },
+    profession: { type: String, default: '' },
+    role: { type: String, default: 'user', enum: ['user', 'admin'] },
+    createdAt: { type: Date, default: Date.now }, // Added for user growth chart
     watchlists: {
         type: [[String]],
         default: [[], [], []],
-        validate: { // Basic validation for watchlist structure
+        validate: {
             validator: function (v) {
                 return v.length === 3 && v.every(Array.isArray);
             },
             message: props => `${props.value} is not a valid watchlist format! Expected a 2D array with 3 inner arrays.`
         }
     },
-    // Updated portfolio field to store detailed stock holdings including portfolioName and totalValue
     portfolio: [{
         symbol: { type: String, required: true },
         quantity: { type: Number, required: true, min: 1 },
         purchasePrice: { type: Number, required: true },
-        totalValue: { type: Number, required: true }, // Added totalValue
-        portfolioName: { type: String, required: true, trim: true }, // Added portfolioName
+        totalValue: { type: Number, required: true }, // This is the purchase value
+        portfolioName: { type: String, required: true, trim: true },
         purchaseDate: { type: Date, default: Date.now }
+    }],
+    // NEW: To store realized gains/losses from sold positions
+    realizedTransactions: [{
+        symbol: { type: String, required: true },
+        quantity: { type: Number, required: true },
+        purchasePrice: { type: Number, required: true }, // Price at which it was bought
+        sellPrice: { type: Number, required: true },     // Price at which it was sold
+        gainLoss: { type: Number, required: true },      // Calculated gain/loss
+        dateSold: { type: Date, default: Date.now }      // Date of sale
     }]
 });
 const User = mongoose.model("User", UserSchema);
@@ -100,7 +117,6 @@ const authenticate = async (req, res, next) => {
         next();
     } catch (err) {
         console.error("Authentication error:", err);
-        // Distinguish between token expiration and other errors
         if (err.name === 'TokenExpiredError') {
             return res.status(401).json({ message: "Token expired. Please log in again." });
         }
@@ -110,13 +126,9 @@ const authenticate = async (req, res, next) => {
 
 // NEW: Middleware to authenticate and check for admin role
 const authenticateAdmin = (req, res, next) => {
-    authenticate(req, res, () => { // First, authenticate the user
-        if (!req.user) {
-            // This case should be handled by 'authenticate'
-            return res.status(401).json({ message: "Authentication required." });
-        }
-        if (req.user.role !== 'admin') {
-            console.warn("Unauthorized access attempt by user:", req.user.username, "Role:", req.user.role);
+    authenticate(req, res, () => {
+        if (!req.user || req.user.role !== 'admin') {
+            console.warn("Unauthorized access attempt by user:", req.user ? req.user.username : 'Unknown', "Role:", req.user ? req.user.role : 'N/A');
             return res.status(403).json({ message: "Access forbidden: Admin privilege required." });
         }
         next();
@@ -132,15 +144,23 @@ app.post("/signup", async (req, res) => {
         return res.status(400).json({ message: "Please provide all required fields." });
     }
     try {
-        const existingUser = await User.findOne({ $or: [{ email }, { username }] }); // Check both email and username
+        const existingUser = await User.findOne({ $or: [{ email }, { username }] });
         if (existingUser) {
             console.log("Signup failed: User already exists.");
             return res.status(400).json({ message: "User with this email or username already exists." });
         }
         const hashedPassword = await bcrypt.hash(password, 10);
-        // Do not ask for mobileNumber, address, profession during signup, they default to empty string
-        const newUser = new User({ username, email, password: hashedPassword, role: 'user' }); // Default role is 'user'
+        const newUser = new User({ username, email, password: hashedPassword, role: 'user' });
         await newUser.save();
+
+        // Log signup activity
+        await Activity.create({
+            userId: newUser._id,
+            username: newUser.username,
+            type: 'signup',
+            description: `New user ${newUser.username} signed up.`
+        });
+
         console.log("User registered successfully:", username);
         res.status(201).json({ success: true, message: "User registered successfully" });
     } catch (error) {
@@ -167,10 +187,8 @@ app.post("/signin", async (req, res) => {
             console.log("Signin failed: Invalid credentials for email:", email);
             return res.status(401).json({ message: "Invalid credentials." });
         }
-        // Include user's role in the JWT payload
         const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
         console.log("Login successful for user:", user.username, "Role:", user.role);
-        // Also send the role in the response
         res.status(200).json({ message: "Login successful", token, username: user.username, role: user.role });
     } catch (error) {
         console.error("Error during signin:", error);
@@ -178,13 +196,11 @@ app.post("/signin", async (req, res) => {
     }
 });
 
-// --- NEW PROFILE MANAGEMENT ENDPOINTS ---
-
-// GET User Profile
+// --- PROFILE MANAGEMENT ENDPOINTS ---
 app.get("/api/profile", authenticate, async (req, res) => {
     console.log("GET /api/profile requested by user ID:", req.user._id);
     try {
-        const user = await User.findById(req.user._id).select('-password'); // Exclude password from response
+        const user = await User.findById(req.user._id).select('-password');
         if (!user) {
             console.log("GET /api/profile failed: User not found for ID:", req.user._id);
             return res.status(404).json({ message: "User not found." });
@@ -196,7 +212,7 @@ app.get("/api/profile", authenticate, async (req, res) => {
             mobileNumber: user.mobileNumber,
             address: user.address,
             profession: user.profession,
-            role: user.role // Include role in profile API response
+            role: user.role
         });
     } catch (error) {
         console.error("Error fetching user profile for ID:", req.user._id, error);
@@ -204,9 +220,7 @@ app.get("/api/profile", authenticate, async (req, res) => {
     }
 });
 
-// PUT Update User Profile
 app.put("/api/profile", authenticate, async (req, res) => {
-    // Only allow updating these fields from the profile page
     const { username, mobileNumber, address, profession } = req.body;
     console.log("PUT /api/profile requested by user ID:", req.user._id);
     console.log("Received profile data for update:", { username, mobileNumber, address, profession });
@@ -218,76 +232,85 @@ app.put("/api/profile", authenticate, async (req, res) => {
             return res.status(404).json({ message: "User not found." });
         }
 
-        // Validate username change to avoid conflicts
+        let changes = [];
         if (username && username !== user.username) {
             const existingUserWithNewUsername = await User.findOne({ username: username });
             if (existingUserWithNewUsername && existingUserWithNewUsername._id.toString() !== user._id.toString()) {
                 console.log("PUT /api/profile failed: Username already taken:", username);
                 return res.status(400).json({ message: "This username is already taken." });
             }
-            user.username = username; // Update if valid and changed
-            console.log("Username updated to:", user.username);
+            changes.push(`username from '${user.username}' to '${username}'`);
+            user.username = username;
+        }
+        if (mobileNumber !== undefined && mobileNumber !== user.mobileNumber) {
+            changes.push(`mobile number from '${user.mobileNumber}' to '${mobileNumber}'`);
+            user.mobileNumber = mobileNumber;
+        }
+        if (address !== undefined && address !== user.address) {
+            changes.push(`address from '${user.address}' to '${address}'`);
+            user.address = address;
+        }
+        if (profession !== undefined && profession !== user.profession) {
+            changes.push(`profession from '${user.profession}' to '${profession}'`);
+            user.profession = profession;
         }
 
-        // Update other fields if provided, otherwise retain current value
-        // Note: Using '!== undefined' to allow saving empty strings if intended
-        if (mobileNumber !== undefined) user.mobileNumber = mobileNumber;
-        if (address !== undefined) user.address = address;
-        if (profession !== undefined) user.profession = profession;
+        await user.save({ validateBeforeSave: true });
 
-        await user.save({ validateBeforeSave: true }); // Mongoose validates schema before saving
+        if (changes.length > 0) {
+            await Activity.create({
+                userId: user._id,
+                username: user.username,
+                type: 'profile_update',
+                description: `User ${user.username} updated profile: ${changes.join(', ')}.`
+            });
+        }
+
         console.log("Profile updated successfully for user ID:", req.user._id);
-
         res.json({
             success: true,
             message: "Profile updated successfully.",
-            username: user.username, // Send back updated username
+            username: user.username,
             mobileNumber: user.mobileNumber,
             address: user.address,
             profession: user.profession,
-            email: user.email, // Email is display-only, but returned for confirmation
-            role: user.role // Include role in profile API response
+            email: user.email,
+            role: user.role
         });
     } catch (error) {
         console.error("Error updating user profile for ID:", req.user._id, error);
         if (error.name === 'ValidationError') {
-            console.error("Profile update validation error:", error.message);
             return res.status(400).json({ message: error.message });
         }
         res.status(500).json({ message: "Error updating user profile." });
     }
 });
 
-// PUT Change User Password
 app.put("/api/profile/change-password", authenticate, async (req, res) => {
     const { currentPassword, newPassword } = req.body;
     console.log("PUT /api/profile/change-password requested by user ID:", req.user._id);
 
     if (!currentPassword || !newPassword) {
-        console.log("Password change failed: Missing current or new password.");
         return res.status(400).json({ message: "Please provide both current and new passwords." });
     }
-    if (newPassword.length < 6) { // Basic password policy, adjust as needed
-        console.log("Password change failed: New password too short.");
+    if (newPassword.length < 6) {
         return res.status(400).json({ message: "New password must be at least 6 characters long." });
     }
 
     try {
         const user = await User.findById(req.user._id);
         if (!user) {
-            console.log("Password change failed: User not found for ID:", req.user._id);
             return res.status(404).json({ message: "User not found." });
         }
 
         const isMatch = await bcrypt.compare(currentPassword, user.password);
         if (!isMatch) {
-            console.log("Password change failed: Incorrect current password for user ID:", req.user._id);
             return res.status(401).json({ message: "Incorrect current password." });
         }
 
         const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-        user.password = hashedNewPassword; // Update the password
-        await user.save(); // Save the user document
+        user.password = hashedNewPassword;
+        await user.save();
         console.log("Password updated successfully for user ID:", req.user._id);
 
         res.json({ success: true, message: "Password updated successfully." });
@@ -299,10 +322,9 @@ app.put("/api/profile/change-password", authenticate, async (req, res) => {
 
 
 // --- FMP API Proxy Endpoints (for Home) ---
-// Endpoint to fetch single stock data from FMP (for watchlist price display)
 app.get('/stock-data/:symbol', authenticate, async (req, res) => {
     const { symbol } = req.params;
-    const FMP_API_KEY = process.env.FMP_API_KEY; // Use consistent key name
+    const FMP_API_KEY = process.env.FMP_API_KEY;
 
     if (!FMP_API_KEY) {
         console.error("FMP_API_KEY not set in environment variables.");
@@ -317,7 +339,6 @@ app.get('/stock-data/:symbol', authenticate, async (req, res) => {
         if (response.data && response.data.length > 0) {
             res.json(response.data);
         } else {
-            // FMP returns empty array for invalid symbols, so this is a valid 404 case
             res.status(404).json({ message: "Stock data not found for symbol or invalid symbol." });
         }
     } catch (error) {
@@ -325,11 +346,10 @@ app.get('/stock-data/:symbol', authenticate, async (req, res) => {
         if (axios.isAxiosError(error)) {
             console.error('Axios error response data:', error.response?.data);
             console.error('Axios error status:', error.response?.status);
-            // Propagate specific FMP API errors if relevant (e.g., rate limits)
-            if (error.response?.status === 401) { // Unauthorized with FMP key
+            if (error.response?.status === 401) {
                 return res.status(500).json({ message: "FMP API key invalid or expired on server." });
             }
-            if (error.response?.status === 403) { // Forbidden / Rate limit
+            if (error.response?.status === 403) {
                 return res.status(429).json({ message: "FMP API rate limit reached or access forbidden." });
             }
         }
@@ -337,10 +357,9 @@ app.get('/stock-data/:symbol', authenticate, async (req, res) => {
     }
 });
 
-// API endpoint to get historical price data for a symbol (for the chart)
 app.get('/api/stock-history/:symbol', authenticate, async (req, res) => {
     const { symbol } = req.params;
-    const FMP_API_KEY = process.env.FMP_API_KEY; // Use consistent key name
+    const FMP_API_KEY = process.env.FMP_API_KEY;
 
     if (!FMP_API_KEY) {
         console.error("FMP_API_KEY not set in environment variables for historical data.");
@@ -360,7 +379,7 @@ app.get('/api/stock-history/:symbol', authenticate, async (req, res) => {
             value: day.close,
         }));
 
-        res.json(data.reverse()); // Ensure chronological order for chart
+        res.json(data.reverse());
     } catch (err) {
         console.error(`Error fetching historical stock data for ${symbol}:`, err.message);
         if (axios.isAxiosError(err)) {
@@ -372,7 +391,7 @@ app.get('/api/stock-history/:symbol', authenticate, async (req, res) => {
             if (err.response?.status === 403) {
                 return res.status(429).json({ error: "FMP API rate limit reached for historical data." });
             }
-            if (err.response?.status === 400) { // Often for invalid symbol in FMP
+            if (err.response?.status === 400) {
                 return res.status(400).json({ error: "Invalid symbol or request for historical data." });
             }
         }
@@ -380,9 +399,8 @@ app.get('/api/stock-history/:symbol', authenticate, async (req, res) => {
     }
 });
 
-// API route to get sector performance data
-app.get('/api/sector-performance', async (req, res) => { // NOTE: Not authenticated in your original code
-    const FMP_API_KEY = process.env.FMP_API_KEY; // Use consistent key name
+app.get('/api/sector-performance', async (req, res) => {
+    const FMP_API_KEY = process.env.FMP_API_KEY;
 
     if (!FMP_API_KEY) {
         console.error("FMP_API_KEY missing in .env for /api/sector-performance");
@@ -390,13 +408,10 @@ app.get('/api/sector-performance', async (req, res) => { // NOTE: Not authentica
     }
 
     try {
-        const url = `https://financialmodelingprep.com/api/v3/sectors-performance?apikey=${FMP_API_KEY}`; // Corrected endpoint if needed, usually just `/sectors-performance`
+        const url = `https://financialmodelingprep.com/api/v3/sectors-performance?apikey=${FMP_API_KEY}`;
         const response = await axios.get(url);
 
-        // FMP's sector performance sometimes returns an array directly, sometimes nested.
-        // Adjust based on actual FMP response structure for your endpoint.
-        // Assuming it's an array of objects directly now, or inside a 'sectorPerformance' key.
-        if (response.data && Array.isArray(response.data)) { // If it's an array directly
+        if (response.data && Array.isArray(response.data)) {
             res.json({ sectorPerformance: response.data });
         } else if (response.data && response.data.sectorPerformance && Array.isArray(response.data.sectorPerformance)) {
             res.json({ sectorPerformance: response.data.sectorPerformance });
@@ -423,7 +438,6 @@ app.get('/api/sector-performance', async (req, res) => { // NOTE: Not authentica
 
 
 // --- Watchlist Management Endpoints ---
-// Get Watchlists
 app.get("/watchlists", authenticate, async (req, res) => {
     try {
         console.log("Getting watchlists for user ID:", req.user._id);
@@ -439,7 +453,6 @@ app.get("/watchlists", authenticate, async (req, res) => {
     }
 });
 
-// Update Watchlists
 app.put("/watchlists", authenticate, async (req, res) => {
     const { watchlists } = req.body;
     console.log("Updating watchlists for user ID:", req.user._id);
@@ -464,7 +477,6 @@ app.put("/watchlists", authenticate, async (req, res) => {
     }
 });
 
-// --- NEW ENDPOINT FOR WATCHLIST PIE CHART DATA ---
 app.get('/api/user-watchlist-counts', authenticate, async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
@@ -482,10 +494,8 @@ app.get('/api/user-watchlist-counts', authenticate, async (req, res) => {
     }
 });
 
-// --- NEW PORTFOLIO MANAGEMENT ENDPOINTS ---
-// Add Stock to Portfolio
+// --- Portfolio Management Endpoints ---
 app.post("/portfolio/add", authenticate, async (req, res) => {
-    // Destructure all expected fields, including the new ones
     const { symbol, quantity, purchasePrice, totalValue, portfolioName, dateAdded } = req.body;
 
     if (!symbol || !quantity || quantity <= 0 || !purchasePrice || purchasePrice <= 0 || !totalValue || totalValue <= 0 || !portfolioName) {
@@ -497,20 +507,28 @@ app.post("/portfolio/add", authenticate, async (req, res) => {
             symbol: symbol.toUpperCase(),
             quantity: quantity,
             purchasePrice: purchasePrice,
-            totalValue: totalValue, // Store totalValue
-            portfolioName: portfolioName, // Store portfolioName
-            purchaseDate: new Date(dateAdded) // Use the dateAdded from the client
+            totalValue: totalValue,
+            portfolioName: portfolioName,
+            purchaseDate: new Date(dateAdded)
         };
 
         const updatedUser = await User.findByIdAndUpdate(
             req.user._id,
-            { $push: { portfolio: newHolding } }, // Add to the portfolio array
+            { $push: { portfolio: newHolding } },
             { new: true, runValidators: true }
         );
 
         if (!updatedUser) {
             return res.status(404).json({ message: "User not found." });
         }
+
+        // Log stock addition activity
+        await Activity.create({
+            userId: req.user._id,
+            username: req.user.username,
+            type: 'stock_added',
+            description: `User ${req.user.username} added ${quantity} shares of ${symbol} to portfolio '${portfolioName}'.`
+        });
 
         res.status(201).json({
             success: true,
@@ -520,7 +538,6 @@ app.post("/portfolio/add", authenticate, async (req, res) => {
 
     } catch (error) {
         console.error("Error adding stock to portfolio:", error);
-        // Catch and respond to Mongoose validation errors or other issues
         if (error.name === 'ValidationError') {
             return res.status(400).json({ message: error.message });
         }
@@ -528,7 +545,6 @@ app.post("/portfolio/add", authenticate, async (req, res) => {
     }
 });
 
-// Get User Portfolio
 app.get("/portfolio", authenticate, async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
@@ -542,7 +558,7 @@ app.get("/portfolio", authenticate, async (req, res) => {
     }
 });
 
-// NEW: Delete a specific stock holding from portfolio
+// NEW: Delete a specific stock holding from portfolio and record realized transaction
 app.delete("/portfolio/delete-holding/:holdingId", authenticate, async (req, res) => {
     const { holdingId } = req.params;
 
@@ -551,44 +567,112 @@ app.delete("/portfolio/delete-holding/:holdingId", authenticate, async (req, res
     }
 
     try {
-        const updatedUser = await User.findByIdAndUpdate(
-            req.user._id,
-            { $pull: { portfolio: { _id: holdingId } } }, // Remove the specific holding by _id
-            { new: true }
-        );
-
-        if (!updatedUser) {
+        const user = await User.findById(req.user._id);
+        if (!user) {
             return res.status(404).json({ message: "User not found." });
         }
 
-        if (!updatedUser.portfolio.some(holding => holding._id.toString() === holdingId)) {
-            // This check might be redundant if $pull works as expected, but good for explicit confirmation
-            // It means the holding wasn't found in the first place or was already removed
+        const holdingIndex = user.portfolio.findIndex(h => h._id.toString() === holdingId);
+        if (holdingIndex === -1) {
+            return res.status(404).json({ message: "Stock holding not found in portfolio." });
         }
 
-        res.json({ success: true, message: "Stock holding deleted successfully.", portfolio: updatedUser.portfolio });
+        const holdingToRemove = user.portfolio[holdingIndex];
+
+        // Fetch current price to calculate realized gain/loss
+        let currentPriceResponse;
+        try {
+            currentPriceResponse = await axios.get(`https://financialmodelingprep.com/api/v3/quote/${holdingToRemove.symbol}?apikey=${process.env.FMP_API_KEY}`);
+        } catch (fmpError) {
+            console.error(`Error fetching current price for ${holdingToRemove.symbol} during deletion:`, fmpError.message);
+            // Even if price fetch fails, proceed with deletion, but record gain/loss as 0 or N/A
+            currentPriceResponse = { data: [] };
+        }
+
+        const sellPrice = (currentPriceResponse.data && currentPriceResponse.data.length > 0) ?
+            currentPriceResponse.data[0].price : holdingToRemove.purchasePrice; // Fallback to purchase price if current price not found
+        const gainLoss = (sellPrice - holdingToRemove.purchasePrice) * holdingToRemove.quantity;
+
+        // Add to realized transactions
+        user.realizedTransactions.push({
+            symbol: holdingToRemove.symbol,
+            quantity: holdingToRemove.quantity,
+            purchasePrice: holdingToRemove.purchasePrice,
+            sellPrice: sellPrice,
+            gainLoss: gainLoss,
+            dateSold: new Date()
+        });
+
+        // Remove from portfolio
+        user.portfolio.splice(holdingIndex, 1);
+        await user.save();
+
+        // Log stock removal activity
+        await Activity.create({
+            userId: req.user._id,
+            username: req.user.username,
+            type: 'stock_removed',
+            description: `User ${req.user.username} removed ${holdingToRemove.quantity} shares of ${holdingToRemove.symbol} from portfolio '${holdingToRemove.portfolioName}'. Realized Gain/Loss: $${gainLoss.toFixed(2)}.`
+        });
+
+        res.json({ success: true, message: "Stock holding deleted successfully.", portfolio: user.portfolio });
     } catch (error) {
         console.error("Error deleting stock holding:", error);
         res.status(500).json({ message: "Error deleting stock holding." });
     }
 });
 
-// NEW: Delete an entire portfolio by name
+// NEW: Delete an entire portfolio by name and record realized transactions
 app.delete("/portfolio/delete-portfolio/:portfolioName", authenticate, async (req, res) => {
     const { portfolioName } = req.params;
 
     try {
-        const updatedUser = await User.findByIdAndUpdate(
-            req.user._id,
-            { $pull: { portfolio: { portfolioName: portfolioName } } }, // Remove all holdings with this portfolioName
-            { new: true }
-        );
-
-        if (!updatedUser) {
+        const user = await User.findById(req.user._id);
+        if (!user) {
             return res.status(404).json({ message: "User not found." });
         }
 
-        res.json({ success: true, message: `Portfolio "${portfolioName}" and all its holdings deleted successfully.`, portfolio: updatedUser.portfolio });
+        const holdingsToDelete = user.portfolio.filter(h => h.portfolioName === portfolioName);
+        if (holdingsToDelete.length === 0) {
+            return res.status(404).json({ message: `Portfolio "${portfolioName}" not found or empty.` });
+        }
+
+        for (const holding of holdingsToDelete) {
+            let currentPriceResponse;
+            try {
+                currentPriceResponse = await axios.get(`https://financialmodelingprep.com/api/v3/quote/${holding.symbol}?apikey=${process.env.FMP_API_KEY}`);
+            } catch (fmpError) {
+                console.error(`Error fetching current price for ${holding.symbol} during portfolio deletion:`, fmpError.message);
+                currentPriceResponse = { data: [] };
+            }
+
+            const sellPrice = (currentPriceResponse.data && currentPriceResponse.data.length > 0) ?
+                currentPriceResponse.data[0].price : holding.purchasePrice;
+            const gainLoss = (sellPrice - holding.purchasePrice) * holding.quantity;
+
+            user.realizedTransactions.push({
+                symbol: holding.symbol,
+                quantity: holding.quantity,
+                purchasePrice: holding.purchasePrice,
+                sellPrice: sellPrice,
+                gainLoss: gainLoss,
+                dateSold: new Date()
+            });
+        }
+
+        // Remove all holdings for this portfolio name
+        user.portfolio = user.portfolio.filter(h => h.portfolioName !== portfolioName);
+        await user.save();
+
+        // Log portfolio deletion activity
+        await Activity.create({
+            userId: req.user._id,
+            username: req.user.username,
+            type: 'portfolio_deleted',
+            description: `User ${req.user.username} deleted portfolio '${portfolioName}' and all its holdings.`
+        });
+
+        res.json({ success: true, message: `Portfolio "${portfolioName}" and all its holdings deleted successfully.`, portfolio: user.portfolio });
     } catch (error) {
         console.error("Error deleting portfolio:", error);
         res.status(500).json({ message: "Error deleting portfolio." });
@@ -604,7 +688,6 @@ app.get('/search', async (req, res) => {
     const { query } = req.query;
     console.log("Received Youtube query:", query);
     if (!query) {
-        console.log("Error: Missing search query");
         return res.status(400).json({ error: 'Missing search query.' });
     }
     if (!YOUTUBE_API_KEY) {
@@ -662,7 +745,6 @@ app.get('/api/twelvedata/quote/:symbol', authenticate, async (req, res) => {
     try {
         const url = `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(symbol)}&apikey=${TWELVEDATA_API_KEY}`;
         const response = await axios.get(url);
-        // Twelve Data often returns a specific status or message for invalid symbols
         if (response.data.status === 'error') {
             return res.status(400).json({ message: response.data.message || `Invalid symbol: ${symbol}` });
         }
@@ -698,7 +780,7 @@ app.get('/api/twelvedata/time_series/:symbol', authenticate, async (req, res) =>
         if (response.data.status === 'error') {
             return res.status(400).json({ message: response.data.message || `Invalid symbol: ${symbol}` });
         }
-        res.json(response.data); // Corrected to use response.data
+        res.json(response.data);
     } catch (error) {
         console.error(`Error fetching Twelve Data time series for ${symbol}:`, error.message);
         if (axios.isAxiosError(error)) {
@@ -716,7 +798,253 @@ app.get('/api/twelvedata/time_series/:symbol', authenticate, async (req, res) =>
 });
 
 
-// --- Static File Serving (ensure this is placed after all API routes) ---
+// --- ADMIN ROUTES ---
+
+// GET all users (for admin user profiles and total users count)
+app.get('/api/admin/users', authenticateAdmin, async (req, res) => {
+    try {
+        const users = await User.find().select('-password'); // Exclude passwords
+        res.json(users);
+    } catch (error) {
+        console.error('Error fetching all users for admin:', error);
+        res.status(500).json({ message: 'Failed to fetch users.' });
+    }
+});
+
+// DELETE a user
+app.delete('/api/admin/delete-user/:userId', authenticateAdmin, async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const deletedUser = await User.findByIdAndDelete(userId);
+        if (!deletedUser) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+        // Optionally, delete associated activities as well
+        await Activity.deleteMany({ userId: userId });
+        res.json({ success: true, message: `User ${deletedUser.username} deleted successfully.` });
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        res.status(500).json({ message: 'Failed to delete user.' });
+    }
+});
+
+// GET user growth data
+app.get('/api/admin/user-growth', authenticateAdmin, async (req, res) => {
+    try {
+        const userGrowth = await User.aggregate([
+            {
+                $group: {
+                    _id: {
+                        year: { $year: "$createdAt" },
+                        month: { $month: "$createdAt" },
+                        day: { $dayOfMonth: "$createdAt" }
+                    },
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    date: {
+                        $dateFromParts: {
+                            year: "$_id.year",
+                            month: "$_id.month",
+                            day: "$_id.day"
+                        }
+                    },
+                    count: 1
+                }
+            },
+            { $sort: { date: 1 } }
+        ]);
+        res.json(userGrowth);
+    } catch (error) {
+        console.error('Error fetching user growth data:', error);
+        res.status(500).json({ message: 'Failed to fetch user growth data.' });
+    }
+});
+
+// GET demanding stocks (count of stocks in all watchlists)
+app.get('/api/admin/demanding-stocks', authenticateAdmin, async (req, res) => {
+    try {
+        const allUsers = await User.find().select('watchlists');
+        const stockCounts = {};
+
+        allUsers.forEach(user => {
+            user.watchlists.flat().forEach(symbol => {
+                stockCounts[symbol] = (stockCounts[symbol] || 0) + 1;
+            });
+        });
+
+        // Convert to array of objects for easier display
+        const demandingStocks = Object.entries(stockCounts).map(([symbol, count]) => ({ symbol, count }));
+        res.json(demandingStocks.sort((a, b) => b.count - a.count)); // Sort by count descending
+    } catch (error) {
+        console.error('Error fetching demanding stocks:', error);
+        res.status(500).json({ message: 'Failed to fetch demanding stocks.' });
+    }
+});
+
+// Helper function to get current prices for a list of symbols
+async function getCurrentPricesForSymbols(symbols) {
+    const FMP_API_KEY = process.env.FMP_API_KEY;
+    const prices = {};
+    if (!symbols || symbols.length === 0) return prices;
+
+    const uniqueSymbols = [...new Set(symbols)];
+    const pricePromises = uniqueSymbols.map(async (symbol) => {
+        try {
+            const response = await axios.get(`https://financialmodelingprep.com/api/v3/quote/${symbol}?apikey=${FMP_API_KEY}`);
+            if (response.data && response.data.length > 0) {
+                prices[symbol] = { price: response.data[0].price, name: response.data[0].name };
+            } else {
+                prices[symbol] = { price: null, name: 'N/A' };
+            }
+        } catch (error) {
+            console.error(`Error fetching current price for ${symbol} in admin route:`, error.message);
+            prices[symbol] = { price: null, name: 'N/A' };
+        }
+    });
+    await Promise.allSettled(pricePromises);
+    return prices;
+}
+
+// GET total portfolio values per user
+app.get('/api/admin/total-portfolio-values', authenticateAdmin, async (req, res) => {
+    try {
+        const users = await User.find().select('username portfolio');
+        const allSymbols = [...new Set(users.flatMap(user => user.portfolio.map(h => h.symbol)))];
+        const currentPrices = await getCurrentPricesForSymbols(allSymbols);
+
+        const portfolioValues = users.map(user => {
+            let totalCurrentValue = 0;
+            user.portfolio.forEach(holding => {
+                const priceData = currentPrices[holding.symbol];
+                const currentPrice = priceData?.price || holding.purchasePrice; // Fallback
+                totalCurrentValue += (currentPrice * holding.quantity);
+            });
+            return {
+                username: user.username,
+                totalPortfolioValue: totalCurrentValue
+            };
+        });
+        res.json(portfolioValues.sort((a, b) => b.totalPortfolioValue - a.totalPortfolioValue));
+    } catch (error) {
+        console.error('Error fetching total portfolio values for admin:', error);
+        res.status(500).json({ message: 'Failed to fetch total portfolio values.' });
+    }
+});
+
+// GET total returns (realized gain/loss) per user
+app.get('/api/admin/total-returns', authenticateAdmin, async (req, res) => {
+    try {
+        const users = await User.find().select('username realizedTransactions');
+
+        const totalReturns = users.map(user => {
+            const totalRealizedGainLoss = user.realizedTransactions.reduce((sum, txn) => sum + txn.gainLoss, 0);
+            const totalPurchaseValueRealized = user.realizedTransactions.reduce((sum, txn) => sum + (txn.purchasePrice * txn.quantity), 0);
+            const percentageGainLoss = totalPurchaseValueRealized > 0 ? (totalRealizedGainLoss / totalPurchaseValueRealized) * 100 : 0;
+
+            return {
+                username: user.username,
+                totalRealizedGainLoss: totalRealizedGainLoss,
+                percentageGainLoss: percentageGainLoss
+            };
+        });
+        res.json(totalReturns.sort((a, b) => b.totalRealizedGainLoss - a.totalRealizedGainLoss));
+    } catch (error) {
+        console.error('Error fetching total returns for admin:', error);
+        res.status(500).json({ message: 'Failed to fetch total returns.' });
+    }
+});
+
+// GET stock performance across all users' portfolios
+app.get('/api/admin/stock-performance', authenticateAdmin, async (req, res) => {
+    try {
+        const users = await User.find().select('username portfolio');
+        const allSymbols = [...new Set(users.flatMap(user => user.portfolio.map(h => h.symbol)))];
+        const currentPrices = await getCurrentPricesForSymbols(allSymbols);
+
+        const allHoldingsPerformance = [];
+        users.forEach(user => {
+            user.portfolio.forEach(holding => {
+                const priceData = currentPrices[holding.symbol];
+                const currentPrice = priceData?.price || holding.purchasePrice; // Fallback
+                const gainLossValue = (currentPrice * holding.quantity) - (holding.purchasePrice * holding.quantity);
+                const gainLossPercent = (holding.purchasePrice * holding.quantity) > 0 ?
+                    (gainLossValue / (holding.purchasePrice * holding.quantity)) * 100 : 0;
+
+                allHoldingsPerformance.push({
+                    username: user.username,
+                    symbol: holding.symbol,
+                    companyName: priceData?.name || 'N/A', // Use fetched name or N/A
+                    buyingPrice: holding.purchasePrice,
+                    currentPrice: currentPrice,
+                    quantity: holding.quantity,
+                    gainLossValue: gainLossValue,
+                    gainLossPercent: gainLossPercent
+                });
+            });
+        });
+        res.json(allHoldingsPerformance.sort((a, b) => b.gainLossValue - a.gainLossValue));
+    } catch (error) {
+        console.error('Error fetching stock performance for admin:', error);
+        res.status(500).json({ message: 'Failed to fetch stock performance.' });
+    }
+});
+
+// GET dashboard statistics
+app.get('/api/admin/dashboard-stats', authenticateAdmin, async (req, res) => {
+    try {
+        const totalUsers = await User.countDocuments();
+        const allUsers = await User.find().select('portfolio realizedTransactions');
+
+        let totalBuyingValue = 0;
+        let totalSellingValue = 0;
+        let totalStocksCount = 0; // Total number of individual stock holdings
+
+        // Calculate total buying value (current portfolio cost basis)
+        // and total number of stocks (sum of quantities)
+        allUsers.forEach(user => {
+            user.portfolio.forEach(holding => {
+                totalBuyingValue += (holding.purchasePrice * holding.quantity);
+                totalStocksCount += holding.quantity;
+            });
+            // Calculate total selling value from realized transactions
+            user.realizedTransactions.forEach(txn => {
+                totalSellingValue += (txn.sellPrice * txn.quantity);
+            });
+        });
+
+        res.json({
+            totalUsers,
+            totalBuyingValue,
+            totalSellingValue,
+            totalStocksCount
+        });
+
+    } catch (error) {
+        console.error('Error fetching dashboard statistics:', error);
+        res.status(500).json({ message: 'Failed to fetch dashboard statistics.' });
+    }
+});
+
+// GET recent activities for dashboard
+app.get('/api/admin/recent-activities', authenticateAdmin, async (req, res) => {
+    try {
+        // Fetch recent activities, e.g., last 20, sorted by date
+        const activities = await Activity.find()
+            .sort({ date: -1 })
+            .limit(20)
+            .select('username type description date');
+        res.json(activities);
+    } catch (error) {
+        console.error('Error fetching recent activities for admin:', error);
+        res.status(500).json({ message: 'Failed to fetch recent activities.' });
+    }
+});
+
+// --- Static File Serving (THIS MUST BE LAST) ---
 // Serve static assets from the 'client' directory
 app.use(express.static(path.join(__dirname, "../client")));
 
@@ -724,11 +1052,10 @@ app.use(express.static(path.join(__dirname, "../client")));
 app.get('/:pageName.html', (req, res) => {
     const { pageName } = req.params;
     const filePath = path.join(__dirname, `../client/${pageName}.html`);
-    console.log(`Server is attempting to send file: ${filePath}`); // Debug log
+    console.log(`Server is attempting to send file: ${filePath}`);
     res.sendFile(filePath, (err) => {
         if (err) {
             console.error(`Error serving ${pageName}.html:`, err);
-            // More user-friendly 404 page
             res.status(404).send('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>404 Not Found</title><style>body { font-family: sans-serif; text-align: center; margin-top: 50px; } h1 { color: #dc3545; }</style></head><body><h1>404 Page Not Found</h1><p>The page you requested could not be found.</p><a href="/">Go to Home</a></body></html>');
         }
     });
@@ -737,7 +1064,7 @@ app.get('/:pageName.html', (req, res) => {
 
 // Root route for the main page (e.g., when accessing http://localhost:5000/)
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/index.html')); // Assuming your login/entry point is index.html
+    res.sendFile(path.join(__dirname, '../client/index.html'));
 });
 
 app.listen(PORT, () => {

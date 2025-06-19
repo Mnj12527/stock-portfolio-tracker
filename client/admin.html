@@ -3,25 +3,170 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Prasham Finance Admin</title>
+  <title>Prasham Admin</title>
   <link rel="stylesheet" href="admin.css" />
+  <!-- Include Chart.js for graphs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Include Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+  <style>
+    /* Basic styles for new elements to fit existing design */
+    .dynamic-content {
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      margin-top: 20px; /* Space from stats cards */
+      overflow-x: auto; /* For table responsiveness */
+    }
+
+    .dynamic-content h2 {
+      color: #333;
+      margin-bottom: 15px;
+      font-size: 1.5em;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+    }
+
+    .dynamic-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    .dynamic-content th, .dynamic-content td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+      font-size: 0.9em;
+    }
+
+    .dynamic-content th {
+      background-color: #f2f2f2;
+      font-weight: bold;
+    }
+
+    .dynamic-content tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    .delete-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8em;
+    }
+
+    .delete-btn:hover {
+      background-color: #c82333;
+    }
+
+    .chart-container {
+      width: 100%;
+      max-width: 800px; /* Limit chart width */
+      margin: 20px auto;
+      background-color: #f8f8f8;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    canvas {
+      width: 100% !important;
+      height: 400px !important; /* Fixed height for chart */
+    }
+
+    /* Styles for the "minus" button */
+    .minus-btn {
+      background-color: #dc3545; /* Red */
+      color: white;
+      border: none;
+      border-radius: 50%; /* Make it round */
+      width: 24px;
+      height: 24px;
+      font-size: 1.2em;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      line-height: 1; /* Adjust line height to center the minus sign */
+      transition: background-color 0.2s ease;
+    }
+
+    .minus-btn:hover {
+      background-color: #c82333; /* Darker red on hover */
+    }
+
+    /* Existing sidebar styling adjustments to ensure fixed position and scroll */
+    .sidebar {
+      width: 250px;
+      background-color: #2c3e50;
+      color: white;
+      padding-top: 20px;
+      position: fixed; /* Keep sidebar fixed */
+      height: 100%; /* Full height */
+      overflow-y: auto; /* Enable scrolling for sidebar content */
+    }
+
+    .main-content {
+      margin-left: 250px; /* Adjust main content to start after sidebar */
+      padding: 20px;
+      flex-grow: 1;
+      height: 100vh; /* Ensure main content takes full viewport height */
+      overflow-y: auto; /* Enable scrolling for main content */
+    }
+
+    /* Adjust header and stats to be fixed within main-content if needed, or just let them scroll with main-content */
+    .header, .stats {
+      background-color: #f3f4f6; /* Match body background for continuity if scrolling */
+      padding-bottom: 20px;
+      position: sticky; /* Keep header and stats fixed at top of main-content */
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .header {
+        background-color: #f3f4f6; /* Maintain original background */
+        padding-top: 0; /* Remove top padding to fix to top */
+    }
+    .stats {
+        padding-top: 0; /* Remove top padding */
+        margin-top: -20px; /* Pull it up to remove the gap from header's bottom padding */
+    }
+
+    /* Ensure specific elements within stats are targeted if needed for color/etc */
+    .card h3 {
+        color: #555;
+    }
+    .card p {
+        color: #333;
+    }
+    .card small {
+        color: #777;
+    }
+  </style>
 </head>
 <body>
   <div class="sidebar">
   <img src="logo2.jpg" alt="Prasham Finance Logo" style="display: block; margin: 0 auto; padding: 0; width: 150px; height: 150px; object-fit: contain;" />
     <ul>
-      <li><a href="#">Dashboard</a></li>
-      <li><a href="#">Accounts</a></li>
-      <li><a href="#">Transactions</a></li>
-      <li><a href="#">Reports</a></li>
-      <li><a href="#">Settings</a></li>
+      <li><a href="#" id="dashboardLink">Dashboard</a></li>
+      <li><a href="#" id="userProfilesLink">User Profiles-Charts</a></li>
+      <li><a href="#" id="demandingStocksLink">Demanding Stocks</a></li>
+      <li><a href="#" id="totalPortfolioValuesLink">Total Portfolio Values</a></li>
+      <li><a href="#" id="totalReturnsLink">Total Returns</a></li>
+      <li><a href="#" id="stockPerformanceLink">Performance of the Stocks</a></li>
     </ul>
   </div>
 
   <div class="main-content">
     <div class="header">
-      <h1>Welcome to Prasham Finance Admin</h1>
-      <p>Manage accounts, transactions, and reports efficiently</p>
+      <h1>Welcome to Prasham Admin</h1>
+      <p>Manage accounts, Activities, and reports efficiently</p>
       <button id="startBtn">Get Started</button>
 
       <button id="goToHomePageBtn" style="margin-top: 15px; padding: 10px 20px; border: none; background: #28a745; color: white; border-radius: 5px; cursor: pointer; font-weight: bold;">Go to User Dashboard</button>
@@ -30,45 +175,44 @@
     <div class="stats">
       <div class="card">
         <h3>Total Users</h3>
-        <p>1,254</p>
+        <p id="totalUsersStat">Loading...</p>
       </div>
       <div class="card">
-        <h3>Total Buying/Selling</h3>
-        <p>5,378</p>
+        <h3>Total Buying</h3>
+        <p id="totalBuyingStat">Loading...</p>
       </div>
       <div class="card">
-        <h3>Total stocks</h3>
-        <p>$34,892</p>
+        <h3>Total Selling</h3>
+        <p id="totalSellingStat">Loading...</p>
       </div>
       <div class="card">
-      <h3>Top Performer</h3>
-      <p style="color: green;">TCS (+4.5%)</p>
-      <small>Today</small>
-      </div>
-      <div class="card">
-      <h3>Worst Performer</h3>
-      <p style="color: red;">Paytm (–3.2%)</p>
-      <small>Today</small>
+        <h3>Total Stock Holdings</h3>
+        <p id="totalStocksStat">Loading...</p>
       </div>
     </div>
 
-    <div class="transactions">
-      <h2>Recent Transactions</h2>
-      <ul id="transactionList">
-        </ul>
+    <!-- Dynamic content will be loaded here -->
+    <div id="dynamicContent" class="dynamic-content">
+      <!-- Default content (Dashboard: Recent Activities) will be loaded here by JS -->
     </div>
   </div>
 
   <script src="admin.js"></script>
-  <script src="script.js"></script> <script>
-        // Check if the user is an admin on page load
-        document.addEventListener("DOMContentLoaded", function() {
-            const userRole = localStorage.getItem("userRole");
-            if (userRole !== 'admin') {
-                alert("You do not have permission to access the admin dashboard. Redirecting to home.");
-                window.location.replace("/Home.html"); // Redirect to home if not admin
-            }
-        });
-    </script>
+  <script src="script.js"></script>
+  <script>
+    // Check if the user is an admin on page load
+    document.addEventListener("DOMContentLoaded", function() {
+      const userRole = localStorage.getItem("userRole");
+      if (userRole !== 'admin') {
+          // Use a custom modal or message instead of alert
+          const message = "You do not have permission to access the admin dashboard. Redirecting to home.";
+          console.error(message);
+          // Redirect after a short delay for user to read message (if a modal was shown)
+          setTimeout(() => {
+            window.location.replace("/Home.html"); // Redirect to home if not admin
+          }, 100); // Small delay
+      }
+    });
+  </script>
 </body>
 </html>
