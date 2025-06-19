@@ -70,10 +70,20 @@
       background: white;
       border-radius: 10px;
       padding: 30px;
-      width: 500px;
-      height: 250px;
+      width: 500px; /* Keeping original width to prevent size change */
+      height: 250px; /* Keeping original height to prevent size change */
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       text-align: center;
+      display: flex; /* Added for vertical centering */
+      flex-direction: column; /* Added for vertical centering */
+      justify-content: center; /* Added for vertical centering */
+      align-items: center; /* Added for horizontal centering of content */
+    }
+
+    .feature-box .icon-emoji { /* Style for the emoji */
+      font-size: 60px; /* Adjust emoji size as needed */
+      margin-bottom: 15px; /* Space between emoji and text */
+      line-height: 1; /* Helps with vertical alignment of emoji */
     }
 
     .feature-box h3 {
@@ -161,34 +171,34 @@
 
   <div class="hero-section">
     <h1>All-in-One Stock Portfolio Tracker</h1>
-    <p>Get live stock updates, track your investments, explore insightful blogs and videos, and dive deep into research and analysis—all in one place.</p>
+    <p><i>"Gain clarity and control over your investments <br>with live data, comprehensive tracking, and <br>in-depth market intelligence, all designed for you."</i></p>
     <button class="login-btn" onclick="location.href='login.html'">Login</button>
   </div>
 
   <div class="features">
     <div class="feature-box">
-      <h3>📈 Portfolio Tracking</h3>
-      <p>Manage and monitor your stock portfolio with real-time updates and performance insights.</p>
+      <span class="icon-emoji">🔍</span> <h3>🏠 Home</h3>
+      <p>Easily add stocks to your watchlist and visualize trends with interactive charts for insightful analysis.</p>
     </div>
     <div class="feature-box">
-      <h3>📰 Live Market News</h3>
-      <p>Stay updated with the latest Indian and global stock market news.</p>
+      <span class="icon-emoji">📰</span> <h3>📰 News</h3>
+      <p>Stay ahead with real-time news and updates impacting the stock market, both globally and locally.</p>
     </div>
     <div class="feature-box">
-      <h3>📊 Interactive Charts</h3>
-      <p>View advanced technical charts to better understand stock trends and indicators.</p>
+      <span class="icon-emoji">📈</span> <h3>🌎 Markets</h3>
+      <p>Explore world indices and their latest movements, giving you a global perspective on market performance.</p>
     </div>
     <div class="feature-box">
-      <h3>🎥 Stock Market Videos</h3>
-      <p>Watch curated educational and market analysis videos from experts.</p>
+      <span class="icon-emoji">💼</span> <h3>💼 Portfolio</h3>
+      <p>Track your diverse investments across multiple portfolios with comprehensive performance insights.</p>
     </div>
     <div class="feature-box">
-      <h3>📝 Expert Blogs</h3>
-      <p>Read blog posts and opinions by financial analysts and traders.</p>
+      <span class="icon-emoji">🧠</span> <h3>📈 Analysis</h3>
+      <p>Dive deep into market data with powerful tools for overall market analysis and informed decision-making.</p>
     </div>
     <div class="feature-box">
-      <h3>🔍 Research & Analysis</h3>
-      <p>Access in-depth market research reports and analysis tools.</p>
+      <span class="icon-emoji">▶️</span> <h3>▶️ Videos</h3>
+      <p>Access a curated library of educational and analytical videos from market experts to enhance your knowledge.</p>
     </div>
   </div>
 
@@ -215,7 +225,6 @@
     </div>
   </footer>
 
-  <!-- Modals -->
   <div id="modal" class="modal">
     <div class="modal-content" id="modal-content">
       <h2 id="modal-title"></h2>

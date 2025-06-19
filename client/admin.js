@@ -14,6 +14,7 @@ const demandingStocksLink = document.getElementById('demandingStocksLink');
 const totalPortfolioValuesLink = document.getElementById('totalPortfolioValuesLink');
 const totalReturnsLink = document.getElementById('totalReturnsLink');
 const stockPerformanceLink = document.getElementById('stockPerformanceLink');
+const logoutLink = document.getElementById('logoutLink'); // NEW: Logout link reference
 
 let userAuthToken = localStorage.getItem('token'); // Get auth token from local storage
 
@@ -253,7 +254,10 @@ async function loadUserProfilesAndCharts() {
             });
             usersHtml += `</tbody></table>`;
         }
-        document.getElementById('dynamicContent').innerHTML = document.getElementById('dynamicContent').innerHTML.split('<h2>All User Profiles</h2>')[0] + usersHtml; // Preserve chart HTML
+        // This ensures the chart HTML is not overwritten
+        const chartContainerHtml = document.getElementById('dynamicContent').querySelector('.chart-container')?.outerHTML || '';
+        document.getElementById('dynamicContent').innerHTML = `<h2>User Growth Over Time</h2>${chartContainerHtml}` + usersHtml;
+
 
         // Attach event listeners to delete buttons
         document.querySelectorAll('.minus-btn').forEach(button => {
@@ -261,8 +265,12 @@ async function loadUserProfilesAndCharts() {
                 const userId = event.target.dataset.userId;
                 const username = event.target.dataset.username;
                 // Replace with custom confirmation modal later
-                if (confirm(`Are you sure you want to delete user '${username}'? This action cannot be undone.`)) {
+                // For now, using a simple prompt for confirmation
+                const confirmed = prompt(`Are you sure you want to delete user '${username}'? Type 'DELETE' to confirm.`);
+                if (confirmed === 'DELETE') {
                     await deleteUser(userId);
+                } else if (confirmed !== null) { // If user typed something but not 'DELETE'
+                    showMessage("Deletion cancelled. Please type 'DELETE' to confirm.", 'info');
                 }
             });
         });
@@ -509,6 +517,16 @@ async function loadStockPerformance() {
     }
 }
 
+// --- Logout Functionality ---
+function performLogout() {
+    localStorage.removeItem('token');     // Remove the authentication token
+    localStorage.removeItem('username');  // Remove username if stored
+    localStorage.removeItem('userRole');  // Remove user role if stored
+    showMessage("Logged out successfully!", 'info');
+    // Redirect to your login page or home page
+    window.location.href = 'index.html'; // Assuming index.html is your login/landing page
+}
+
 
 // --- Event Listeners ---
 document.getElementById("startBtn").addEventListener("click", () => {
@@ -526,6 +544,7 @@ demandingStocksLink.addEventListener('click', (e) => { e.preventDefault(); loadD
 totalPortfolioValuesLink.addEventListener('click', (e) => { e.preventDefault(); loadTotalPortfolioValues(); });
 totalReturnsLink.addEventListener('click', (e) => { e.preventDefault(); loadTotalReturns(); });
 stockPerformanceLink.addEventListener('click', (e) => { e.preventDefault(); loadStockPerformance(); });
+logoutLink.addEventListener('click', (e) => { e.preventDefault(); performLogout(); }); // NEW: Logout event listener
 
 
 // Initial load
@@ -536,6 +555,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (userRole === 'admin') {
         updateDashboardStats(); // Load initial stats
         loadDashboard(); // Load default content for dashboard
+    } else {
+        // If not admin, ensure they are redirected as per the script in admin.html
+        // No action needed here, as the HTML script already handles redirection.
     }
 });
 
