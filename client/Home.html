@@ -163,11 +163,11 @@
         <div class="nav-links">
             <a onclick="loadPage('myHome.html')">Home</a>
             <a onclick="loadPage('News.html')">News</a>
-            <a href="#" onclick="loadPage('markets.html')">Markets</a> <!-- MODIFIED LINE -->
+            <a href="#" onclick="loadPage('markets.html')">Markets</a> 
             <a href="portfolio.html">Portfolio</a>
             <a onclick="loadPage('Analysis.html')">Analysis</a>
             <a onclick="loadPage('Videos.html')">Videos</a>
-            <a href="Profile.html">Profile</a>
+            <a href="#" onclick="loadPage('Profile.html')">Profile</a> <!-- MODIFIED LINE -->
             <a class="signout-btn" onclick="signOut()">Sign Out</a>
         </div>
     </div>
@@ -224,6 +224,7 @@
         // authToken is already declared above and fetched
 
         const API_BASE_URL = 'http://localhost:5000'; // Base URL for your Node.js backend
+        window.API_BASE_URL = API_BASE_URL; // Expose globally for profile.js
 
         // --- Video Elements (used by Videos.html content) ---
         let videoContainer;
@@ -271,6 +272,12 @@
         ];
 
         let globalErrorDisplay; // This will be assigned when markets.html is loaded
+
+        // --- Global variables for Profile.html content ---
+        let profileForm;
+        let changePasswordForm;
+        let profileMessage;
+        let passwordMessage;
 
 
         function displayErrorMessage(message) {
@@ -541,9 +548,14 @@
                             tbody.addEventListener('click', handleMarketRefreshClick);
                         });
 
-                    } else if (page === 'Profile.html') { // NEW: Handle loading Profile.html
-                         // The script within profile.html handles its own DOMContentLoaded and data fetching
-                         console.log("Profile.html loaded. Its script will handle content.");
+                    } else if (page === 'Profile.html') { 
+                         console.log("Profile.html loaded. Calling initProfilePage...");
+                         // Call the initProfilePage function from profile.js to set up forms and fetch data
+                         if (window.initProfilePage) {
+                             window.initProfilePage();
+                         } else {
+                             console.error("initProfilePage function not found on window object.");
+                         }
                     }
                      // No specific initialization for Portfolio.html here, as it's a separate file now.
                 })
@@ -1336,6 +1348,204 @@
         }
 
         // --- End of Markets.html specific functions ---
+
+        // --- Functions originally from profile.js, now integrated into home.html ---
+        /**
+         * Function to display messages in the UI.
+         * @param {HTMLElement} element - The HTML element where the message should be displayed.
+         * @param {string} message - The message text.
+         * @param {boolean} isSuccess - True for a success message, false for an error message.
+         */
+        function showMessage(element, message, isSuccess) {
+            if (!element) {
+                console.error("showMessage: Element not found.");
+                return;
+            }
+            element.textContent = message;
+            element.className = 'message'; // Reset class
+            if (isSuccess) {
+                element.classList.add('success');
+            } else {
+                element.classList.add('error');
+            }
+            element.style.display = 'block'; // Ensure it's visible
+
+            // Clear message after a few seconds
+            setTimeout(() => {
+                element.textContent = '';
+                element.classList.remove('success', 'error');
+                element.style.display = 'none'; // Hide it again
+            }, 5000);
+        }
+
+        /**
+         * Fetches user profile data and populates the form fields.
+         */
+        async function fetchUserProfile() {
+            let currentAuthToken = localStorage.getItem('token');
+            if (!currentAuthToken) {
+                showMessage(profileMessage, 'Authentication token not found. Please log in.', false);
+                console.warn("fetchUserProfile: No auth token found, cannot fetch profile.");
+                if (document.getElementById('username')) document.getElementById('username').value = 'N/A';
+                if (document.getElementById('email')) document.getElementById('email').value = 'N/A';
+                if (document.getElementById('mobileNumber')) document.getElementById('mobileNumber').value = 'N/A';
+                if (document.getElementById('address')) document.getElementById('address').value = 'N/A';
+                if (document.getElementById('profession')) document.getElementById('profession').value = 'N/A';
+                return;
+            }
+            try {
+                const response = await fetch(`${window.API_BASE_URL}/api/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentAuthToken}`
+                    }
+                });
+                const data = await response.json();
+                console.log('fetchUserProfile - Received profile data from server:', data);
+
+                if (response.ok) {
+                    if (document.getElementById('username')) document.getElementById('username').value = data.username || '';
+                    if (document.getElementById('email')) document.getElementById('email').value = data.email || '';
+                    if (document.getElementById('mobileNumber')) document.getElementById('mobileNumber').value = data.mobileNumber || '';
+                    if (document.getElementById('address')) document.getElementById('address').value = data.address || '';
+                    if (document.getElementById('profession')) document.getElementById('profession').value = data.profession || '';
+                    console.log('fetchUserProfile - Fields populated successfully.');
+
+                    if (data.username) {
+                        localStorage.setItem('username', data.username);
+                        window.dispatchEvent(new Event('usernameUpdated'));
+                    }
+
+                } else {
+                    console.error('fetchUserProfile - Failed to fetch profile with status:', response.status, 'Message:', data.message);
+                    showMessage(profileMessage, data.message || 'Failed to fetch profile data.', false);
+                }
+            } catch (error) {
+                console.error('fetchUserProfile - Error fetching profile:', error);
+                showMessage(profileMessage, 'Network error or server unavailable when fetching profile.', false);
+            }
+        }
+
+        async function handleProfileSubmit(event) {
+            event.preventDefault();
+            let currentAuthToken = localStorage.getItem('token');
+            if (!currentAuthToken) {
+                showMessage(profileMessage, 'Authentication token not found. Please log in.', false);
+                return;
+            }
+
+            const updatedProfile = {
+                username: document.getElementById('username').value,
+                mobileNumber: document.getElementById('mobileNumber').value,
+                address: document.getElementById('address').value,
+                profession: document.getElementById('profession').value
+            };
+            console.log('profileForm submit - Sending profile update:', updatedProfile);
+
+            try {
+                const response = await fetch(`${window.API_BASE_URL}/api/profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentAuthToken}`
+                    },
+                    body: JSON.stringify(updatedProfile)
+                });
+                const data = await response.json();
+                console.log('profileForm submit - Profile update response:', data);
+
+                if (response.ok) {
+                    showMessage(profileMessage, data.message || 'Profile updated successfully!', true);
+                    if (data.username && localStorage.getItem('username') !== data.username) {
+                        console.log('profileForm submit - Updating username in localStorage from:', localStorage.getItem('username'), 'to:', data.username);
+                        localStorage.setItem('username', data.username);
+                        window.dispatchEvent(new Event('usernameUpdated'));
+                    } else if (data.username === localStorage.getItem('username')) {
+                        console.log('profileForm submit - Username in localStorage already matches updated username:', data.username);
+                    } else {
+                        console.warn('profileForm submit - Username not returned in response or not changed.');
+                    }
+                    fetchUserProfile();
+                } else {
+                    console.error('profileForm submit - Failed to update profile. Status:', response.status, 'Message:', data.message);
+                    showMessage(profileMessage, data.message || 'Failed to update profile.', false);
+                }
+            } catch (error) {
+                console.error('profileForm submit - Error updating profile:', error);
+                showMessage(profileMessage, 'Network error or server unavailable when updating profile.', false);
+            }
+        }
+
+        async function handleChangePasswordSubmit(event) {
+            event.preventDefault();
+            let currentAuthToken = localStorage.getItem('token');
+            if (!currentAuthToken) {
+                showMessage(passwordMessage, 'Authentication token not found. Please log in.', false);
+                return;
+            }
+
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+            if (newPassword !== confirmNewPassword) {
+                showMessage(passwordMessage, 'New password and confirmation do not match.', false);
+                return;
+            }
+            if (newPassword.length < 6) {
+                showMessage(passwordMessage, 'New password must be at least 6 characters long.', false);
+                return;
+            }
+            console.log('changePasswordForm submit - Attempting password change.');
+
+            try {
+                const response = await fetch(`${window.API_BASE_URL}/api/profile/change-password`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentAuthToken}`
+                    },
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+                const data = await response.json();
+                console.log('changePasswordForm submit - Password change response:', data);
+
+                if (response.ok) {
+                    showMessage(passwordMessage, data.message || 'Password changed successfully!', true);
+                    if (changePasswordForm) changePasswordForm.reset();
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('username');
+                    window.location.replace("index.html");
+                } else {
+                    console.error('changePasswordForm submit - Failed to change password. Status:', response.status, 'Message:', data.message);
+                    showMessage(passwordMessage, data.message || 'Failed to change password.', false);
+                }
+            } catch (error) {
+                console.error('changePasswordForm submit - Error changing password:', error);
+                showMessage(passwordMessage, 'Network error or server unavailable when changing password.', false);
+            }
+        }
+
+        function initProfilePage() {
+            console.log("initProfilePage called.");
+            profileForm = document.getElementById('profileForm');
+            changePasswordForm = document.getElementById('changePasswordForm');
+            profileMessage = document.getElementById('profileMessage');
+            passwordMessage = document.getElementById('passwordMessage');
+
+            if (profileForm && !profileForm.__eventListenerAttached) {
+                profileForm.addEventListener('submit', handleProfileSubmit);
+                profileForm.__eventListenerAttached = true;
+            }
+            if (changePasswordForm && !changePasswordForm.__eventListenerAttached) {
+                changePasswordForm.addEventListener('submit', handleChangePasswordSubmit);
+                changePasswordForm.__eventListenerAttached = true;
+            }
+
+            fetchUserProfile();
+        }
+
+        window.initProfilePage = initProfilePage; // Expose globally
+
 
         document.addEventListener("DOMContentLoaded", () => {
             // Display user greeting
