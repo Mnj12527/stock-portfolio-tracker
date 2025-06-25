@@ -155,7 +155,7 @@
         <div class="logo">
         <span><img src="logo3.jpg" alt="Prasham Finance Logo" style="width: 60px; height: 60px; top:0ch" /></span>
         <span style="color: white;">✦</span> 
-        <span style="color: #00bfff; font-weight: bold;">PRASHAM</span>
+        <span style="color: #00bfff; font-weight: bold; font-family: Brevis; font-style: italic;">PRASHAM</span>
         <span class="finance"> ✦ Your Market Companion</span>
         </div>
         <div id="userGreeting" class="user-greeting"></div>
@@ -163,7 +163,7 @@
         <div class="nav-links">
             <a onclick="loadPage('myHome.html')">Home</a>
             <a onclick="loadPage('News.html')">News</a>
-            <a href="Markets.html">Markets</a>
+            <a href="#" onclick="loadPage('markets.html')">Markets</a> <!-- MODIFIED LINE -->
             <a href="portfolio.html">Portfolio</a>
             <a onclick="loadPage('Analysis.html')">Analysis</a>
             <a onclick="loadPage('Videos.html')">Videos</a>
@@ -244,6 +244,33 @@
         let stockInput; // This is the search bar inside myHome.html content
         let addStockToPortfolioButton; // This button is inside myHome.html content
         let modal, modalStockSymbol, modalCompanyName, modalStockCurrentPrice, modalStockQuantity, modalStockValue, modalPortfolioName, modalSaveButton, modalCancelButton, modalErrorMessage;
+
+        // --- Global variables for Markets.html content ---
+        // WARNING: Using API_KEY directly in client-side code is INSECURE for production.
+        // For a production application, use a backend proxy to protect your API key.
+        const API_KEY = 'H4Y6X76DBD1EJR4H'; // Your Alpha Vantage API Key
+        const ALPHA_VANTAGE_BASE_URL = 'https://www.alphavantage.co/query?';
+
+        const indices = [
+            { symbol: 'MSFT', name: 'Microsoft (proxy Nifty)', type: 'stock' },
+            { symbol: 'AAPL', name: 'Apple (proxy Sensex)', type: 'stock' },
+            { symbol: 'DJI', name: 'Dow Jones', type: 'index' },
+            { symbol: 'IXIC', name: 'NASDAQ', type: 'index' }
+        ];
+
+        const forexPairs = [
+            { from: 'USD', to: 'INR', symbol: 'USDINR' },
+            { from: 'EUR', to: 'INR', symbol: 'EURINR' },
+            { from: 'GBP', to: 'INR', symbol: 'GBPINR' }
+        ];
+
+        const commodities = [
+            { symbol: 'XAUUSD', name: 'Gold (XAU/USD)', type: 'forex' },
+            { symbol: 'XAGUSD', name: 'Silver (XAG/USD)', type: 'forex' },
+            { symbol: 'USO', name: 'Crude Oil (USO ETF proxy)', type: 'stock' }
+        ];
+
+        let globalErrorDisplay; // This will be assigned when markets.html is loaded
 
 
         function displayErrorMessage(message) {
@@ -478,10 +505,42 @@
 
                         fetchStockNews(newsContainer, errorMessageDiv, loadingIndicatorElement);
                     }
-                    else if (page === 'Markets.html') {
-                        console.log("Markets.html loaded. Attempting to draw charts...");
-                        loadWatchlistPieChart();
-                        loadSectorPerformance();
+                    else if (page === 'markets.html') {
+                        console.log("Markets.html loaded. Initializing market data...");
+                        // Assign global error display for markets page
+                        globalErrorDisplay = document.getElementById('globalError');
+                        
+                        // Load initial table rows with placeholders
+                        loadInitialTableRows("worldIndicesTable", indices);
+                        loadInitialTableRows("forexRatesTable", forexPairs);
+                        loadInitialTableRows("commoditiesTable", commodities);
+
+                        // Trigger updates for each item after they've been loaded as placeholders
+                        document.querySelectorAll("table tbody").forEach(tbody => {
+                            Array.from(tbody.rows).forEach(row => {
+                                const symbol = row.dataset.symbol;
+                                let item;
+                                // Determine the item based on the table ID and symbol
+                                if (tbody.closest('table').id === 'worldIndicesTable') { 
+                                    item = indices.find(idx => idx.symbol === symbol);
+                                } else if (tbody.closest('table').id === 'forexRatesTable') {
+                                    item = forexPairs.find(pair => pair.symbol === symbol);
+                                } else if (tbody.closest('table').id === 'commoditiesTable') {
+                                    item = commodities.find(cmd => cmd.symbol === symbol);
+                                }
+                                if (item) {
+                                    updateSingleItemRow(tbody.closest('table').id, item, row);
+                                }
+                            });
+                        });
+
+                        // Re-attach universal event listener for refresh buttons within all tables
+                        document.querySelectorAll("table tbody").forEach(tbody => {
+                            // Remove existing listener to prevent duplicates
+                            tbody.removeEventListener('click', handleMarketRefreshClick); 
+                            tbody.addEventListener('click', handleMarketRefreshClick);
+                        });
+
                     } else if (page === 'Profile.html') { // NEW: Handle loading Profile.html
                          // The script within profile.html handles its own DOMContentLoaded and data fetching
                          console.log("Profile.html loaded. Its script will handle content.");
@@ -710,7 +769,7 @@
         function highlightActiveButton(index) {
             const buttons = document.querySelectorAll(".watchlist-tabs button");
             buttons.forEach((btn, i) => {
-                btn.style.backgroundColor = i === index ? "#333" : "#6f2cff";
+                btn.style.backgroundColor = i === index ? "#333" : "#CD853F";
             });
         }
 
@@ -832,7 +891,8 @@
 
             } catch (err) {
                 console.error('Error loading chart:', err);
-                alert('Error loading chart: ' + err.message);
+                // Use custom modal instead of alert
+                // alert('Error loading chart: ' + err.message); 
 
                 if (stockLineSeries) {
                     stockLineSeries.setData([]);
@@ -1032,7 +1092,7 @@
                             .enter().append("rect")
                             .attr("class", "bar")
                             .attr("x", d => x(Math.min(0, d.changesPercentage)))
-                            .attr("y", d => y(d.sector))
+                            .attr("y", d => y(d.sector) + y.bandwidth() / 2)
                             .attr("width", d => Math.abs(x(d.changesPercentage) - x(0)))
                             .attr("height", y.bandwidth())
                             .attr("fill", d => d.changesPercentage >= 0 ? "#28a745" : "#dc3545");
@@ -1065,6 +1125,217 @@
             }
         }
 
+
+        // --- Functions originally from markets.html, now integrated into home.html ---
+
+        function displayGlobalError(message) {
+            if (globalErrorDisplay) {
+                globalErrorDisplay.textContent = message;
+                globalErrorDisplay.style.display = 'block';
+            }
+            console.error("Global Error:", message);
+        }
+
+        function clearGlobalError() {
+            if (globalErrorDisplay) {
+                globalErrorDisplay.textContent = '';
+                globalErrorDisplay.style.display = 'none';
+            }
+        }
+
+        async function fetchJSON(url) {
+            try {
+                const res = await fetch(url);
+                if (!res.ok) {
+                    const errorBody = await res.text();
+                    throw new Error(`HTTP error! status: ${res.status} - ${errorBody}`);
+                }
+                const data = await res.json();
+                if (data["Error Message"]) {
+                    throw new Error(`Alpha Vantage API Error: ${data["Error Message"]}`);
+                }
+                if (data["Note"] && data["Note"].includes("5 calls per minute")) {
+                    throw new Error(`Alpha Vantage API Rate Limit Exceeded: ${data["Note"]}`);
+                }
+                return data;
+            } catch (error) {
+                console.error("Failed to fetch JSON:", url, error);
+                throw error;
+            }
+        }
+
+        /**
+         * Generic function to update a table row's content.
+         * @param {HTMLElement} row The table row element.
+         * @param {Array<string>} data An array of strings for each cell.
+         * @param {Object} options Optional settings { changeIndex, changePctIndex } for styling
+         */
+        function updateRowContent(row, data, options = {}) {
+            row.innerHTML = ''; // Clear existing cells
+            data.forEach((value, index) => {
+                const cell = row.insertCell();
+                cell.textContent = value;
+                // Apply price-up/down classes if indices are provided and value is a number
+                if (options.changeIndex !== undefined && index === options.changeIndex && typeof value === 'number') {
+                    cell.classList.add(value >= 0 ? "price-up" : "price-down");
+                } else if (options.changePctIndex !== undefined && index === options.changePctIndex && typeof value === 'string' && value.includes('%') && !isNaN(parseFloat(value))) {
+                    const changePctValue = parseFloat(value);
+                    cell.classList.add(changePctValue >= 0 ? "price-up" : "price-down");
+                }
+            });
+        }
+
+        async function updateSingleItemRow(tableId, item, row) {
+            const symbol = item.symbol || `${item.from}${item.to}`; // Use full symbol for consistency
+            const name = item.name || `${item.from}/${item.to}`;
+            const isForex = item.type === 'forex' && tableId === 'forexRatesTable'; // Check if it's the forex table's forex item
+
+            const refreshButton = row.querySelector('.refresh-item-btn');
+            if (refreshButton) {
+                refreshButton.disabled = true;
+                refreshButton.innerHTML = '<div class="spinner"></div>';
+            }
+
+            // Temporarily set cell contents to 'Loading...' or '...'
+            // Account for Name cell and Action cell
+            const totalDataCells = row.cells.length - 2; // Subtract Name cell and Action cell
+            const cellsToUpdate = Array.from(row.cells).slice(1, 1 + totalDataCells); // Get data cells only
+            cellsToUpdate.forEach(cell => {
+                cell.textContent = '...';
+                cell.className = ''; // Clear styling
+            });
+
+            try {
+                let quoteData;
+                if (item.type === 'stock' || item.type === 'index' || (item.type === 'forex' && tableId === 'commoditiesTable')) { // Commodities using stock proxy
+                    const url = `${ALPHA_VANTAGE_BASE_URL}function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${API_KEY}`;
+                    const data = await fetchJSON(url);
+                    quoteData = data["Global Quote"];
+                } else if (item.type === 'forex' && tableId === 'forexRatesTable') { // Actual forex
+                    const url = `${ALPHA_VANTAGE_BASE_URL}function=CURRENCY_EXCHANGE_RATE&from_currency=${item.from}&to_currency=${item.to}&apikey=${API_KEY}`;
+                    const data = await fetchJSON(url);
+                    quoteData = data["Realtime Currency Exchange Rate"];
+                }
+
+                if (quoteData) {
+                    let price, change, changePct, trendIcon;
+
+                    if (isForex) {
+                        price = parseFloat(quoteData["5. Exchange Rate"]);
+                        // Alpha Vantage Realtime Currency Exchange Rate does not provide daily change
+                        change = "N/A";
+                        changePct = "N/A";
+                        trendIcon = "N/A"; // No direct trend for N/A change
+                    } else { // Stock, Index, Commodity (using GLOBAL_QUOTE)
+                        price = parseFloat(quoteData["05. price"]);
+                        change = parseFloat(quoteData["09. change"]);
+                        changePct = quoteData["10. change percent"];
+                        trendIcon = change >= 0 ? "📈" : "📉";
+                    }
+
+                    const formattedPrice = isForex ? price.toFixed(4) : price.toFixed(2);
+                    const formattedChange = (change !== "N/A" && !isNaN(change)) ? change.toFixed(2) : "N/A";
+
+                    let rowData;
+                    let options = {};
+
+                    // Construct rowData based on table and item type
+                    rowData = [
+                        name,
+                        formattedPrice,
+                        formattedChange,
+                        changePct,
+                        trendIcon,
+                        '' // Placeholder for Action column, will be replaced by button
+                    ];
+
+                    // Indices for applying price-up/down classes
+                    options = { changeIndex: 2, changePctIndex: 3 };
+
+                    updateRowContent(row, rowData, options);
+
+                    // Re-insert action button after updating content
+                    const actionCell = row.cells[row.cells.length - 1]; // Last cell is the actions cell
+                    actionCell.innerHTML = `<button class="refresh-item-btn" data-symbol="${symbol}">🔄</button>`;
+
+                } else {
+                    // Handle no data scenario
+                    let rowData;
+                    rowData = [name, 'N/A', 'N/A', 'N/A', 'N/A', '']; // All data cells + action
+                    updateRowContent(row, rowData);
+                    const actionCell = row.cells[row.cells.length - 1];
+                    actionCell.innerHTML = `<button class="refresh-item-btn" data-symbol="${symbol}">🔄</button>`;
+                }
+                clearGlobalError();
+            } catch (e) {
+                let errorDetails = e.message.substring(0, 50);
+                let rowData;
+                rowData = [name, `Error`, `(${errorDetails}...)`, '', '', '']; // All data cells + action
+                updateRowContent(row, rowData);
+                const actionCell = row.cells[row.cells.length - 1];
+                actionCell.innerHTML = `<button class="refresh-item-btn" data-symbol="${symbol}">🔄</button>`;
+                console.error(`Error updating ${name} (${symbol}):`, e);
+                displayGlobalError(`Failed to load data for ${name}. (API error or rate limit)`);
+            } finally {
+                if (refreshButton) {
+                    refreshButton.disabled = false;
+                    refreshButton.innerHTML = '🔄';
+                }
+            }
+        }
+
+        function loadInitialTableRows(tableId, items) {
+            const tbody = document.querySelector(`#${tableId} tbody`);
+            if (!tbody) {
+                console.error(`tbody for table ID ${tableId} not found.`);
+                return;
+            }
+            tbody.innerHTML = ''; // Clear loading message
+
+            items.forEach(item => {
+                const row = tbody.insertRow();
+                const symbol = item.symbol || `${item.from}${item.to}`;
+                row.dataset.symbol = symbol; // Store symbol for easy lookup
+
+                const nameCell = row.insertCell();
+                nameCell.textContent = item.name || `${item.from}/${item.to}`; // Display name or pair
+
+                // Add placeholder cells for Price, Change, Change %, Trend
+                row.insertCell().textContent = 'Not Loaded'; // Price
+                row.insertCell().textContent = '-';         // Change
+                row.insertCell().textContent = '-';         // Change %
+                row.insertCell().textContent = '-';         // Trend
+
+                // Add the actions cell with the refresh button
+                const actionCell = row.insertCell();
+                actionCell.innerHTML = `<button class="refresh-item-btn" data-symbol="${symbol}">🔄</button>`;
+            });
+        }
+
+        // Universal event listener handler for markets page tables
+        async function handleMarketRefreshClick(event) {
+            const button = event.target.closest('.refresh-item-btn');
+            if (button) {
+                const symbol = button.dataset.symbol;
+                const row = button.closest('tr');
+                const tableId = button.closest('table').id;
+
+                let item;
+                if (tableId === 'worldIndicesTable') {
+                    item = indices.find(idx => idx.symbol === symbol);
+                } else if (tableId === 'forexRatesTable') {
+                    item = forexPairs.find(pair => pair.symbol === symbol);
+                } else if (tableId === 'commoditiesTable') {
+                    item = commodities.find(cmd => cmd.symbol === symbol);
+                }
+
+                if (item && row) {
+                    await updateSingleItemRow(tableId, item, row);
+                }
+            }
+        }
+
+        // --- End of Markets.html specific functions ---
 
         document.addEventListener("DOMContentLoaded", () => {
             // Display user greeting
@@ -1233,7 +1504,10 @@
             const totalValue = quantity * purchasePrice; // Calculate total value here before sending
 
             if (!authToken) {
-                alert('You need to be logged in to add stocks to your portfolio.'); // Consider custom modal
+                // Use custom modal instead of alert
+                // alert('You need to be logged in to add stocks to your portfolio.'); 
+                modalErrorMessage.textContent = 'You need to be logged in to add stocks to your portfolio.';
+                modalErrorMessage.classList.remove('portfolio-hidden');
                 return;
             }
 
@@ -1267,7 +1541,8 @@
 
                 console.log("Stock added to portfolio successfully via server!");
                 hideAddStockModal();
-                alert(`${quantity} shares of ${symbol} added to your portfolio '${portfolioName}'!`); // Simple confirmation
+                // Use custom modal instead of alert
+                // alert(`${quantity} shares of ${symbol} added to your portfolio '${portfolioName}'!`); 
                 // If you want to refresh the watchlist or anything on home.html, do it here.
                 // Otherwise, the user would navigate to Portfolio.html to see the full list.
             } catch (error) {

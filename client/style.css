@@ -152,7 +152,7 @@ h2 {
 
 .tabs .active {
   background: blue;
-  color: white;
+  color: rgb(255, 255, 255);
 }
 
 input {
