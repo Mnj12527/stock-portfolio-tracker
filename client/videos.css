@@ -1,6 +1,7 @@
 /* videos.css */
 
 .video-container {
+  background-color: #eaf3fb;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Responsive grid */
   gap: 16px; /* Spacing between video items */

@@ -24,7 +24,7 @@ body {
     /* REMOVED max-width: 1200px; to make it fit the page width */
     margin: 0; /* REMOVED margin: 2rem auto; - Now it fills all edges */
     padding: 1.5rem; /* Keep internal padding for content */
-    background-color: #fff; /* This will now be the main page background */
+    background: linear-gradient(to right, #00dbde, #fc00ff); /* This will now be the main page background */
     border-radius: 0; /* REMOVED border-radius: 0.75rem; for full-bleed corners */
     box-shadow: none; /* REMOVED box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); if you don't want a shadow on the entire page */
     flex-grow: 1; /* Allows it to grow and fill available height within the flex body */

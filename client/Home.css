@@ -9,7 +9,7 @@
     min-height: 830px;
     /* Optional: specify a taller minimum height */
     padding: 20px;
-    background: #f8f8f8;
+    background: #e6f0f8;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     z-index: 999;
@@ -30,7 +30,7 @@
 
 .watchlist-tabs button {
     /* Added default button style for all tabs */
-    background-color: #e0e0e0;
+    background-color: #3498DB;
     border: none;
     padding: 10px 15px;
     border-radius: 5px;
@@ -41,7 +41,7 @@
 }
 
 .watchlist-tabs button:hover {
-    background-color: #5a23cc;
+    background-color: #3498DB;
 }
 
 .watchlist-tabs button.active {
@@ -68,7 +68,7 @@
 }
 
 #addStockButton {
-    background-color: #afb490;
+    background-color: #00bcd4;
     color: white;
     border: none;
     padding: 8px 15px;
@@ -79,7 +79,7 @@
 }
 
 #addStocktoportfolioButton {
-    background-color: #6c9b83;
+    background-color: #28a745;
     color: white;
     border: none;
     padding: 8px 15px;
@@ -90,9 +90,12 @@
 }
 
 #addStockButton:hover {
-    background-color: #0056b3;
+    background-color: #3892C7;
 }
 
+#addStocktoportfolioButton:hover {
+    background-color: #27ae60;
+}
 
 /* --- WATCHLIST TABLE STYLES (NEW/UPDATED) --- */
 
@@ -287,7 +290,7 @@
 .chart-section {
     flex-grow: 1;
     margin-left: 520px;
-    background: #ffffff;
+    background: #eaf3fb;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     padding: 20px;
@@ -317,7 +320,7 @@
     padding: 0 20px;
     height: 42px;
     width: 100px;
-    background-color: #c2c4bb;
+    background-color: #1751E8;
     color: white;
     border: none;
     border-radius: 5px;
@@ -831,3 +834,4 @@
         color: #2d3748;
     }
 }
+
