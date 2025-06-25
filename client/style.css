@@ -7,28 +7,13 @@
 
 /* BODY */
 body {
-  font-family: Arial, sans-serif;
-  background-color: #ffffff;
-  color: white;
-  margin: 0;
-  padding: 0;
+  font-family: Arial, sans-serif; /* Keep this as global font */
+  background-color: #ffffff; /* Keep this as global background, may be overridden by page-specific content */
+  /* Removed 'color: white;', 'margin: 0;', 'padding: 0;' as these are handled by Home.html's inline styles for consistency */
 }
 
 /* === NAVBAR === */
-.navbar {
-  background-color: #2c3e50;
-  padding: 10px 20px;
-  padding-left: 70px;
-  padding-right: 40px; 
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 2px solid #00c49f;
-  position: fixed;
-  top: 0;
-  width: 100%;
-  z-index: 1000;
-}
+/* The main .navbar container styling is in Home.html for fixed positioning, etc. */
 
 .logo {
   font-size: 30px;
@@ -36,13 +21,14 @@ body {
 }
 
 .logo .finance {
-  color: rgb(255, 255, 255); /* or any color you want */
+  color: rgb(255, 255, 255); /* Keep this specific color for .finance */
 }
 
 .logo span {
-  color: #2bc2e7;
+  color: #2bc2e7; /* Keep this specific color for the '✦' spans */
 }
 
+/* Search bar styles (if present in navbar on some pages) */
 .search-bar {
   flex-grow: 1;
   margin: 0 30px;
@@ -63,14 +49,6 @@ body {
   height: 40px;
 }
 
-.signout-btn {
-  background-color: #c0392b;
-  padding: 8px 14px;
-  border-radius: 6px;
-  color: white;
-  font-weight: bold;
-}
-
 .search-bar button {
   background-color: #247ccebb;
   border: none;
@@ -82,6 +60,7 @@ body {
   height: 40px;
 }
 
+/* Navigation links */
 .nav-links {
   display: flex;
   gap: 25px;
@@ -89,14 +68,22 @@ body {
 }
 
 .nav-links a {
-  color: white;
+  color: white; /* Default link color in navbar */
   text-decoration: none;
   font-weight: bold;
   cursor: pointer;
+  padding: 8px 15px; /* Add padding for better clickability/hover */
+  border-radius: 5px; /* Add border-radius for aesthetic */
+  transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transitions */
 }
 
 .nav-links a.active {
-  color: #00c49f;
+  color: #00c49f; /* Active link color */
+}
+
+.nav-links a:hover {
+    background-color: #555; /* Hover background */
+    color: #00bfff; /* Hover text color */
 }
 
 .nav-links .Home-btn {
@@ -114,7 +101,25 @@ body {
   color: white;
 }
 
-/* === MAIN CONTENT === */
+/* Sign out button */
+.signout-btn {
+  background-color: #dc3545; /* Red color for sign out */
+  padding: 8px 14px;
+  border-radius: 6px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.signout-btn:hover {
+    background-color: #c82333;
+}
+
+
+/* === MAIN CONTENT (General) === */
+/* Note: The .content class in home.html is named .content-below-navbar for fixed header spacing,
+   so this rule's padding might not apply as directly to the main content area. */
 .content {
   padding: 80px 20px 40px; /* Adjusted top padding */
   text-align: center;

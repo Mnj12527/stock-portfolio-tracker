@@ -9,17 +9,104 @@
     <link rel="stylesheet" href="/Home.css"> 
     <link rel="stylesheet" href="/videos.css">
     <link rel="stylesheet" href="/news.css">
-    <!-- No portfolio.css link here as its content is now in Home.css or Portfolio.html -->
+    <link rel="stylesheet" href="/portfolio.css"> 
+    <link rel="stylesheet" href="/profile.css">
+    <link rel="stylesheet" href="/markets.css">
+
     <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
     <script src="https://unpkg.com/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Chart.js for portfolio -->
     <style>
-        /* Keep any global styles or styles specific to Home.html here */
+        /* Global Body Styles */
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6; /* Light gray background */
             margin: 0;
             padding: 0;
+            overflow-y: scroll; /* Always show vertical scrollbar to prevent layout shifts */
+            overflow-x: hidden; /* Keep horizontal overflow hidden */
+            box-sizing: border-box; /* Ensure padding/border are included in element's total width/height */
         }
+
+        /* --- Navbar Styles (Consolidated for Consistency) --- */
+        .navbar {
+            position: fixed; /* Make the navbar fixed */
+            top: 0; /* Position at the top */
+            left: 0; /* Ensure it starts from the left edge */
+            width: 100%; /* Take full width */
+            z-index: 1000; /* Ensure it stays on top of other content */
+            padding: 10px 20px; /* Consistent padding */
+            box-sizing: border-box; /* Crucial for consistent sizing */
+            background-color: #333; /* Dark background from style.css */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Subtle shadow */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px; /* Explicit height for consistency */
+        }
+
+        .navbar .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px; /* Space between logo image and text */
+        }
+
+        .navbar .logo img {
+            width: 50px; /* Consistent logo size */
+            height: 50px;
+            border-radius: 50%; /* Make it round if desired */
+        }
+
+        .navbar .logo .finance {
+            color: #fff; /* White text for "Your Market Companion" */
+            font-size: 1.1em;
+            font-weight: normal;
+        }
+
+        .navbar .user-greeting {
+            color: #fff; /* White text for greeting */
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-right: 20px; /* Space between greeting and nav links */
+        }
+
+        .navbar .nav-links a {
+            color: #fff; /* White text for links */
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            font-weight: 500;
+        }
+
+        .navbar .nav-links a:hover {
+            background-color: #555; /* Slightly lighter gray on hover */
+            color: #00bfff; /* Light blue on hover */
+        }
+
+        .navbar .signout-btn {
+            background-color: #dc3545; /* Red for sign-out button */
+            margin-left: 20px;
+            padding: 8px 15px;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .navbar .signout-btn:hover {
+            background-color: #c82333;
+        }
+        /* --- End Navbar Styles --- */
+
+
+        /* Adjust content below navbar to prevent it from being hidden under the fixed navbar */
+        .content-below-navbar {
+            margin-top: 70px; /* This must match the navbar's height */
+            /* Add any other general styling for the content area if needed */
+        }
+
+        /* --- Other General Styles --- */
         .container {
             max-width: 1200px;
             margin: 20px auto;
@@ -128,32 +215,45 @@
             background-color: #ffe6e6;
         }
 
-        /* Added style for user greeting */
-        .user-greeting {
-            color: #fff; /* White text for greeting */
-            font-size: 1.1em;
-            font-weight: bold;
-            margin-right: 20px; /* Space between greeting and nav links */
-        }
-
-        /* Padding for navbar content from corners */
-        .navbar {
-            padding: 10px 20px; /* Example: 10px top/bottom, 20px left/right */
-            box-sizing: border-box; /* Ensures padding is included in element's total width */
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 20px; /* space between logo and text */
+        /* Responsive Navbar Adjustments */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                height: auto; /* Allow height to adjust based on content */
+                padding: 10px;
             }
+            .navbar .logo {
+                margin-bottom: 10px;
+            }
+            .navbar .nav-links {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 5px; /* Smaller gap for links on smaller screens */
+            }
+            .navbar .user-greeting {
+                margin: 0 0 10px 0; /* Adjust margin for stacked layout */
+            }
+            .navbar .nav-links a {
+                padding: 6px 10px; /* Smaller padding for links */
+                font-size: 0.9em;
+            }
+            .navbar .signout-btn {
+                margin-left: 0;
+                margin-top: 10px; /* Space between links and signout button */
+            }
+            .content-below-navbar {
+                /* Adjust margin-top to account for the dynamic height of the stacked navbar */
+                margin-top: 150px; /* This value might need fine-tuning based on actual content */
+            }
+        }
     </style>
 </head>
 <body>
 
     <div class="navbar">
         <div class="logo">
-        <span><img src="logo3.jpg" alt="Prasham Finance Logo" style="width: 60px; height: 60px; top:0ch" /></span>
+        <span><img src="logo3.jpg" alt="Prasham Finance Logo" /></span>
         <span style="color: white;">✦</span> 
         <span style="color: #00bfff; font-weight: bold; font-family: Brevis; font-style: italic;">PRASHAM</span>
         <span class="finance"> ✦ Your Market Companion</span>
@@ -164,10 +264,10 @@
             <a onclick="loadPage('myHome.html')">Home</a>
             <a onclick="loadPage('News.html')">News</a>
             <a href="#" onclick="loadPage('markets.html')">Markets</a> 
-            <a href="portfolio.html">Portfolio</a>
+            <a href="#" onclick="loadPage('portfolio.html')">Portfolio</a> 
             <a onclick="loadPage('Analysis.html')">Analysis</a>
             <a onclick="loadPage('Videos.html')">Videos</a>
-            <a href="#" onclick="loadPage('Profile.html')">Profile</a> <!-- MODIFIED LINE -->
+            <a href="#" onclick="loadPage('Profile.html')">Profile</a> 
             <a class="signout-btn" onclick="signOut()">Sign Out</a>
         </div>
     </div>
@@ -224,7 +324,7 @@
         // authToken is already declared above and fetched
 
         const API_BASE_URL = 'http://localhost:5000'; // Base URL for your Node.js backend
-        window.API_BASE_URL = API_BASE_URL; // Expose globally for profile.js
+        window.API_BASE_URL = API_BASE_URL; // Expose globally for profile.js and portfolio.js functions
 
         // --- Video Elements (used by Videos.html content) ---
         let videoContainer;
@@ -278,6 +378,29 @@
         let changePasswordForm;
         let profileMessage;
         let passwordMessage;
+
+        // --- Global variables for Portfolio.html content ---
+        let allUserPortfolios = []; // Stores all portfolio entries from the backend
+        let currentChart; // To hold the Chart.js instance
+
+        // Element references for Portfolio.html elements (will be assigned when portfolio.html is loaded)
+        let portfolioSelect;
+        let totalPortfolioValueEl;
+        let totalStocksHeldEl;
+        let unrealizedGainLossEl;
+        let realizedGainLossEl;
+        let holdingsTableBody;
+        let holdingsChartCanvas;
+        let chartPlaceholderText;
+        let holdingsLoadingIndicator;
+        let deletePortfolioBtn; 
+
+        let dayChangePercentEl;
+        let dayChangeAmountEl;
+        let highestGainerSymbolEl;
+        let highestGainerPercentEl;
+        let looserStockSymbolEl;
+        let looserStockPercentEl;
 
 
         function displayErrorMessage(message) {
@@ -550,14 +673,55 @@
 
                     } else if (page === 'Profile.html') { 
                          console.log("Profile.html loaded. Calling initProfilePage...");
-                         // Call the initProfilePage function from profile.js to set up forms and fetch data
                          if (window.initProfilePage) {
                              window.initProfilePage();
                          } else {
                              console.error("initProfilePage function not found on window object.");
                          }
+                    } else if (page === 'portfolio.html') { 
+                        console.log("Portfolio.html loaded. Initializing portfolio data...");
+                        // Assign Portfolio.html specific element references
+                        portfolioSelect = document.getElementById('portfolioSelect');
+                        totalPortfolioValueEl = document.getElementById('totalPortfolioValue');
+                        totalStocksHeldEl = document.getElementById('totalStocksHeld');
+                        unrealizedGainLossEl = document.getElementById('unrealizedGainLoss');
+                        realizedGainLossEl = document.getElementById('realizedGainLoss');
+                        holdingsTableBody = document.getElementById('holdingsTableBody');
+                        holdingsChartCanvas = document.getElementById('holdingsChart');
+                        chartPlaceholderText = document.getElementById('portfolio-chart-placeholder-text');
+                        holdingsLoadingIndicator = document.getElementById('holdingsLoadingIndicator');
+                        deletePortfolioBtn = document.getElementById('deletePortfolioBtn');
+
+                        dayChangePercentEl = document.getElementById('dayChangePercent');
+                        dayChangeAmountEl = document.getElementById('dayChangeAmount');
+                        highestGainerSymbolEl = document.getElementById('highestGainerSymbol');
+                        highestGainerPercentEl = document.getElementById('highestGainerPercent');
+                        looserStockSymbolEl = document.getElementById('looserStockSymbol');
+                        looserStockPercentEl = document.getElementById('looserStockPercentEl'); // Corrected ID reference
+
+                        // Attach event listeners for portfolio page
+                        if (portfolioSelect) {
+                            portfolioSelect.addEventListener('change', (event) => {
+                                const selectedName = event.target.value;
+                                if (selectedName) {
+                                    filterAndRenderPortfolio(selectedName);
+                                } else {
+                                    updatePortfolioMetrics(null);
+                                    renderHoldingsTable([]);
+                                    drawHoldingsChart([]);
+                                    updateDailyChanges([]);
+                                    if (deletePortfolioBtn) deletePortfolioBtn.disabled = true; // Make sure button exists
+                                }
+                            });
+                        }
+                        if (deletePortfolioBtn) {
+                            deletePortfolioBtn.addEventListener('click', () => {
+                                const selectedPortfolioName = portfolioSelect.value;
+                                deletePortfolio(selectedPortfolioName);
+                            });
+                        }
+                        fetchUserPortfolios(); // Initial fetch for portfolio data
                     }
-                     // No specific initialization for Portfolio.html here, as it's a separate file now.
                 })
                 .catch(error => {
                     console.error("Error loading page:", error);
@@ -1388,6 +1552,7 @@
                 console.warn("fetchUserProfile: No auth token found, cannot fetch profile.");
                 if (document.getElementById('username')) document.getElementById('username').value = 'N/A';
                 if (document.getElementById('email')) document.getElementById('email').value = 'N/A';
+                if (document.getElementById('email')) document.getElementById('email').value = 'N/A';
                 if (document.getElementById('mobileNumber')) document.getElementById('mobileNumber').value = 'N/A';
                 if (document.getElementById('address')) document.getElementById('address').value = 'N/A';
                 if (document.getElementById('profession')) document.getElementById('profession').value = 'N/A';
@@ -1545,6 +1710,449 @@
         }
 
         window.initProfilePage = initProfilePage; // Expose globally
+
+        // --- Functions originally from portfolio.js, now integrated into home.html ---
+        async function fetchUserPortfolios() {
+            if (!authToken) {
+                // Ensure authToken is fetched or redirect if not available
+                authToken = localStorage.getItem('token');
+                if (!authToken) {
+                    console.log("No token found, cannot fetch portfolios. Please log in.");
+                    if (portfolioSelect) portfolioSelect.innerHTML = '<option value="">Please log in</option>';
+                    return;
+                }
+            }
+
+            if (holdingsLoadingIndicator) holdingsLoadingIndicator.classList.remove('hidden'); // Show loading indicator
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/portfolio`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401 || response.status === 403) {
+                        // Use custom message instead of alert and redirect
+                        console.error('Session expired. Please log in again.');
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('username');
+                        window.location.replace("index.html"); 
+                        return; // Stop execution
+                    }
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to fetch portfolio data.');
+                }
+
+                const data = await response.json();
+                let actualPortfoliosArray = [];
+                if (Array.isArray(data)) {
+                    actualPortfoliosArray = data;
+                } else if (data && typeof data === 'object' && Array.isArray(data.portfolio)) {
+                    actualPortfoliosArray = data.portfolio;
+                } else {
+                    console.warn('Server response for portfolios was not an array or did not contain an expected array property. Response:', data);
+                    actualPortfoliosArray = [];
+                }
+
+                allUserPortfolios = actualPortfoliosArray;
+                console.log("Fetched user portfolios:", allUserPortfolios);
+
+                if (allUserPortfolios.length === 0) {
+                    if (portfolioSelect) portfolioSelect.innerHTML = '<option value="">No portfolios found</option>';
+                    updatePortfolioMetrics(null);
+                    renderHoldingsTable([]);
+                    drawHoldingsChart([]);
+                    updateDailyChanges([]);
+                    if (deletePortfolioBtn) deletePortfolioBtn.disabled = true;
+                    return;
+                } else {
+                    if (deletePortfolioBtn) deletePortfolioBtn.disabled = false;
+                }
+
+                const uniquePortfolioNames = [...new Set(allUserPortfolios.map(holding => holding.portfolioName))];
+                populatePortfolioDropdown(uniquePortfolioNames);
+
+                if (uniquePortfolioNames.length > 0) {
+                    if (portfolioSelect) portfolioSelect.value = uniquePortfolioNames[0];
+                    filterAndRenderPortfolio(uniquePortfolioNames[0]);
+                }
+
+            } catch (error) {
+                console.error("Error fetching user portfolios:", error);
+                if (portfolioSelect) portfolioSelect.innerHTML = '<option value="">Error loading portfolios</option>';
+                // Use custom message instead of alert
+                console.error(`Error loading portfolios: ${error.message}`); 
+                updatePortfolioMetrics(null);
+                renderHoldingsTable([]);
+                drawHoldingsChart([]);
+                updateDailyChanges([]);
+                if (deletePortfolioBtn) deletePortfolioBtn.disabled = true;
+            } finally {
+                if (holdingsLoadingIndicator) holdingsLoadingIndicator.classList.add('hidden'); // Hide loading indicator
+            }
+        }
+
+        function populatePortfolioDropdown(portfolioNames) {
+            if (!portfolioSelect) return;
+            portfolioSelect.innerHTML = '';
+            if (portfolioNames.length === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'No Portfolios Available';
+                portfolioSelect.appendChild(option);
+                return;
+            }
+            portfolioNames.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                portfolioSelect.appendChild(option);
+            });
+        }
+
+        async function filterAndRenderPortfolio(selectedPortfolioName) {
+            if (holdingsLoadingIndicator) holdingsLoadingIndicator.classList.remove('hidden');
+            const filteredHoldings = allUserPortfolios.filter(holding => holding.portfolioName === selectedPortfolioName);
+            console.log(`Filtering for portfolio: ${selectedPortfolioName}. Found ${filteredHoldings.length} holdings.`);
+
+            const symbolsToFetch = [...new Set(filteredHoldings.map(h => h.symbol))];
+            const currentPrices = {};
+
+            const pricePromises = symbolsToFetch.map(async symbol => {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/stock-data/${symbol}`, {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data && data.length > 0) {
+                            currentPrices[symbol] = { price: data[0].price, name: data[0].name, previousClose: data[0].previousClose };
+                        } else {
+                            console.warn(`No data received for symbol ${symbol} from /stock-data.`);
+                        }
+                    } else {
+                        const errorText = await response.text();
+                        console.error(`Error fetching current price for ${symbol}: Status ${response.status}, ${errorText}`);
+                    }
+                } catch (error) {
+                    console.error(`Network error or unexpected response for ${symbol}:`, error);
+                }
+            });
+            await Promise.allSettled(pricePromises);
+
+            const processedHoldings = filteredHoldings.map(holding => {
+                const currentPriceData = currentPrices[holding.symbol];
+                const currentPrice = currentPriceData?.price || holding.purchasePrice;
+                const companyName = currentPriceData?.name || 'N/A';
+                const previousClose = currentPriceData?.previousClose || holding.purchasePrice;
+
+                const currentValue = holding.quantity * currentPrice;
+                const gainLoss = currentValue - holding.totalValue;
+                const gainLossPercent = holding.totalValue > 0 ? (gainLoss / holding.totalValue) * 100 : 0;
+
+                return {
+                    ...holding,
+                    companyName,
+                    currentPrice,
+                    currentValue,
+                    gainLoss,
+                    gainLossPercent,
+                    previousClose
+                };
+            });
+
+            updatePortfolioMetrics(processedHoldings);
+            renderHoldingsTable(processedHoldings);
+            drawHoldingsChart(processedHoldings);
+            updateDailyChanges(processedHoldings);
+
+            if (holdingsLoadingIndicator) holdingsLoadingIndicator.classList.add('hidden');
+        }
+
+        function updatePortfolioMetrics(holdings) {
+            if (!totalPortfolioValueEl || !totalStocksHeldEl || !unrealizedGainLossEl || !realizedGainLossEl) return;
+
+            if (!holdings || holdings.length === 0) {
+                totalPortfolioValueEl.textContent = '$0.00';
+                totalStocksHeldEl.textContent = '0';
+                unrealizedGainLossEl.textContent = '+$0.00 (0.00%)';
+                unrealizedGainLossEl.classList.remove('text-green-600', 'text-red-700');
+                unrealizedGainLossEl.classList.add('portfolio-text-purple-700');
+                realizedGainLossEl.textContent = '+$0.00 (0.00%)';
+                realizedGainLossEl.classList.remove('text-green-600', 'text-red-700');
+                realizedGainLossEl.classList.add('portfolio-text-red-700');
+                return;
+            }
+
+            let totalValue = 0;
+            let totalStocks = 0;
+            let totalUnrealizedGainLoss = 0;
+
+            holdings.forEach(h => {
+                totalValue += h.currentValue;
+                totalStocks += h.quantity;
+                totalUnrealizedGainLoss += h.gainLoss;
+            });
+
+            const totalPurchaseValue = holdings.reduce((sum, h) => sum + h.totalValue, 0);
+            const unrealizedPercent = totalPurchaseValue > 0 ? (totalUnrealizedGainLoss / totalPurchaseValue) * 100 : 0;
+
+            totalPortfolioValueEl.textContent = `$${totalValue.toFixed(2)}`;
+            totalStocksHeldEl.textContent = holdings.length;
+
+            unrealizedGainLossEl.textContent = `${totalUnrealizedGainLoss >= 0 ? '+' : ''}$${totalUnrealizedGainLoss.toFixed(2)} (${unrealizedPercent >= 0 ? '+' : ''}${unrealizedPercent.toFixed(2)}%)`;
+            unrealizedGainLossEl.classList.remove('portfolio-text-green-700', 'portfolio-text-red-700', 'portfolio-text-purple-700');
+            if (totalUnrealizedGainLoss > 0) {
+                unrealizedGainLossEl.classList.add('portfolio-text-green-700');
+            } else if (totalUnrealizedGainLoss < 0) {
+                unrealizedGainLossEl.classList.add('portfolio-text-red-700');
+            } else {
+                unrealizedGainLossEl.classList.add('portfolio-text-purple-700');
+            }
+
+            realizedGainLossEl.textContent = '+$0.00 (0.00%)';
+            realizedGainLossEl.classList.remove('portfolio-text-green-700', 'text-red-700');
+            realizedGainLossEl.classList.add('portfolio-text-red-700');
+        }
+
+        function renderHoldingsTable(holdings) {
+            if (!holdingsTableBody || !chartPlaceholderText) return;
+
+            holdingsTableBody.innerHTML = '';
+            if (holdings.length === 0) {
+                holdingsTableBody.innerHTML = '<tr><td colspan="9" class="text-center text-gray-500 py-4">No holdings in this portfolio.</td></tr>';
+                chartPlaceholderText.style.display = 'block';
+                return;
+            }
+            chartPlaceholderText.style.display = 'none';
+
+            holdings.forEach((h, index) => {
+                const row = document.createElement('tr');
+                if (index % 2 !== 0) {
+                    row.classList.add('even-row');
+                }
+
+                const gainLossText = `${h.gainLoss >= 0 ? '+' : ''}${h.gainLoss.toFixed(2)} (${h.gainLossPercent >= 0 ? '+' : ''}${h.gainLossPercent.toFixed(2)}%)`;
+                const gainLossClass = h.gainLoss > 0 ? 'gain' : (h.gainLoss < 0 ? 'loss' : 'neutral');
+
+                // Using h.dateAdded which is consistent with the backend payload for adding stocks
+                const formattedDate = h.purchaseDate ? new Date(h.purchaseDate).toLocaleDateString() : 'N/A'; 
+
+                row.innerHTML = `
+                    <td>${formattedDate}</td>
+                    <td>${h.symbol}</td>
+                    <td>${h.companyName}</td>
+                    <td>${h.quantity}</td>
+                    <td>$${h.purchasePrice.toFixed(2)}</td>
+                    <td>$${h.currentPrice.toFixed(2)}</td>
+                    <td>$${h.currentValue.toFixed(2)}</td>
+                    <td class="${gainLossClass}">${gainLossText}</td>
+                    <td><button class="delete-stock-btn" data-holding-id="${h._id}">-</button></td>
+                `;
+                holdingsTableBody.appendChild(row);
+            });
+
+            document.querySelectorAll('.delete-stock-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const holdingId = event.target.dataset.holdingId;
+                    deleteHolding(holdingId);
+                });
+            });
+        }
+
+        function drawHoldingsChart(holdings) {
+            if (!holdingsChartCanvas || !chartPlaceholderText) return;
+
+            if (currentChart) {
+                currentChart.destroy();
+            }
+
+            if (!holdings || holdings.length === 0) {
+                holdingsChartCanvas.style.display = 'none';
+                chartPlaceholderText.style.display = 'block';
+                return;
+            } else {
+                holdingsChartCanvas.style.display = 'block';
+                chartPlaceholderText.style.display = 'none';
+            }
+
+            const chartDataMap = {};
+            holdings.forEach(h => {
+                if (chartDataMap[h.symbol]) {
+                    chartDataMap[h.symbol].currentValue += h.currentValue;
+                } else {
+                    chartDataMap[h.symbol] = {
+                        symbol: h.symbol,
+                        companyName: h.companyName,
+                        currentValue: h.currentValue
+                    };
+                }
+            });
+
+            const chartLabels = Object.values(chartDataMap).map(d => d.symbol);
+            const chartValues = Object.values(chartDataMap).map(d => d.currentValue);
+            const backgroundColors = [
+                '#4F46E5', '#22C55E', '#F97316', '#EF4444', '#6366F1', '#34D399', '#FB923C', '#F87171',
+                '#A78BFA', '#06B6D4', '#FCD34D', '#F472B6', '#8B5CF6', '#10B981', '#FBBF24', '#EC4899'
+            ];
+
+            const data = {
+                labels: chartLabels,
+                datasets: [{
+                    label: 'Portfolio Allocation by Value',
+                    data: chartValues,
+                    backgroundColor: backgroundColors.slice(0, chartLabels.length),
+                    hoverOffset: 4
+                }]
+            };
+
+            const config = {
+                type: 'doughnut',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: '#333'
+                            }
+                        },
+                        title: {
+                            display: false,
+                            text: 'Holdings Allocation'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            const ctx = holdingsChartCanvas.getContext('2d');
+            currentChart = new Chart(ctx, config);
+        }
+
+        function updateDailyChanges(holdings) {
+            if (!dayChangePercentEl || !dayChangeAmountEl || !highestGainerSymbolEl || !highestGainerPercentEl || !looserStockSymbolEl || !looserStockPercentEl) return;
+
+            let totalDayChangeAmount = 0;
+            let totalCurrentValue = 0;
+
+            let highestGainer = { symbol: 'N/A', percent: -Infinity };
+            let looserStock = { symbol: 'N/A', percent: Infinity };
+
+            holdings.forEach(h => {
+                // Ensure h.currentPrice and h.previousClose are numbers for calculation
+                const currentPriceNum = parseFloat(h.currentPrice);
+                const previousCloseNum = parseFloat(h.previousClose);
+                const quantityNum = parseFloat(h.quantity);
+
+                if (!isNaN(currentPriceNum) && !isNaN(previousCloseNum) && previousCloseNum > 0 && !isNaN(quantityNum)) {
+                    const dayChangePerShare = currentPriceNum - previousCloseNum;
+                    totalDayChangeAmount += dayChangePerShare * quantityNum;
+                    totalCurrentValue += (currentPriceNum * quantityNum); // Recalculate current value accurately from fetched price
+
+                    const dailyPercentChange = (dayChangePerShare / previousCloseNum) * 100;
+
+                    if (dailyPercentChange > highestGainer.percent) {
+                        highestGainer = { symbol: h.symbol, percent: dailyPercentChange };
+                    }
+                    if (dailyPercentChange < looserStock.percent) {
+                        looserStock = { symbol: h.symbol, percent: dailyPercentChange };
+                    }
+                }
+            });
+
+            const dayChangePercent = totalCurrentValue > 0 ? (totalDayChangeAmount / totalCurrentValue) * 100 : 0;
+
+            dayChangePercentEl.textContent = `${dayChangePercent >= 0 ? '+' : ''}${dayChangePercent.toFixed(2)}%`;
+            dayChangePercentEl.className = `portfolio-card-value-large ${dayChangePercent >= 0 ? 'text-green-600' : 'text-red-700'}`;
+
+            dayChangeAmountEl.textContent = `${totalDayChangeAmount >= 0 ? '+' : ''}$${totalDayChangeAmount.toFixed(2)}`;
+            dayChangeAmountEl.className = `portfolio-card-value-medium ${totalDayChangeAmount >= 0 ? 'text-green-600' : 'text-red-700'}`;
+
+            highestGainerSymbolEl.textContent = highestGainer.symbol;
+            highestGainerPercentEl.textContent = `${highestGainer.percent !== -Infinity ? (highestGainer.percent >= 0 ? '+' : '') + highestGainer.percent.toFixed(2) + '%' : 'N/A'} Today`;
+            highestGainerPercentEl.className = `portfolio-card-sub-text ${highestGainer.percent >= 0 ? 'text-green-600' : 'text-gray-600'}`;
+
+            looserStockSymbolEl.textContent = looserStock.symbol;
+            looserStockPercentEl.textContent = `${looserStock.percent !== Infinity ? (looserStock.percent >= 0 ? '+' : '') + looserStock.percent.toFixed(2) + '%' : 'N/A'} Today`;
+            looserStockPercentEl.className = `portfolio-card-sub-text ${looserStock.percent < 0 ? 'text-red-700' : 'text-gray-600'}`;
+        }
+
+        async function deleteHolding(holdingId) {
+            // Use custom modal or confirmation UI instead of alert/confirm
+            if (!confirm('Are you sure you want to delete this stock holding?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/portfolio/delete-holding/${holdingId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to delete holding.');
+                }
+
+                // Use custom message instead of alert
+                console.log('Stock holding deleted successfully!'); 
+                await fetchUserPortfolios();
+            }
+            catch (error) {
+                console.error('Error deleting holding:', error);
+                // Use custom message instead of alert
+                console.error(`Error deleting holding: ${error.message}`);
+            }
+        }
+
+        async function deletePortfolio(portfolioName) {
+            if (!portfolioName) {
+                // Use custom message instead of alert
+                console.error('Please select a portfolio to delete.');
+                return;
+            }
+            // Use custom modal or confirmation UI instead of alert/confirm
+            if (!confirm(`Are you sure you want to delete the entire portfolio "${portfolioName}"? This action cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/portfolio/delete-portfolio/${encodeURIComponent(portfolioName)}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to delete portfolio.');
+                }
+
+                // Use custom message instead of alert
+                console.log(`Portfolio "${portfolioName}" deleted successfully!`);
+                await fetchUserPortfolios();
+            } catch (error) {
+                console.error('Error deleting portfolio:', error);
+                // Use custom message instead of alert
+                console.error(`Error deleting portfolio: ${error.message}`);
+            }
+        }
+        // --- End of portfolio.js functions ---
 
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -1740,7 +2348,7 @@
                         purchasePrice: purchasePrice,
                         totalValue: totalValue, // Include totalValue in the payload
                         portfolioName: portfolioName, // Include portfolio name
-                        dateAdded: new Date().toISOString() // Send as ISO string
+                        purchaseDate: new Date().toISOString() // Send as ISO string
                     })
                 });
 

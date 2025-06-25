@@ -1,0 +1,194 @@
+/* markets.css */
+
+/* General Body Styles - Removed redundant properties handled by Home.html */
+body {
+    color: #333; /* Specific text color for markets content */
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+h1 {
+    text-align: center;
+    color: #0056b3;
+    margin-bottom: 30px;
+}
+
+h2 {
+    margin-top: 35px;
+    margin-bottom: 20px;
+    color: #0056b3;
+    font-size: 1.8em;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-right: 10px;
+}
+
+/* Dashboard Container */
+.dashboard-container {
+    width: 100%; /* Changed from max-width to 100% to fill the page */
+    margin: 0; /* Changed from auto margins to allow full width */
+    padding: 30px; /* Keep internal padding for content */
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    flex-grow: 1; /* Allows it to grow and take available space */
+    box-sizing: border-box; /* Include padding in the element's total width */
+}
+
+/* Table Styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 40px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    overflow: hidden; /* Ensures rounded corners apply to content */
+}
+
+th, td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+th {
+    background-color: #e8f5ff; /* Light blue header */
+    color: #0056b3;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.9em;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tr:hover {
+    background-color: #f0f8ff;
+}
+
+/* Price change indicators */
+.price-up {
+    color: #28a745; /* Green */
+    font-weight: bold;
+}
+
+.price-down {
+    color: #dc3545; /* Red */
+    font-weight: bold;
+}
+
+/* Refresh button styles */
+.refresh-table-btn, .refresh-item-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.3s ease;
+}
+
+.refresh-table-btn:hover, .refresh-item-btn:hover {
+    background-color: #0056b3;
+}
+
+.refresh-item-btn {
+    padding: 5px 10px; /* Smaller for individual rows */
+    font-size: 0.8em;
+    margin-left: 10px;
+}
+
+.refresh-item-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+/* Spinner for loading state */
+.spinner {
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top: 3px solid #ffffff;
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Global Error Message */
+.global-error {
+    text-align: center;
+    color: #dc3545;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    display: none; /* Hidden by default */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 15px;
+        margin: 10px auto;
+    }
+
+    h1 {
+        font-size: 1.8em;
+    }
+
+    h2 {
+        font-size: 1.5em;
+    }
+
+    th, td {
+        padding: 10px;
+        font-size: 0.85em;
+    }
+
+    .refresh-table-btn, .refresh-item-btn {
+        padding: 6px 10px;
+        font-size: 0.8em;
+    }
+}
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.5em;
+    }
+
+    h2 {
+        font-size: 1.3em;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .refresh-table-btn {
+        margin-top: 10px;
+        width: 100%;
+    }
+
+    th, td {
+        font-size: 0.75em;
+        white-space: nowrap; /* Prevent text wrapping in small screens */
+    }
+
+    /* Make tables horizontally scrollable if content overflows */
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}
