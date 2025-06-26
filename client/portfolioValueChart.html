@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portfolio Total Value</title>
-    <!-- D3.js is required for drawing the pie chart -->
     <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
     <style>
         /* Basic styling for the chart's HTML page to ensure it fills the iframe */
@@ -21,17 +20,20 @@
             background-color: #f8f8f8; /* Light background for chart area */
         }
 
+        /* REMOVED: Header styling as the h1 tag will be removed from this file */
+        /*
         header {
-            width: 100%; /* Make header span full width */
-            text-align: center; /* Center the heading text */
-            margin-bottom: 15px; /* Space below the header */
+            width: 100%;
+            text-align: center;
+            margin-bottom: 15px;
         }
 
         header h1 {
-            font-size: 1.5rem; /* Adjust title size */
+            font-size: 1.5rem;
             color: #333;
-            margin: 0; /* Remove default h1 margin */
+            margin: 0;
         }
+        */
 
         main {
             flex-grow: 1; /* Allow main to take up available space */
@@ -58,17 +60,12 @@
     </style>
 </head>
 <body>
-    <header>
-        <h1>Portfolio Total Value</h1>
-    </header>
-
     <main>
         <div id="chart-container">
             <svg id="portfolioValueChart"></svg>
         </div>
     </main>
     
-    <!-- Load analysis.js which contains the loadPortfolioValueChart function -->
     <script src="analysis.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
