@@ -1,7 +1,7 @@
 /* Add a margin-top to the main content area to clear the fixed navbar */
 /* This class should be applied to the direct child of body that contains your page content */
 .content-area {
-    margin-top: 70px; /* Adjust this value to match your fixed navbar's height */
+    margin-top: 5px; /* Adjust this value to match your fixed navbar's height */
     flex-grow: 1; /* Allow content area to grow and take available space */
 }
 

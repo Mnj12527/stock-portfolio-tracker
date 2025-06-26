@@ -5,7 +5,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>My Home</title>
-    <link rel="stylesheet" href="/global.css">
     <link rel="stylesheet" href="/style.css">
     <link rel="stylesheet" href="/Home.css"> 
     <link rel="stylesheet" href="/videos.css">
@@ -19,14 +18,119 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Chart.js for portfolio -->
     <style>
 
+/* Global Body Styles */
+body {
+    height: 100%; /* <-- ADD THIS! Makes html and body take full viewport height */
+    font-family: 'Inter', sans-serif;
+    background-color: #f3f4f6; /* Light gray background */
+    margin: 0;
+    padding: 0;
+    overflow-y: scroll; /* Always show vertical scrollbar to prevent layout shifts */
+    overflow-x: hidden; /* Keep horizontal overflow hidden */
+    box-sizing: border-box; /* Ensure padding/border are included in element's total width/height */
+    /* Add this if you want to use flex-grow on content-below-navbar */
+    display: flex;
+    flex-direction: column;
+}
 
+/* --- Navbar Styles (Consolidated for Consistency) --- */
+.navbar {
+    position: fixed; /* Make the navbar fixed */
+    top: 0; /* Position at the top */
+    left: 0; /* Ensure it starts from the left edge */
+    width: 100%; /* Take full width */
+    z-index: 1000; /* Ensure it stays on top of other content */
+    padding: 10px 20px; /* Consistent padding */
+    box-sizing: border-box; /* Crucial for consistent sizing */
+    background-color: #2c3e50; /* Dark background from style.css */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Subtle shadow */
+    display: flex;
+    justify-content: space-between; /* Distribute items with space between them */
+    align-items: center;
+    height: 70px; /* Explicit height for consistency */
+}
+
+.navbar .logo {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.navbar .logo > span:nth-child(2) {
+    margin-left: 25px;
+}
+
+.navbar .logo span {
+    margin: 0;
+}
+
+.navbar .logo img {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+}
+
+.navbar .logo .finance {
+    margin-left: 10px;
+    color: white;
+    font-size: 0.9em;
+}
+
+.navbar .user-greeting {
+    color: #fff;
+    font-size: 1.1em;
+    font-weight: bold;
+    margin: 0 20px;
+    flex-grow: 1;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.navbar .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-shrink: 0;
+}
+
+.navbar .nav-links a {
+    color: #fff;
+    text-decoration: none;
+    padding: 2px 5px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-weight: 500;
+}
+
+.navbar .nav-links a:hover {
+    background-color: #555;
+    color: #00bfff;
+}
+
+.navbar .signout-btn {
+    background-color: #BF2A1D;
+    margin-left: 20px;
+    padding: 8px 15px;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    flex-shrink: 0;
+}
+
+.navbar .signout-btn:hover {
+    background-color: #c82333;
+}
+/* --- End Navbar Styles --- */
 
 /* Adjust content below navbar to prevent it from being hidden under the fixed navbar */
 .content-below-navbar {
-    margin-top: 80px; /* This must match the navbar's height + some buffer */
+    margin-top: 80px; /* <-- CHANGE THIS to match exact navbar height! */
+    flex-grow: 1; /* <-- ADD THIS if body is display: flex; flex-direction: column; */
     /* Add any other general styling for the content area if needed */
 }
-
 /* --- Other General Styles --- */
 .container {
     max-width: 1200px;
