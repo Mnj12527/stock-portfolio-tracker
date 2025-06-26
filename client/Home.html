@@ -5,6 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>My Home</title>
+    <link rel="stylesheet" href="/global.css">
     <link rel="stylesheet" href="/style.css">
     <link rel="stylesheet" href="/Home.css"> 
     <link rel="stylesheet" href="/videos.css">
@@ -17,236 +18,163 @@
     <script src="https://unpkg.com/d3@7"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Chart.js for portfolio -->
     <style>
-        /* Global Body Styles */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6; /* Light gray background */
-            margin: 0;
-            padding: 0;
-            overflow-y: scroll; /* Always show vertical scrollbar to prevent layout shifts */
-            overflow-x: hidden; /* Keep horizontal overflow hidden */
-            box-sizing: border-box; /* Ensure padding/border are included in element's total width/height */
-        }
-
-        /* --- Navbar Styles (Consolidated for Consistency) --- */
-        .navbar {
-            position: fixed; /* Make the navbar fixed */
-            top: 0; /* Position at the top */
-            left: 0; /* Ensure it starts from the left edge */
-            width: 100%; /* Take full width */
-            z-index: 1000; /* Ensure it stays on top of other content */
-            padding: 10px 20px; /* Consistent padding */
-            box-sizing: border-box; /* Crucial for consistent sizing */
-            background-color: #333; /* Dark background from style.css */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Subtle shadow */
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 70px; /* Explicit height for consistency */
-        }
-
-        .navbar .logo {
-            display: flex;
-            align-items: center;
-            gap: 15px; /* Space between logo image and text */
-        }
-
-        .navbar .logo img {
-            width: 50px; /* Consistent logo size */
-            height: 50px;
-            border-radius: 50%; /* Make it round if desired */
-        }
-
-        .navbar .logo .finance {
-            color: #fff; /* White text for "Your Market Companion" */
-            font-size: 1.1em;
-            font-weight: normal;
-        }
-
-        .navbar .user-greeting {
-            color: #fff; /* White text for greeting */
-            font-size: 1.1em;
-            font-weight: bold;
-            margin-right: 20px; /* Space between greeting and nav links */
-        }
-
-        .navbar .nav-links a {
-            color: #fff; /* White text for links */
-            text-decoration: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            transition: background-color 0.3s ease, color 0.3s ease;
-            font-weight: 500;
-        }
-
-        .navbar .nav-links a:hover {
-            background-color: #555; /* Slightly lighter gray on hover */
-            color: #00bfff; /* Light blue on hover */
-        }
-
-        .navbar .signout-btn {
-            background-color: #dc3545; /* Red for sign-out button */
-            margin-left: 20px;
-            padding: 8px 15px;
-            border-radius: 5px;
-            color: white;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .navbar .signout-btn:hover {
-            background-color: #c82333;
-        }
-        /* --- End Navbar Styles --- */
 
 
-        /* Adjust content below navbar to prevent it from being hidden under the fixed navbar */
-        .content-below-navbar {
-            margin-top: 70px; /* This must match the navbar's height */
-            /* Add any other general styling for the content area if needed */
-        }
 
-        /* --- Other General Styles --- */
-        .container {
-            max-width: 1200px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .loading-indicator {
-            color: #007bff;
-            display: none; /* Hidden by default */
-            text-align: center;
-            margin-top: 20px;
-        }
+/* Adjust content below navbar to prevent it from being hidden under the fixed navbar */
+.content-below-navbar {
+    margin-top: 80px; /* This must match the navbar's height + some buffer */
+    /* Add any other general styling for the content area if needed */
+}
 
-        .animate-spin {
-            animation: spin 1s linear infinite;
-        }
+/* --- Other General Styles --- */
+.container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.loading-indicator {
+    color: #007bff;
+    display: none; /* Hidden by default */
+    text-align: center;
+    margin-top: 20px;
+}
 
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
 
-        .error-message {
-            color: #dc3545;
-            text-align: center;
-            margin-top: 20px;
-            display: none; /* Hidden by default */
-        }
-        /* Ensure .hidden class also sets display: none */
-        .hidden {
-            display: none !important;
-        }
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
 
-        /* Specific styles for watchlist display */
-        #watchlistDisplay li {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
-            color: #333; /* Default text color */
-        }
-        #watchlistDisplay li:last-child {
-            border-bottom: none;
-        }
-        #watchlistDisplay .stock-details {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        #watchlistDisplay .stock-symbol {
-            font-weight: bold;
-            font-size: 1.1em;
-            margin-bottom: 2px;
-        }
-        #watchlistDisplay .company-name {
-            font-size: 0.85em;
-            color: #666;
-        }
-        #watchlistDisplay .stock-actions {
-            display: flex;
-            align-items: center;
-            gap: 10px; /* Space between price, changes, and buttons */
-        }
-        #watchlistDisplay .price-changes {
-            display: flex;
-            flex-direction: row; /* CHANGE THIS FROM 'column' to 'row' */
-            align-items: center; /* Change from 'flex-end' to 'center' for vertical alignment */
-            gap: 8px; /* Add a small space between the price and the change text */
-            white-space: nowrap; /* Prevent the price or change from wrapping */
-        }
-        #watchlistDisplay .stock-price {
-            font-size: 1.1em;
-            font-weight: bold;
-        }
-        #watchlistDisplay .change-positive {
-            color: #28a745; /* Green for positive change */
-            font-weight: bold;
-        }
-        #watchlistDisplay .change-negative {
-            color: #dc3545; /* Red for negative change */
-            font-weight: bold;
-        }
-        #watchlistDisplay .refresh-btn,
-        #watchlistDisplay .remove-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1em;
-            padding: 5px;
-            border-radius: 4px;
-            transition: background-color 0.2s;
-        }
-        #watchlistDisplay .refresh-btn {
-            color: #007bff;
-        }
-        #watchlistDisplay .remove-btn {
-            color: #dc3545;
-        }
-        #watchlistDisplay .refresh-btn:hover {
-            background-color: #e6f2ff;
-        }
-        #watchlistDisplay .remove-btn:hover {
-            background-color: #ffe6e6;
-        }
+.error-message {
+    color: #dc3545;
+    text-align: center;
+    margin-top: 20px;
+    display: none; /* Hidden by default */
+}
+/* Ensure .hidden class also sets display: none */
+.hidden {
+    display: none !important;
+}
 
-        /* Responsive Navbar Adjustments */
-        @media (max-width: 768px) {
-            .navbar {
-                flex-direction: column;
-                height: auto; /* Allow height to adjust based on content */
-                padding: 10px;
-            }
-            .navbar .logo {
-                margin-bottom: 10px;
-            }
-            .navbar .nav-links {
-                display: flex;
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 5px; /* Smaller gap for links on smaller screens */
-            }
-            .navbar .user-greeting {
-                margin: 0 0 10px 0; /* Adjust margin for stacked layout */
-            }
-            .navbar .nav-links a {
-                padding: 6px 10px; /* Smaller padding for links */
-                font-size: 0.9em;
-            }
-            .navbar .signout-btn {
-                margin-left: 0;
-                margin-top: 10px; /* Space between links and signout button */
-            }
-            .content-below-navbar {
-                /* Adjust margin-top to account for the dynamic height of the stacked navbar */
-                margin-top: 150px; /* This value might need fine-tuning based on actual content */
-            }
-        }
+/* Specific styles for watchlist display */
+#watchlistDisplay li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+    color: #333; /* Default text color */
+}
+#watchlistDisplay li:last-child {
+    border-bottom: none;
+}
+#watchlistDisplay .stock-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+#watchlistDisplay .stock-symbol {
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-bottom: 2px;
+}
+#watchlistDisplay .company-name {
+    font-size: 0.85em;
+    color: #666;
+}
+#watchlistDisplay .stock-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Space between price, changes, and buttons */
+}
+#watchlistDisplay .price-changes {
+    display: flex;
+    flex-direction: row; /* CHANGE THIS FROM 'column' to 'row' */
+    align-items: center; /* Change from 'flex-end' to 'center' for vertical alignment */
+    gap: 8px; /* Add a small space between the price and the change text */
+    white-space: nowrap; /* Prevent the price or change from wrapping */
+}
+#watchlistDisplay .stock-price {
+    font-size: 1.1em;
+    font-weight: bold;
+}
+#watchlistDisplay .change-positive {
+    color: #28a745; /* Green for positive change */
+    font-weight: bold;
+}
+#watchlistDisplay .change-negative {
+    color: #dc3545; /* Red for negative change */
+    font-weight: bold;
+}
+#watchlistDisplay .refresh-btn,
+#watchlistDisplay .remove-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1em;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+#watchlistDisplay .refresh-btn {
+    color: #007bff;
+}
+#watchlistDisplay .remove-btn {
+    color: #dc3545;
+}
+#watchlistDisplay .refresh-btn:hover {
+    background-color: #e6f2ff;
+}
+#watchlistDisplay .remove-btn:hover {
+    background-color: #ffe6e6;
+}
+
+/* Responsive Navbar Adjustments */
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        height: auto; /* Allow height to adjust based on content */
+        padding: 10px;
+    }
+    .navbar .logo {
+        margin-bottom: 10px;
+    }
+    .navbar .user-greeting {
+        margin: 10px 0; /* Adjust margin for stacked layout and better spacing */
+        /* On small screens, allow the greeting to wrap if needed */
+        white-space: normal;
+        text-overflow: unset;
+        text-align: center;
+        flex-grow: 0; /* Don't force it to grow on smaller screens if wrapping */
+        width: 100%; /* Take full width on smaller screens */
+    }
+    .navbar .nav-links {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 5px; /* Smaller gap for links on smaller screens */
+        width: 100%; /* Take full width */
+    }
+    .navbar .nav-links a {
+        padding: 6px 10px; /* Smaller padding for links */
+        font-size: 0.9em;
+    }
+    .navbar .signout-btn {
+        margin-left: 0;
+        margin-top: 10px; /* Space between links and signout button */
+    }
+    .content-below-navbar {
+        /* Adjust margin-top to account for the dynamic height of the stacked navbar */
+        margin-top: 180px; /* Increased to account for the additional space taken by the stacked elements */
+    }
+}
     </style>
 </head>
 <body>
@@ -945,7 +873,7 @@
         function highlightActiveButton(index) {
             const buttons = document.querySelectorAll(".watchlist-tabs button");
             buttons.forEach((btn, i) => {
-                btn.style.backgroundColor = i === index ? "#333" : "#CD853F";
+                btn.style.backgroundColor = i === index ? "#333" : "#0497E8";
             });
         }
 

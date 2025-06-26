@@ -1,11 +1,8 @@
-/* markets.css */
-
-/* General Body Styles - Removed redundant properties handled by Home.html */
-body {
-    color: #333; /* Specific text color for markets content */
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
+/* Add a margin-top to the main content area to clear the fixed navbar */
+/* This class should be applied to the direct child of body that contains your page content */
+.content-area {
+    margin-top: 70px; /* Adjust this value to match your fixed navbar's height */
+    flex-grow: 1; /* Allow content area to grow and take available space */
 }
 
 h1 {
@@ -16,48 +13,49 @@ h1 {
 
 h2 {
     margin-top: 35px;
-    margin-bottom: 20px;
-    color: #0056b3;
-    font-size: 1.8em;
-    border-bottom: 2px solid #e0e0e0;
-    padding-bottom: 10px;
+    margin-bottom: 15px; /* Adjusted from 20px for better spacing */
+    color: #007bff; /* Changed to #007bff from #0056b3 for consistency with inline style */
+    border-bottom: 2px solid #e9ecef; /* Changed to #e9ecef from #e0e0e0 for consistency */
+    padding-bottom: 8px; /* Adjusted from 10px */
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-right: 10px;
+    padding-right: 10px; /* Kept this for internal spacing */
 }
 
 /* Dashboard Container */
 .dashboard-container {
-    width: 100%; /* Changed from max-width to 100% to fill the page */
-    margin: 0; /* Changed from auto margins to allow full width */
-    padding: 30px; /* Keep internal padding for content */
-    background-color: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    background-color: #eaf3fb; /* Moved from inline style */
+    width: 100%;
+    margin: 0;
+    padding: 30px;
+    border-radius: 0; /* Moved from inline style */
+    box-shadow: none; /* Moved from inline style */
     flex-grow: 1; /* Allows it to grow and take available space */
-    box-sizing: border-box; /* Include padding in the element's total width */
+    box-sizing: border-box;
 }
 
 /* Table Styles */
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 40px;
+    margin-top: 15px; /* Adjusted from 40px for better spacing */
+    margin-bottom: 40px; /* Keeps the original bottom margin for tables */
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     border-radius: 8px;
     overflow: hidden; /* Ensures rounded corners apply to content */
+    font-size: 0.95em; /* Moved from inline style */
 }
 
 th, td {
-    padding: 15px;
+    padding: 12px 15px; /* Adjusted from 15px */
     text-align: left;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid #e0e0e0; /* Kept original, consistent with table theme */
 }
 
 th {
-    background-color: #e8f5ff; /* Light blue header */
-    color: #0056b3;
+    background-color: #f8f9fa; /* Changed to #f8f9fa from #e8f5ff for consistency with inline style */
+    color: #555; /* Changed to #555 from #0056b3 for consistency */
     font-weight: 600;
     text-transform: uppercase;
     font-size: 0.9em;
@@ -67,8 +65,8 @@ tr:nth-child(even) {
     background-color: #f9f9f9;
 }
 
-tr:hover {
-    background-color: #f0f8ff;
+tbody tr:hover { /* Specific to tbody rows for hover effect */
+    background-color: #f2f2f2; /* Changed from #f0f8ff for consistency with inline style */
 }
 
 /* Price change indicators */
@@ -99,9 +97,14 @@ tr:hover {
 }
 
 .refresh-item-btn {
-    padding: 5px 10px; /* Smaller for individual rows */
-    font-size: 0.8em;
-    margin-left: 10px;
+    padding: 8px 12px; /* Adjusted from 5px 10px to match inline */
+    font-size: 1em; /* Adjusted from 0.8em to match inline */
+    margin-left: 0; /* Removed margin-left to allow button to control its own size */
+    width: 40px; /* Make button square, moved from inline */
+    height: 40px; /* Make button square, moved from inline */
+    display: flex; /* Moved from inline */
+    align-items: center; /* Moved from inline */
+    justify-content: center; /* Moved from inline */
 }
 
 .refresh-item-btn:disabled {
@@ -114,8 +117,8 @@ tr:hover {
     border: 3px solid rgba(255, 255, 255, 0.3);
     border-top: 3px solid #ffffff;
     border-radius: 50%;
-    width: 12px;
-    height: 12px;
+    width: 16px; /* Adjusted from 12px to match inline */
+    height: 16px; /* Adjusted from 12px to match inline */
     animation: spin 1s linear infinite;
     display: inline-block;
     vertical-align: middle;
@@ -126,23 +129,34 @@ tr:hover {
     100% { transform: rotate(360deg); }
 }
 
-/* Global Error Message */
-.global-error {
+/* Loading Row */
+.loading-row td { /* Moved from inline style */
     text-align: center;
-    color: #dc3545;
+    font-style: italic;
+    color: #777;
+    padding: 20px;
+}
+
+/* Global Error Message */
+.global-error, .error-message { /* Combined for consistency */
+    text-align: center;
+    color: #721c24; /* Adjusted from #dc3545 to match inline */
     background-color: #f8d7da;
     border: 1px solid #f5c6cb;
     padding: 10px;
     border-radius: 5px;
-    margin-bottom: 20px;
+    margin-top: 10px; /* Adjusted margin-bottom for better spacing */
+    margin-bottom: 20px; /* Adjusted from 20px */
     display: none; /* Hidden by default */
+    font-weight: bold; /* Moved from inline */
 }
+
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .dashboard-container {
         padding: 15px;
-        margin: 10px auto;
+        margin: 10px auto; /* Still keeps it centered with side margins */
     }
 
     h1 {
@@ -161,6 +175,12 @@ tr:hover {
     .refresh-table-btn, .refresh-item-btn {
         padding: 6px 10px;
         font-size: 0.8em;
+    }
+
+    .refresh-item-btn {
+        width: 35px; /* Adjust button size for smaller screens */
+        height: 35px;
+        font-size: 0.9em;
     }
 }
 

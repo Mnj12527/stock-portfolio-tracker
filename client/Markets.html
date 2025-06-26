@@ -4,207 +4,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Financial Market Dashboard</title>
-<style>
-    /* General Body Styles - MODIFIED for scrollability */
-    html, body { /* Ensure html also takes full height for proper scrolling context */
-        height: 100%;
-        margin: 0;
-        padding: 0;
-    }
-
-    body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        /* Removed background-color from body - it will now be covered by .dashboard-container */
-        color: #333;
-        /* height: 100vh; - REMOVE THIS from body */
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        /* justify-content: stretch; - Not needed if body is handling scroll */
-
-        /* ALLOW SCROLLING */
-        overflow-y: auto; /* Allow vertical scrolling if content overflows */
-        overflow-x: hidden; /* Keep horizontal overflow hidden if you don't want it */
-    }
-
-    h1 {
-        text-align: center;
-        color: #0056b3;
-        margin-bottom: 30px;
-    }
-
-    h2 {
-        margin-top: 35px;
-        margin-bottom: 15px;
-        color: #007bff;
-        border-bottom: 2px solid #e9ecef;
-        padding-bottom: 8px;
-    }
-
-    /* Dashboard Container - MODIFIED to allow content to push height */
-    .dashboard-container {
-         background-color: #eaf3fb;
-        /* max-width: 1000px; */ /* To make it fit the page width (already removed) */
-        margin: 0; /* To make it fit the page with no outer gaps (already removed) */
-        /* background-color: #ffffff;  Keep this - it will be your new page background */
-        border-radius: 0; /* To make corners flush with page edges (already removed) */
-        box-shadow: none; /* Shadow effect typically not desired for full-page background (already removed) */
-        padding: 30px; /* Keep internal padding for content */
-        width: 100%; /* Ensure it takes full available width */
-        box-sizing: border-box; /* Include padding in total width/height */
-        flex-grow: 1; /* Allow it to grow and fill available height in the flex body */
-        /* min-height: 100vh; - REMOVE THIS from dashboard-container */
-        /* Its height will now be determined by its content, and flex-grow will ensure it takes at least 100% of body's height */
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 15px;
-        font-size: 0.95em;
-    }
-
-    th, td {
-        padding: 12px 15px;
-        text-align: left;
-        border-bottom: 1px solid #e0e0e0;
-    }
-
-    th {
-        background-color: #f8f9fa;
-        color: #555;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
-
-    tbody tr:hover {
-        background-color: #f2f2f2;
-    }
-
-    .price-up {
-        color: #28a745; /* Green */
-        font-weight: bold;
-    }
-
-    .price-down {
-        color: #dc3545; /* Red */
-        font-weight: bold;
-    }
-
-    .refresh-item-btn {
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        padding: 8px 12px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-        font-size: 1em;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 40px; /* Make button square */
-        height: 40px; /* Make button square */
-    }
-
-    .refresh-item-btn:hover {
-        background-color: #0056b3;
-    }
-
-    .refresh-item-btn:disabled {
-        background-color: #cccccc;
-        cursor: not-allowed;
-    }
-
-    .spinner {
-        border: 3px solid rgba(255, 255, 255, 0.3);
-        border-top: 3px solid #fff;
-        border-radius: 50%;
-        width: 16px;
-        height: 16px;
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    .loading-row td {
-        text-align: center;
-        font-style: italic;
-        color: #777;
-        padding: 20px;
-    }
-
-    .error-message {
-        background-color: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-        border-radius: 5px;
-        padding: 10px;
-        margin-top: 10px;
-        margin-bottom: 20px;
-        display: none; /* Hidden by default */
-        text-align: center;
-        font-weight: bold;
-    }
-</style>
+    <link rel="stylesheet" href="markets.css">
 </head>
 <body>
 
-    <div class="dashboard-container">
-        <h1>📊 Financial Market Dashboard</h1>
+    <div class="content-area">
+        <div class="dashboard-container">
+            <h1>📊 Financial Market Dashboard</h1>
 
-        <div id="globalError" class="error-message"></div>
+            <div id="globalError" class="error-message"></div>
 
-        <h2>🌐 World Indices</h2>
-        <table id="worldIndicesTable">
-            <thead>
-                <tr>
-                    <th>Index</th>
-                    <th>Price</th>
-                    <th>Change</th>
-                    <th>Change %</th>
-                    <th>Trend</th> <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                </tbody>
-        </table>
+            <h2>🌐 World Indices</h2>
+            <table id="worldIndicesTable">
+                <thead>
+                    <tr>
+                        <th>Index</th>
+                        <th>Price</th>
+                        <th>Change</th>
+                        <th>Change %</th>
+                        <th>Trend</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
 
-        <h2>💱 Forex Rates</h2>
-        <table id="forexRatesTable">
-            <thead>
-                <tr>
-                    <th>Pair</th>
-                    <th>Price</th>
-                    <th>Change</th>
-                    <th>Change %</th>
-                    <th>Trend</th> <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                </tbody>
-        </table>
+            <h2>💱 Forex Rates</h2>
+            <table id="forexRatesTable">
+                <thead>
+                    <tr>
+                        <th>Pair</th>
+                        <th>Price</th>
+                        <th>Change</th>
+                        <th>Change %</th>
+                        <th>Trend</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
 
-        <h2>🛢 Commodities</h2>
-        <table id="commoditiesTable">
-            <thead>
-                <tr>
-                    <th>Commodity</th>
-                    <th>Price</th>
-                    <th>Change</th>
-                    <th>Change %</th>
-                    <th>Trend</th> <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                </tbody>
-        </table>
-    </div>
-
-    <script>
+            <h2>🛢 Commodities</h2>
+            <table id="commoditiesTable">
+                <thead>
+                    <tr>
+                        <th>Commodity</th>
+                        <th>Price</th>
+                        <th>Change</th>
+                        <th>Change %</th>
+                        <th>Trend</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </div>
+    </div> <script>
         // WARNING: Using API_KEY directly in client-side code is INSECURE for production.
         // For a production application, use a backend proxy to protect your API key.
         const API_KEY = 'H4Y6X76DBD1EJR4H'; // Your Alpha Vantage API Key
@@ -275,8 +133,10 @@
                 const cell = row.insertCell();
                 cell.textContent = value;
                 // Apply price-up/down classes if indices are provided and value is a number
-                if (options.changeIndex !== undefined && index === options.changeIndex && typeof value === 'number') {
-                    cell.classList.add(value >= 0 ? "price-up" : "price-down");
+                // Note: changePctIndex applies to string values that can be parsed as numbers
+                if (options.changeIndex !== undefined && index === options.changeIndex && typeof value === 'string' && !isNaN(parseFloat(value))) {
+                    const numValue = parseFloat(value);
+                    cell.classList.add(numValue >= 0 ? "price-up" : "price-down");
                 } else if (options.changePctIndex !== undefined && index === options.changePctIndex && typeof value === 'string' && value.includes('%') && !isNaN(parseFloat(value))) {
                     const changePctValue = parseFloat(value);
                     cell.classList.add(changePctValue >= 0 ? "price-up" : "price-down");
@@ -295,8 +155,6 @@
                 refreshButton.innerHTML = '<div class="spinner"></div>';
             }
 
-            // Temporarily set cell contents to 'Loading...' or '...'
-            // Account for Name cell and Action cell
             const totalDataCells = row.cells.length - 2; // Subtract Name cell and Action cell
             const cellsToUpdate = Array.from(row.cells).slice(1, 1 + totalDataCells); // Get data cells only
             cellsToUpdate.forEach(cell => {
@@ -321,7 +179,7 @@
 
                     if (isForex) {
                         price = parseFloat(quoteData["5. Exchange Rate"]);
-                        // Alpha Vantage Realtime Currency Exchange Rate does not provide daily change
+                        // Alpha Vantage Realtime Currency Exchange Rate does not provide daily change directly in this API call
                         change = "N/A";
                         changePct = "N/A";
                         trendIcon = "N/A"; // No direct trend for N/A change
@@ -338,7 +196,6 @@
                     let rowData;
                     let options = {};
 
-                    // Construct rowData based on table and item type
                     rowData = [
                         name,
                         formattedPrice,
@@ -348,8 +205,8 @@
                         '' // Placeholder for Action column, will be replaced by button
                     ];
 
-                    // Indices for applying price-up/down classes
-                    options = { changeIndex: 2, changePctIndex: 3 };
+                    // Indices for applying price-up/down classes (Price, Change, Change %)
+                    options = { changeIndex: 2, changePctIndex: 3 }; // Change is at index 2, Change % at index 3
 
                     updateRowContent(row, rowData, options);
 
@@ -360,7 +217,7 @@
                 } else {
                     // Handle no data scenario
                     let rowData;
-                    rowData = [name, 'N/A', 'N/A', 'N/A', 'N/A', '']; // All data cells + action
+                    rowData = [name, `N/A`, `N/A`, `N/A`, `N/A`, '']; // All data cells + action
                     updateRowContent(row, rowData);
                     const actionCell = row.cells[row.cells.length - 1];
                     actionCell.innerHTML = `<button class="refresh-item-btn" data-symbol="${symbol}">🔄</button>`;

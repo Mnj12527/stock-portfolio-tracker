@@ -1,0 +1,106 @@
+/* Global Body Styles */
+html,body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f3f4f6; /* Light gray background */
+    margin: 0;
+    padding: 0;
+    overflow-y: scroll; /* Always show vertical scrollbar to prevent layout shifts */
+    overflow-x: hidden; /* Keep horizontal overflow hidden */
+    box-sizing: border-box; /* Ensure padding/border are included in element's total width/height */
+}
+
+/* --- Navbar Styles (Consolidated for Consistency) --- */
+.navbar {
+    position: fixed; /* Make the navbar fixed */
+    top: 0; /* Position at the top */
+    left: 0; /* Ensure it starts from the left edge */
+    width: 100%; /* Take full width */
+    z-index: 1000; /* Ensure it stays on top of other content */
+    padding: 10px 20px; /* Consistent padding */
+    box-sizing: border-box; /* Crucial for consistent sizing */
+    background-color: #2c3e50; /* Dark background from style.css */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Subtle shadow */
+    display: flex;
+    justify-content: space-between; /* Distribute items with space between them */
+    align-items: center;
+    height: 70px; /* Explicit height for consistency */
+}
+
+.navbar .logo {
+    display: flex;
+    align-items: center;
+    /* The 'flex-shrink: 0;' here is crucial. It tells the logo not to shrink */
+    flex-shrink: 0;
+}
+
+.navbar .logo > span:nth-child(2) {
+    margin-left: 25px; /* Adjust this value as needed for the desired space */
+}
+
+.navbar .logo span {
+    margin: 0; /* Ensure other spans don't have default margins */
+}
+
+.navbar .logo img {
+    width: 65px; /* Consistent logo size */
+    height: 65px;
+    border-radius: 50%; /* Make it round if desired */
+}
+
+.navbar .logo .finance {
+    margin-left: 10px; /* Keep a small gap after PRASHAM text */
+    color: white; /* Example color, ensure it matches your design */
+    font-size: 0.9em;
+}
+
+.navbar .user-greeting {
+    color: #fff; /* White text for greeting */
+    font-size: 1.1em;
+    font-weight: bold;
+    /* Remove fixed margins to allow dynamic adjustment */
+    margin: 0 20px; /* Add some horizontal padding to separate it */
+    flex-grow: 1; /* Allow the greeting to grow and take available space */
+    text-align: center; /* Center the text within its flexible space */
+    white-space: nowrap; /* Prevent text from wrapping onto multiple lines */
+    overflow: hidden; /* Hide overflowing text */
+    text-overflow: ellipsis; /* Add ellipsis for hidden text */
+}
+
+
+.navbar .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Space between navigation links */
+    /* This is also crucial. It prevents the nav-links from shrinking */
+    flex-shrink: 0;
+}
+
+.navbar .nav-links a {
+    color: #fff; /* White text for links */
+    text-decoration: none;
+    padding: 2px 5px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-weight: 500;
+}
+
+.navbar .nav-links a:hover {
+    background-color: #555; /* Slightly lighter gray on hover */
+    color: #00bfff; /* Light blue on hover */
+}
+
+.navbar .signout-btn {
+    background-color: #dc3545; /* Red for sign-out button */
+    margin-left: 20px;
+    padding: 8px 15px;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    flex-shrink: 0; /* Prevent the sign-out button from shrinking */
+}
+
+.navbar .signout-btn:hover {
+    background-color: #c82333;
+}
+/* --- End Navbar Styles --- */

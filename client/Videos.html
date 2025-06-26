@@ -5,33 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Indian Stock Market Videos</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-</head>
-<body class="bg-gray-100">
+    <link rel="stylesheet" href="videos.css"> </head>
+    <body class="bg-gray-100">
     <div class="container mx-auto p-4">
-        <h1 class="text-3xl font-semibold text-blue-700 mb-6" style="color: black; text-align: center;">Indian Stock Market Videos</h1>
+        <h1 class="text-3xl font-semibold text-blue-700 mb-6" style="color: black; text-align: center;">Expert Talks on Markets</h1>
 
-        <div class="flex flex-col sm:flex-row items-center gap-4 mb-6">
-            <input
+        <div class="search-section"> <input
                 type="text"
                 id="search-input"
                 placeholder="Search for videos..."
-                class="flex-grow p-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
+                class="flex-grow p-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"/>
             <button
                 id="search-button"
-                class="bg-blue-500 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-            >
-                Search
-            </button>
+                class="bg-blue-500 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                Search</button>
+
              <div id="loading-indicator" class="hidden animate-spin text-blue-500">
                 Loading...
             </div>
         </div>
 
         <div id="video-container" class="video-container">
-            </div>
+        </div>
         <div id="error-message" class="text-red-500 text-center mt-4 hidden">
-            </div>
+        </div>
     </div>
 
     <script>
@@ -95,7 +92,7 @@
             videoCard.classList.add('video-card'); // Use the class from videos.css
 
             // Construct the standard YouTube video URL
-            const youtubeUrl = `https://www.youtube.com/watch?v=${video.id}`;
+            const youtubeUrl = `https://www.youtube.com/watch?v=$${video.id}`;
 
             videoCard.innerHTML = `
                 <div class="video-thumbnail-container">

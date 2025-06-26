@@ -79,3 +79,26 @@
   color: #666;
   line-height: 1.4;
 }
+
+/* New CSS for search section */
+.search-section {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Space between input and button */
+    margin-bottom: 20px;
+    /* You might want to control the overall width of this section */
+    max-width: 800px; /* Adjust this as needed for the overall section width */
+    margin-left: auto; /* Center the search section */
+    margin-right: auto; /* Center the search section */
+}
+
+#search-input {
+    flex-grow: 1;
+    max-width: 1000px; /* Limit the width of the search input */
+}
+
+#search-button {
+    width: 60%;
+    padding: 9px 12px; /* Make the button smaller */
+    font-size: 0.9em; /* Adjust font size */
+}
