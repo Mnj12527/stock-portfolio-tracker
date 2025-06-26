@@ -265,7 +265,7 @@
             <a onclick="loadPage('News.html')">News</a>
             <a href="#" onclick="loadPage('markets.html')">Markets</a> 
             <a href="#" onclick="loadPage('portfolio.html')">Portfolio</a> 
-            <a onclick="loadPage('Analysis.html')">Analysis</a>
+            <a onclick="loadPage('analysis.html')">Analysis</a>
             <a onclick="loadPage('Videos.html')">Videos</a>
             <a href="#" onclick="loadPage('Profile.html')">Profile</a> 
             <a class="signout-btn" onclick="signOut()">Sign Out</a>
@@ -1128,179 +1128,6 @@
                 }
             }
         }
-
-        async function loadWatchlistPieChart() {
-            console.log("loadWatchlistPieChart function started.");
-            const watchlistPieChartSvg = document.getElementById('watchlistPieChart');
-            if (!watchlistPieChartSvg) {
-                console.warn("Watchlist pie chart SVG element not found.");
-                return;
-            }
-            watchlistPieChartSvg.innerHTML = '';
-
-            console.log(`Attempted to getElementById('watchlistPieChart'). Result: ${watchlistPieChartSvg}`);
-            console.log(`Watchlist SVG dimensions: Width=${watchlistPieChartSvg.width.baseVal.value}, Height=${watchlistPieChartSvg.height.baseVal.value}`);
-
-            console.log("Fetching watchlist stock counts...");
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/user-watchlist-counts`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(`HTTP error! status: ${response.status} - ${errorData.message || 'Unknown error'}`);
-                }
-                const data = await response.json();
-                console.log("Received watchlist data for pie chart:", data);
-
-                const totalStocks = data.reduce((sum, item) => sum + item.stockCount, 0);
-                if (totalStocks === 0) {
-                    watchlistPieChartSvg.innerHTML = `<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="16" fill="#666">No stocks in watchlists to chart.</text>`;
-                    console.log("No stocks in watchlists, pie chart not drawn.");
-                    return;
-                }
-                
-                console.log(`Total stocks in watchlists: ${totalStocks}`);
-                if (window.d3) {
-                    const width = watchlistPieChartSvg.width.baseVal.value;
-                    const height = watchlistPieChartSvg.height.baseVal.value;
-                    const radius = Math.min(width, height) / 2 - 10;
-
-                    const svg = window.d3.select("#watchlistPieChart")
-                        .attr("width", width)
-                        .attr("height", height)
-                        .append("g")
-                        .attr("transform", `translate(${width / 2},${height / 2})`);
-
-                    const color = window.d3.scaleOrdinal(window.d3.schemeCategory10);
-                    const pie = window.d3.pie().value(d => d.stockCount);
-                    const arc = window.d3.arc().innerRadius(0).outerRadius(radius);
-                    const outerArc = window.d3.arc().innerRadius(radius * 0.9).outerRadius(radius * 0.9);
-
-                    const arcs = svg.selectAll("arc")
-                        .data(pie(data))
-                        .enter()
-                        .append("g")
-                        .attr("class", "arc");
-
-                    arcs.append("path")
-                        .attr("d", arc)
-                        .attr("fill", (d, i) => color(i));
-
-                    arcs.append("text")
-                        .attr("transform", d => `translate(${arc.centroid(d)})`)
-                        .attr("text-anchor", "middle")
-                        .text(d => `${d.data.watchlistName}: ${d.data.stockCount}`)
-                        .style("font-size", "12px")
-                        .style("fill", "white");
-
-                    console.log("Watchlist pie chart drawn successfully.");
-                } else {
-                    console.warn("D3.js is not loaded. Cannot draw pie chart.");
-                    watchlistPieChartSvg.innerHTML = `<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="16" fill="#666">Chart requires D3.js</text>`;
-                }
-            } catch (error) {
-                console.error("Error fetching or drawing watchlist pie chart:", error);
-                if (watchlistPieChartSvg) {
-                    watchlistPieChartSvg.innerHTML = `<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="16" fill="#dc3545">Error loading chart: ${error.message}</text>`;
-                }
-            }
-        }
-
-        async function loadSectorPerformance() {
-            console.log("loadSectorPerformance function started.");
-            const sectorChartSvg = document.getElementById('sectorChart');
-            if (!sectorChartSvg) {
-                console.warn("Sector performance SVG element not found.");
-                return;
-            }
-            sectorChartSvg.innerHTML = '';
-
-            console.log(`Attempted to getElementById('sectorChart'). Result: ${sectorChartSvg}`);
-            console.log(`SVG dimensions: Width=${sectorChartSvg.width.baseVal.value}, Height=${sectorChartSvg.height.baseVal.value}`);
-
-            console.log("Fetching sector performance data...");
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/sector-performance`);
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(`HTTP error! status: ${response.status} - ${errorData.message || 'Unknown error'}`);
-                }
-                const data = await response.json();
-                console.log("Received sector performance data:", data);
-
-                if (data.sectorPerformance && data.sectorPerformance.length > 0) {
-                    console.log(`First sector: ${data.sectorPerformance[0].sector}, Performance: ${data.sectorPerformance[0].changesPercentage}%`);
-                    if (window.d3) {
-                        const width = sectorChartSvg.width.baseVal.value;
-                        const height = sectorChartSvg.height.baseVal.value;
-                        const margin = { top: 20, right: 30, bottom: 40, left: 90 };
-                        const chartWidth = width - margin.left - margin.right;
-                        const chartHeight = height - margin.top - margin.bottom;
-
-                        const svg = window.d3.select("#sectorChart")
-                            .attr("width", width)
-                            .attr("height", height)
-                            .append("g")
-                            .attr("transform", `translate(${margin.left},${margin.top})`);
-                        
-                        const sortedData = data.sectorPerformance.sort((a, b) => b.changesPercentage - a.changesPercentage);
-
-
-                        const x = window.d3.scaleLinear()
-                            .domain([window.d3.min(sortedData, d => Math.min(0, d.changesPercentage)), window.d3.max(sortedData, d => Math.max(0, d.changesPercentage))])
-                            .range([0, chartWidth]);
-
-                        const y = window.d3.scaleBand()
-                            .domain(sortedData.map(d => d.sector))
-                            .range([0, chartHeight])
-                            .padding(0.1);
-
-                        svg.append("g")
-                            .attr("transform", `translate(0,${chartHeight})`)
-                            .call(window.d3.axisBottom(x).tickFormat(d => `${d}%`));
-
-                        svg.append("g")
-                            .call(window.d3.axisLeft(y));
-
-                        svg.selectAll(".bar")
-                            .data(sortedData)
-                            .enter().append("rect")
-                            .attr("class", "bar")
-                            .attr("x", d => x(Math.min(0, d.changesPercentage)))
-                            .attr("y", d => y(d.sector) + y.bandwidth() / 2)
-                            .attr("width", d => Math.abs(x(d.changesPercentage) - x(0)))
-                            .attr("height", y.bandwidth())
-                            .attr("fill", d => d.changesPercentage >= 0 ? "#28a745" : "#dc3545");
-
-                        svg.selectAll(".text")
-                            .data(sortedData)
-                            .enter().append("text")
-                            .attr("x", d => x(d.changesPercentage) + (d.changesPercentage >= 0 ? 5 : -5))
-                            .attr("y", d => y(d.sector) + y.bandwidth() / 2)
-                            .attr("dy", ".35em")
-                            .attr("text-anchor", d => d.changesPercentage >= 0 ? "start" : "end")
-                            .text(d => `${d.changesPercentage.toFixed(2)}%`)
-                            .style("font-size", "10px")
-                            .style("fill", "#333");
-
-                    } else {
-                        console.warn("D3.js is not loaded. Cannot draw sector performance chart.");
-                        sectorChartSvg.innerHTML = `<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="16" fill="#666">Chart requires D3.js</text>`;
-                    }
-                } else {
-                    sectorChartSvg.innerHTML = `<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="16" fill="#666">No sector performance data available.</text>`;
-                }
-
-                console.log("Sector performance chart drawn successfully.");
-            } catch (error) {
-                console.error("Error fetching or drawing sector performance:", error);
-                if (sectorChartSvg) {
-                    sectorChartSvg.innerHTML = `<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="16" fill="#dc3545">Error loading chart: ${error.message}</text>`;
-                }
-            }
-        }
-
 
         // --- Functions originally from markets.html, now integrated into home.html ---
 
@@ -2322,14 +2149,11 @@
             const totalValue = quantity * purchasePrice; // Calculate total value here before sending
 
             if (!authToken) {
-                // Use custom modal instead of alert
-                // alert('You need to be logged in to add stocks to your portfolio.'); 
-                modalErrorMessage.textContent = 'You need to be logged in to add stocks to your portfolio.';
-                modalErrorMessage.classList.remove('portfolio-hidden');
+                alert('You need to be logged in to add stocks to your portfolio.'); // Consider custom modal
                 return;
             }
 
-            if (!symbol || isNaN(quantity) || quantity <= 0 || isNaN(purchasePrice) || purchasePrice <= 0 || !totalValue || totalValue <= 0 || !portfolioName) {
+            if (!symbol || isNaN(quantity) || quantity <= 0 || isNaN(purchasePrice) || purchasePrice <= 0 || !portfolioName) {
                 modalErrorMessage.textContent = 'Please enter a valid symbol, quantity, price, and portfolio name.';
                 modalErrorMessage.classList.remove('portfolio-hidden');
                 return;
@@ -2348,7 +2172,7 @@
                         purchasePrice: purchasePrice,
                         totalValue: totalValue, // Include totalValue in the payload
                         portfolioName: portfolioName, // Include portfolio name
-                        purchaseDate: new Date().toISOString() // Send as ISO string
+                        dateAdded: new Date().toISOString() // Send as ISO string
                     })
                 });
 
@@ -2359,8 +2183,7 @@
 
                 console.log("Stock added to portfolio successfully via server!");
                 hideAddStockModal();
-                // Use custom modal instead of alert
-                // alert(`${quantity} shares of ${symbol} added to your portfolio '${portfolioName}'!`); 
+                alert(`${quantity} shares of ${symbol} added to your portfolio '${portfolioName}'!`); // Simple confirmation
                 // If you want to refresh the watchlist or anything on home.html, do it here.
                 // Otherwise, the user would navigate to Portfolio.html to see the full list.
             } catch (error) {

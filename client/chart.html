@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Sector Performance Pie Chart</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sector Performance Pie Chart</title>
   <link rel="stylesheet" href="analysis.css" />
   <style>
     /* Basic styling for the chart's HTML page to ensure it fills the iframe */
@@ -19,17 +20,20 @@
       background-color: #f8f8f8; /* Light background for chart area */
     }
 
+    /* REMOVED: Header styling as the h1 tag will be removed from this file */
+    /*
     header {
-      width: 100%; /* Make header span full width */
-      text-align: center; /* Center the heading text */
-      margin-bottom: 15px; /* Space below the header */
+      width: 100%;
+      text-align: center;
+      margin-bottom: 15px;
     }
 
     header h1 {
-      font-size: 1.5rem; /* Adjust title size */
+      font-size: 1.5rem;
       color: #333;
-      margin: 0; /* Remove default h1 margin */
+      margin: 0;
     }
+    */
 
     main {
       flex-grow: 1; /* Allow main to take up available space */
@@ -45,10 +49,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      /* Add a border or subtle shadow to the container if desired */
-      /* border: 1px solid #ddd; */
-      /* border-radius: 8px; */
-      /* box-shadow: 0 2px 5px rgba(0,0,0,0.05); */
     }
 
     #sectorChart {
@@ -60,9 +60,12 @@
   </style>
 </head>
 <body>
+  <!-- REMOVED: The header section with the h1 tag to avoid duplicate titles -->
+  <!--
   <header>
     <h1>Sector Performance Analysis</h1>
   </header>
+  -->
 
   <main>
     <div id="chart-container">
@@ -70,6 +73,25 @@
     </div>
   </main>
   
+  <!-- Ensure D3.js is loaded here within the iframe for the chart drawing functions -->
+  <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
+  <!-- Load your analysis.js which contains the chart drawing logic -->
   <script src="analysis.js"></script> 
+  <script>
+    // This log confirms chart.html itself is executing its script
+    console.log("chart.html script loaded and DOMContentLoaded event fired."); 
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // This log confirms the DOMContentLoaded event listener fired inside chart.html
+        console.log("chart.html DOMContentLoaded listener triggered.");
+        // Check if the function is available (loaded from analysis.js) before calling it
+        if (window.loadSectorPerformancePieChart) {
+            console.log("loadSectorPerformancePieChart function found. Attempting to call it.");
+            window.loadSectorPerformancePieChart();
+        } else {
+            console.error("loadSectorPerformancePieChart function not found. Ensure analysis.js is loaded correctly.");
+        }
+    });
+  </script>
 </body>
 </html>

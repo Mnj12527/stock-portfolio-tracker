@@ -436,7 +436,6 @@ app.get('/api/sector-performance', async (req, res) => {
     }
 });
 
-
 // --- Watchlist Management Endpoints ---
 app.get("/watchlists", authenticate, async (req, res) => {
     try {
@@ -557,6 +556,138 @@ app.get("/portfolio", authenticate, async (req, res) => {
         res.status(500).json({ message: "Error fetching user portfolio." });
     }
 });
+
+// NEW ENDPOINT: Fetch portfolio data for charts (stock counts and current values by portfolio name)
+// NEW ENDPOINT: Fetch portfolio data for charts (stock counts and current values by portfolio name)
+app.get("/api/portfolio-charts-data", authenticate, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select('portfolio');
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        const portfolio = user.portfolio;
+
+        const portfolioStockCounts = {};
+        const portfolioCurrentValues = {};
+        const symbolsToFetch = new Set();
+
+        portfolio.forEach(holding => {
+            portfolioStockCounts[holding.portfolioName] = (portfolioStockCounts[holding.portfolioName] || 0) + holding.quantity;
+            symbolsToFetch.add(holding.symbol);
+        });
+
+        const FMP_API_KEY = process.env.FMP_API_KEY;
+        const currentPrices = {};
+        const pricePromises = Array.from(symbolsToFetch).map(async (symbol) => {
+            try {
+                const response = await axios.get(`https://financialmodelingprep.com/api/v3/quote/${symbol}?apikey=${FMP_API_KEY}`);
+                if (response.data && response.data.length > 0) {
+                    currentPrices[symbol] = response.data[0].price;
+                } else {
+                    currentPrices[symbol] = null;
+                }
+            } catch (error) {
+                console.error(`Error fetching current price for ${symbol}:`, error.message);
+                currentPrices[symbol] = null;
+            }
+        });
+        await Promise.allSettled(pricePromises);
+
+        portfolio.forEach(holding => {
+            const currentPrice = currentPrices[holding.symbol] !== null ? currentPrices[holding.symbol] : holding.purchasePrice;
+            const holdingCurrentValue = currentPrice * holding.quantity;
+            portfolioCurrentValues[holding.portfolioName] = (portfolioCurrentValues[holding.portfolioName] || 0) + holdingCurrentValue;
+        });
+
+        res.json({
+            stockCounts: portfolioStockCounts,
+            currentValues: portfolioCurrentValues
+        });
+
+    } catch (error) {
+        console.error("Error fetching portfolio chart data:", error);
+        res.status(500).json({ message: "Error fetching portfolio chart data." });
+    }
+});
+
+
+// NEW: Dedicated endpoint for Portfolio Unique Stock Counts
+app.get("/api/portfolio/unique-stock-counts", authenticate, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select('portfolio');
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        const portfolioStockCounts = {};
+        user.portfolio.forEach(holding => {
+            // Count unique stock symbols per portfolioName
+            if (!portfolioStockCounts[holding.portfolioName]) {
+                portfolioStockCounts[holding.portfolioName] = new Set();
+            }
+            portfolioStockCounts[holding.portfolioName].add(holding.symbol);
+        });
+
+        // Convert Sets to their sizes
+        const uniqueStockCountsResult = {};
+        for (const portfolioName in portfolioStockCounts) {
+            uniqueStockCountsResult[portfolioName] = portfolioStockCounts[portfolioName].size;
+        }
+        
+        res.json(uniqueStockCountsResult);
+    } catch (error) {
+        console.error("Error fetching unique stock counts for portfolio:", error);
+        res.status(500).json({ message: "Error fetching unique stock counts." });
+    }
+});
+
+// NEW: Dedicated endpoint for Portfolio Total Values
+app.get("/api/portfolio/total-values", authenticate, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select('portfolio');
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        const portfolio = user.portfolio;
+        const portfolioCurrentValues = {};
+        const symbolsToFetch = new Set();
+
+        portfolio.forEach(holding => {
+            symbolsToFetch.add(holding.symbol);
+        });
+
+        const FMP_API_KEY = process.env.FMP_API_KEY;
+        const currentPrices = {};
+        const pricePromises = Array.from(symbolsToFetch).map(async (symbol) => {
+            try {
+                const response = await axios.get(`https://financialmodelingprep.com/api/v3/quote/${symbol}?apikey=${FMP_API_KEY}`);
+                if (response.data && response.data.length > 0) {
+                    currentPrices[symbol] = response.data[0].price;
+                } else {
+                    currentPrices[symbol] = null;
+                }
+            } catch (error) {
+                console.error(`Error fetching current price for ${symbol} in total-values endpoint:`, error.message);
+                currentPrices[symbol] = null;
+            }
+        });
+        await Promise.allSettled(pricePromises);
+
+        portfolio.forEach(holding => {
+            const currentPrice = currentPrices[holding.symbol] !== null ? currentPrices[holding.symbol] : holding.purchasePrice;
+            const holdingCurrentValue = currentPrice * holding.quantity;
+            portfolioCurrentValues[holding.portfolioName] = (portfolioCurrentValues[holding.portfolioName] || 0) + holdingCurrentValue;
+        });
+        
+        res.json(portfolioCurrentValues);
+    } catch (error) {
+        console.error("Error fetching portfolio total values:", error);
+        res.status(500).json({ message: "Error fetching portfolio total values." });
+    }
+});
+
 
 // NEW: Delete a specific stock holding from portfolio and record realized transaction
 app.delete("/portfolio/delete-holding/:holdingId", authenticate, async (req, res) => {
